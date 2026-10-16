@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cloud Yatra — Himal Rajya</title>
+    <style>
+      html, body {
+        margin: 0;
+        background: #0e1726;
+        font-family: system-ui, sans-serif;
+        color: #e9f6ff;
+      }
+      /* Fixed-height game container so a Grafana dashboard can later sit BELOW it
+         on the same page (see product brief). */
+      #game-root {
+        width: 100%;
+        max-width: 960px;
+        height: 540px;
+        margin: 16px auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #game-root canvas {
+        border-radius: 8px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Phaser injects its <canvas> here (see src/main.ts). -->
+    <div id="game-root"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

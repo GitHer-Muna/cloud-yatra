@@ -1,0 +1,23 @@
+{
+  "name": "cloud-yatra-game",
+  "version": "0.1.0",
+  "description": "Cloud Yatra — an original observability-driven Nepali browser platformer (game client)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@grafana/faro-web-sdk": "^1.19.0",
+    "phaser": "3.90.0"
+  },
+  "devDependencies": {
+    "typescript": "5.9.2",
+    "vite": "7.3.6",
+    "vitest": "3.2.4"
+  }
+}
