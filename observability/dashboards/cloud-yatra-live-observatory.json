@@ -1,0 +1,320 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus (Grafana Cloud AWS integration)",
+      "description": "The Prometheus data source receiving CloudWatch metrics from the AWS integration.",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    },
+    {
+      "name": "DS_LOKI",
+      "label": "Loki (CloudWatch Lambda logs)",
+      "description": "The Loki data source receiving structured Cloud Yatra Lambda logs.",
+      "type": "datasource",
+      "pluginId": "loki",
+      "pluginName": "Loki"
+    }
+  ],
+  "__requires": [
+    { "type": "grafana", "id": "grafana", "name": "Grafana", "version": "10.0.0" },
+    { "type": "datasource", "id": "prometheus", "name": "Prometheus", "version": "1.0.0" },
+    { "type": "datasource", "id": "loki", "name": "Loki", "version": "1.0.0" }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      },
+      {
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "iconColor": "orange",
+        "name": "Chaos Mode",
+        "tags": ["chaos"],
+        "type": "tags"
+      }
+    ]
+  },
+  "description": "Cloud Yatra — Live Observatory. One dashboard telling the story from player experience to backend health, driven by real gameplay telemetry. Graduation deliverable for the Grafana Emerging Champion mentorship.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "liveNow": true,
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["cloud-yatra", "observability", "graduation"],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "label": "Prometheus",
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      },
+      {
+        "current": { "text": "cloud-yatra", "value": "cloud-yatra" },
+        "hide": 0,
+        "label": "Stack",
+        "name": "stack",
+        "options": [{ "text": "cloud-yatra", "value": "cloud-yatra", "selected": true }],
+        "query": "cloud-yatra",
+        "type": "constant"
+      }
+    ]
+  },
+  "time": { "from": "now-30m", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Cloud Yatra — Live Observatory",
+  "uid": "cloud-yatra-live-observatory",
+  "version": 1,
+  "weekStart": "",
+  "panels": [
+    {
+      "type": "row",
+      "title": "Player Experience (frontend / API surface)",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "title": "Requests / min (HTTP API)",
+      "description": "Total API Gateway requests per minute — the pulse of live play.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 1 },
+      "id": 1,
+      "fieldConfig": {
+        "defaults": { "unit": "reqpm", "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } },
+        "overrides": []
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "expr": "sum(rate(aws_apigateway_count_sum{}[5m])) * 60",
+          "legendFormat": "requests/min"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "API latency (p50 / p99)",
+      "description": "API Gateway integration latency. Watch this spike during Chaos Mode.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 6, "w": 10, "x": 6, "y": 1 },
+      "id": 2,
+      "fieldConfig": { "defaults": { "unit": "ms", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "expr": "avg(aws_apigateway_latency_average{})", "legendFormat": "p50 (avg)" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "expr": "max(aws_apigateway_latency_p99{})", "legendFormat": "p99" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Error rate (4xx / 5xx)",
+      "description": "Client vs server errors on the HTTP API. 5xx rising = backend trouble (or Chaos Mode).",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 1 },
+      "id": 3,
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "fillOpacity": 40 } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "expr": "sum(rate(aws_apigateway_4xx_sum{}[5m]))", "legendFormat": "4xx" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "expr": "sum(rate(aws_apigateway_5xx_sum{}[5m]))", "legendFormat": "5xx" }
+      ]
+    },
+
+    {
+      "type": "row",
+      "title": "Game Behavior (custom gameplay metrics)",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 },
+      "id": 200,
+      "collapsed": false
+    },
+    {
+      "type": "text",
+      "title": "How to read this row",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 8 },
+      "id": 20,
+      "options": {
+        "mode": "markdown",
+        "content": "These panels are driven by **custom gameplay events** (`player_jump`, `collectible_collected`, `player_died`, `level_completed`). Wire them via **Faro** events (browser) or **Loki metrics** from the `/event` Lambda logs — see `observability/grafana-setup.md`. Once connected, replace the placeholder Prometheus queries below with your Faro/Loki equivalents. Metric names follow `design.md §4`."
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Jumps / Collectibles / Deaths (per min)",
+      "description": "Custom game metrics. Placeholder Prometheus series names match design.md §4 — swap for Faro/Loki once the log-to-metric pipeline is chosen.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 6, "w": 12, "x": 6, "y": 8 },
+      "id": 21,
+      "fieldConfig": { "defaults": { "unit": "cpm", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "expr": "sum(rate(player_jumps_total{level=~\".*\"}[5m])) * 60", "legendFormat": "jumps/min" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "expr": "sum(rate(collectibles_total{}[5m])) * 60", "legendFormat": "collectibles/min" },
+        { "refId": "C", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "expr": "sum(rate(player_deaths_total{}[5m])) * 60", "legendFormat": "deaths/min" }
+      ]
+    },
+    {
+      "type": "piechart",
+      "title": "Deaths by cause",
+      "description": "Bounded label `cause` (mist_wisp, fall). Low-cardinality by design.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 8 },
+      "id": 22,
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["sum"] }, "legend": { "displayMode": "list", "placement": "right" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "expr": "sum by (cause) (player_deaths_total{})", "legendFormat": "{{cause}}" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Level completions",
+      "description": "Successful crossings of Himal Rajya.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 14 },
+      "id": 23,
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "green" } }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "expr": "sum(level_completions_total{})", "legendFormat": "completions" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Sampled client FPS",
+      "description": "Averaged FPS sampled ~every 2s (never per-frame). Frontend health from Faro measurements.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 5, "w": 18, "x": 6, "y": 14 },
+      "id": 24,
+      "fieldConfig": { "defaults": { "unit": "none", "custom": { "drawStyle": "line", "fillOpacity": 10 }, "min": 0, "max": 70 }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "expr": "avg(client_perf_fps{})", "legendFormat": "avg fps" }
+      ]
+    },
+
+    {
+      "type": "row",
+      "title": "Backend (Lambda)",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 19 },
+      "id": 300,
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Lambda invocations & errors",
+      "description": "Per-function invocations vs errors (AWS/Lambda).",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 20 },
+      "id": 31,
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "expr": "sum by (function_name) (rate(aws_lambda_invocations_sum{}[5m]))", "legendFormat": "invocations {{function_name}}" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "expr": "sum by (function_name) (rate(aws_lambda_errors_sum{}[5m]))", "legendFormat": "errors {{function_name}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Lambda duration (avg / max)",
+      "description": "Execution time per function. Chaos Mode injects latency here.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 20 },
+      "id": 32,
+      "fieldConfig": { "defaults": { "unit": "ms", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "expr": "avg by (function_name) (aws_lambda_duration_average{})", "legendFormat": "avg {{function_name}}" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "expr": "max by (function_name) (aws_lambda_duration_maximum{})", "legendFormat": "max {{function_name}}" }
+      ]
+    },
+
+    {
+      "type": "row",
+      "title": "Data Layer (DynamoDB)",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 26 },
+      "id": 400,
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "DynamoDB consumed capacity",
+      "description": "On-demand read/write capacity units consumed by the single cy_data table.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 27 },
+      "id": 41,
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "expr": "sum(rate(aws_dynamodb_consumed_read_capacity_units_sum{}[5m]))", "legendFormat": "read CU/s" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "expr": "sum(rate(aws_dynamodb_consumed_write_capacity_units_sum{}[5m]))", "legendFormat": "write CU/s" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "DynamoDB throttles",
+      "description": "Should stay flat at zero on on-demand billing. A spike would indicate hot keys.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 27 },
+      "id": 42,
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "fillOpacity": 40 } }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "expr": "sum(rate(aws_dynamodb_throttled_requests_sum{}[5m]))", "legendFormat": "throttled req/s" }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Logs & Guru Megh (Loki)",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 34 },
+      "id": 500,
+      "collapsed": false
+    },
+    {
+      "type": "logs",
+      "title": "Backend logs and Guru Megh outcomes",
+      "description": "Structured Lambda logs from CloudWatch through Loki. Adjust the service_name selector to match your Grafana Cloud labels.",
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 35 },
+      "id": 51,
+      "options": { "showTime": true, "showLabels": true, "showCommonLabels": false, "wrapLines": true, "prettifyLogMessage": true },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+          "expr": "{service_name=~\".*cloud-yatra.*\"} | json | msg=~\"oracle_answered|oracle_bedrock_failed|oracle_rate_limited|oracle_guard_failed|event_ingested\"",
+          "legendFormat": "Cloud Yatra logs"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Custom gameplay events from Lambda logs",
+      "description": "Backend-truth event metrics. This requires the CloudWatch Logs → Loki connection and JSON parsing.",
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 35 },
+      "id": 52,
+      "fieldConfig": { "defaults": { "unit": "cpm", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+          "expr": "sum by (type) (rate({service_name=~\".*cloud-yatra.*\"} | json | msg=\"event_metric\" | unwrap count [5m])) * 60",
+          "legendFormat": "{{type}}/min"
+        }
+      ]
+    }
+  ]
+}
