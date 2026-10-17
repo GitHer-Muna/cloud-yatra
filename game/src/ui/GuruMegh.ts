@@ -12,8 +12,37 @@ export class GuruMegh {
   private container?: Phaser.GameObjects.Container;
   private hideEvent?: Phaser.Time.TimerEvent;
   private asyncGeneration = 0;
+  /** Where the panel docks vertically. 'sky' = upper area (default); 'bottom' = just
+   * above the controls bar, used when a centred status card is on screen so the two
+   * never overlap. */
+  private dock: 'sky' | 'bottom' = 'sky';
 
   constructor(private scene: Phaser.Scene) {}
+
+  /** Choose where new lines appear. Existing visible line is re-docked immediately. */
+  setDock(dock: 'sky' | 'bottom'): void {
+    this.dock = dock;
+    if (this.container) {
+      this.container.y = this.dockY();
+    }
+  }
+
+  /** Resolved y-centre for the current dock, clamped to the camera. */
+  private dockY(): number {
+    const cam = this.scene.cameras.main;
+    // 'sky': upper area during normal play — below the top HUD row and the top-right
+    //   collectibles panel (which ends at y≈132; this panel is 68px tall so its top at
+    //   y≈136 stays clear). Used for spontaneous encouragement.
+    // 'bottom': a MID-LOWER band used whenever a centred status card (level-won /
+    //   game-over / milestone burst) is on screen. It is deliberately placed BELOW the
+    //   status card AND ABOVE the on-screen touch-control buttons (which start at y≈452),
+    //   so Guru Megh never overlaps either. On a 540-tall view this lands at y≈386
+    //   (panel spans ≈352–420).
+    if (this.dock === 'bottom') {
+      return Math.min(cam.height - 120, 386);
+    }
+    return 170;
+  }
 
   /** Show a line from Guru Megh. Replaces any current line. */
   say(text: string, holdMs = 5000): void {
@@ -24,11 +53,11 @@ export class GuruMegh {
     const cam = this.scene.cameras.main;
     const W = Math.min(520, cam.width - 60);
     const x = cam.width / 2;
-    // Up in the SKY (upper area) where Guru Megh belongs — but positioned JUST BELOW the
-    // top HUD row (score/lives/time/combo/progress at y≈14-54) and the top-right
-    // collectibles panel (y≈74-132), so the cloud-sage floats clearly in the sky without
-    // covering any HUD element. Panel is 68px tall (±34), centred at y=168 → spans 134-202.
-    const y = 168;
+    // Panel is 68px tall (±34). In the 'sky' dock it sits just below the top HUD row
+    // (score/lives/time/combo/progress) and the top-right collectibles panel. In the
+    // 'bottom' dock it sits above the controls bar so it never covers a centred status
+    // card (level-won / game-over), fixing the overlap between the two boxes.
+    const y = this.dockY();
 
     const panel = this.scene.add.graphics();
     panel.fillStyle(0x10233b, 0.9);

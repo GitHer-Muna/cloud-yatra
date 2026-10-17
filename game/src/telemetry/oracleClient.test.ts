@@ -13,7 +13,8 @@ describe('askOracle', () => {
     });
     expect(result.source).toBe('fallback');
     expect(result.latencyMs).toBeGreaterThanOrEqual(0);
-    expect(result.text).toContain('mist');
+    // A local Guru Megh line is always returned (region/situation-aware, varied).
+    expect(result.text.length).toBeGreaterThan(0);
   });
 
   it('preserves Bedrock source and measures request latency', async () => {
@@ -41,6 +42,6 @@ describe('askOracle', () => {
       sessionId: 'abcdefgh-1234',
     });
     expect(result.source).toBe('fallback');
-    expect(result.text).toContain('river');
+    expect(result.text.length).toBeGreaterThan(0);
   });
 });
