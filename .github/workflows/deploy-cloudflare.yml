@@ -1,0 +1,54 @@
+# Deploy the Cloud Yatra game client to Cloudflare Pages.
+#
+# This is a STATIC-ONLY deploy (Vite build → game/dist), which is free and unlimited on
+# Cloudflare Pages. It runs only after the build + tests pass.
+#
+# Enable it by adding two repository secrets (Settings → Secrets and variables → Actions):
+#   CLOUDFLARE_API_TOKEN  — a token with the "Edit Cloudflare Pages" permission
+#   CLOUDFLARE_ACCOUNT_ID — your Cloudflare account ID
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'game/**'
+      - '.github/workflows/deploy-cloudflare.yml'
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    defaults:
+      run:
+        working-directory: game
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: game/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check and test
+        run: |
+          npm run typecheck
+          npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: game
+          command: pages deploy dist --project-name=cloud-yatra

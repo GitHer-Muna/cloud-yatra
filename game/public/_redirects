@@ -1,0 +1,7 @@
+# Cloudflare Pages redirects for Cloud Yatra.
+# Docs: https://developers.cloudflare.com/pages/configuration/redirects/
+#
+# The game is a single static HTML entry (Phaser renders into a canvas; there is no
+# client-side router with deep links). This rule makes any unknown path fall back to the
+# game instead of a 404, so a shared/bookmarked sub-path still loads the game.
+/*    /index.html   200

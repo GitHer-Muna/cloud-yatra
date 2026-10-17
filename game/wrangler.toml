@@ -1,0 +1,10 @@
+#:schema node_modules/wrangler/config-schema.json
+# Cloudflare Pages project config for Cloud Yatra (static game client).
+# Docs: https://developers.cloudflare.com/pages/functions/wrangler-configuration/
+#
+# This project is 100% static (Vite build → dist/). There are NO Pages Functions,
+# NO Workers, NO KV/D1/R2 — so there is nothing that can incur cost. Cloudflare Pages
+# serves static assets with unlimited bandwidth on the free plan.
+name = "cloud-yatra"
+compatibility_date = "2024-11-01"
+pages_build_output_dir = "dist"
