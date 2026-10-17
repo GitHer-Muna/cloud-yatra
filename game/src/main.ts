@@ -14,6 +14,12 @@ import { initFaro } from './telemetry/faro';
 // Inert (returns null) if no public VITE_FARO_URL is configured — see faro.ts.
 initFaro();
 
+// Respect the OS "reduce motion" setting (WCAG 2.3.3). Scenes read this from the registry
+// to soften parallax/particles for players with vestibular sensitivity.
+const prefersReducedMotion =
+  typeof window !== 'undefined' &&
+  (window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false);
+
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   parent: 'game-root',
@@ -41,7 +47,19 @@ const config: Phaser.Types.Core.GameConfig = {
 };
 
 const game = new Phaser.Game(config);
+game.registry.set('reducedMotion', prefersReducedMotion);
 
-// Expose the game instance for debugging/diagnostics in the browser console
-// (e.g. `window.__CY_GAME__.scene.getScene('HimalRajya')`). Harmless in production.
-(window as unknown as { __CY_GAME__?: Phaser.Game }).__CY_GAME__ = game;
+// Remove the DOM loading placeholder and make the canvas keyboard-focusable so arrow/space
+// go to the game (not the page) as soon as it is clicked/tapped.
+game.events.once(Phaser.Core.Events.READY, () => {
+  document.getElementById('cy-loading')?.remove();
+  const canvas = game.canvas;
+  if (canvas) {
+    canvas.setAttribute('tabindex', '0');
+    canvas.setAttribute('aria-label', 'Cloud Yatra game canvas');
+    canvas.style.outline = 'none';
+    canvas.addEventListener('pointerdown', () => canvas.focus());
+    canvas.focus();
+  }
+});
+
