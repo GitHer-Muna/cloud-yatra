@@ -1,0 +1,304 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Cloud Yatra backend — HTTP API + Lambda (Node 24) + DynamoDB (on-demand).
+  Cost-conscious by design: pay-per-use only, tiny memory, on-demand billing, short
+  log retention. No always-on resources (no NAT/RDS/ECS/provisioned concurrency).
+
+Parameters:
+  AllowedOrigin:
+    Type: String
+    Default: '*'
+    Description: CORS origin. '*' for local/dev; set to the public game URL at Phase 8.
+  ChaosAdminToken:
+    Type: String
+    Default: ''
+    NoEcho: true
+    Description: Admin token gating Chaos Mode (Phase 7). Empty disables chaos.
+  LogRetentionDays:
+    Type: Number
+    Default: 7
+    Description: CloudWatch log retention (days) — short to control cost.
+  OracleModelId:
+    Type: String
+    Default: amazon.nova-lite-v1:0
+    Description: Bedrock model for Guru Megh (verified invocable, cheapest compact model).
+  DisableOracle:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: When true the oracle returns a canned fallback with no Bedrock spend; when false it calls Bedrock live.
+  OracleDailyCallCap:
+    Type: Number
+    Default: 100
+    Description: Global hard cap on Bedrock oracle calls per UTC day (cost ceiling).
+
+Globals:
+  Function:
+    Runtime: nodejs24.x
+    Architectures: [arm64]        # Graviton = cheaper per ms
+    MemorySize: 128               # smallest practical; measure before raising
+    Timeout: 10
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref DataTable
+        ALLOWED_ORIGIN: !Ref AllowedOrigin
+        NODE_ENV: production
+        APP_VERSION: '0.1.0'
+  # esbuild bundling keeps deploy artifacts tiny (faster cold starts, lower cost).
+
+Resources:
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: prod
+      # CORS for an HTTP API MUST be set here (HttpApi CorsConfiguration), NOT under
+      # Globals.Api — that block is for REST AWS::Serverless::Api and is silently
+      # ignored by HTTP APIs, which is why cross-origin preflight was failing.
+      CorsConfiguration:
+        AllowOrigins:
+          - !Ref AllowedOrigin
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+        AllowHeaders:
+          - content-type
+          - x-correlation-id
+        MaxAge: 300
+
+  # --- Single DynamoDB table: on-demand billing, TTL for auto-expiring sessions ---
+  DataTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST      # on-demand: no idle cost
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: expiresAt
+        Enabled: true
+
+  # --- Health: no data access needed (least privilege = no table policy) ---
+  HealthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/health.handler
+      CodeUri: ./
+      Events:
+        Get:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /health
+            Method: GET
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Format: esm
+        Target: es2022
+        Minify: true
+        # AWS SDK v3 does a dynamic require() internally; in ESM output that throws
+        # "Dynamic require of 'node:https' is not supported". This banner recreates
+        # require() in the bundled ESM module scope to fix it.
+        Banner:
+          - "js=import{createRequire as __cr}from'module';const require=__cr(import.meta.url);"
+        OutExtension: [".js=.mjs"]
+        EntryPoints: [src/handlers/health.ts]
+
+  # --- Event ingest: needs write to the table; NO Bedrock permission ---
+  EventFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/event.handler
+      CodeUri: ./
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DataTable
+      Events:
+        Post:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /event
+            Method: POST
+        # /ingest is a blocker-resistant alias — browser ad/privacy blockers commonly
+        # block URLs containing "event"/"telemetry"/"track". Same handler, neutral path.
+        Ingest:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /ingest
+            Method: POST
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Format: esm
+        Target: es2022
+        Minify: true
+        # AWS SDK v3 does a dynamic require() internally; in ESM output that throws
+        # "Dynamic require of 'node:https' is not supported". This banner recreates
+        # require() in the bundled ESM module scope to fix it.
+        Banner:
+          - "js=import{createRequire as __cr}from'module';const require=__cr(import.meta.url);"
+        OutExtension: [".js=.mjs"]
+        EntryPoints: [src/handlers/event.ts]
+
+  # --- Leaderboard: read-only access to the table ---
+  LeaderboardFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/leaderboard.handler
+      CodeUri: ./
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref DataTable
+      Events:
+        Get:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /leaderboard
+            Method: GET
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Format: esm
+        Target: es2022
+        Minify: true
+        # AWS SDK v3 does a dynamic require() internally; in ESM output that throws
+        # "Dynamic require of 'node:https' is not supported". This banner recreates
+        # require() in the bundled ESM module scope to fix it.
+        Banner:
+          - "js=import{createRequire as __cr}from'module';const require=__cr(import.meta.url);"
+        OutExtension: [".js=.mjs"]
+        EntryPoints: [src/handlers/leaderboard.ts]
+
+  # --- Oracle (Guru Megh): Bedrock-powered, least-privilege InvokeModel only ---
+  OracleFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/oracle.handler
+      CodeUri: ./
+      Environment:
+        Variables:
+          DISABLE_ORACLE: !Ref DisableOracle
+          BEDROCK_REGION: !Ref AWS::Region
+          BEDROCK_MODEL_ID: !Ref OracleModelId
+          ORACLE_MAX_TOKENS: '150'
+          ORACLE_TEMPERATURE: '0.4'
+          ORACLE_COOLDOWN_MS: '8000'
+          ORACLE_DAILY_CALL_CAP: !Ref OracleDailyCallCap
+      Policies:
+        # Guard counters (cooldown + daily cap) live in the shared table.
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DataTable
+        # Least privilege: invoke ONLY the chosen compact model.
+        - Statement:
+            - Effect: Allow
+              Action: bedrock:InvokeModel
+              Resource:
+                - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/${OracleModelId}"
+      Events:
+        Post:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /oracle
+            Method: POST
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Format: esm
+        Target: es2022
+        Minify: true
+        # AWS SDK v3 does a dynamic require() internally; in ESM output that throws
+        # "Dynamic require of 'node:https' is not supported". This banner recreates
+        # require() in the bundled ESM module scope to fix it.
+        Banner:
+          - "js=import{createRequire as __cr}from'module';const require=__cr(import.meta.url);"
+        OutExtension: [".js=.mjs"]
+        EntryPoints: [src/handlers/oracle.ts]
+
+  # --- Chaos (admin-gated): self-only latency/error injection via a DynamoDB state flag.
+  #     Needs table read/write to set/clear the chaos window; no Bedrock permission. ---
+  ChaosFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/chaos.handler
+      CodeUri: ./
+      Environment:
+        Variables:
+          CHAOS_ADMIN_TOKEN: !Ref ChaosAdminToken
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DataTable
+      Events:
+        Start:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /chaos/start
+            Method: POST
+        Stop:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /chaos/stop
+            Method: POST
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Format: esm
+        Target: es2022
+        Minify: true
+        # AWS SDK v3 does a dynamic require() internally; in ESM output that throws
+        # "Dynamic require of 'node:https' is not supported". This banner recreates
+        # require() in the bundled ESM module scope to fix it.
+        Banner:
+          - "js=import{createRequire as __cr}from'module';const require=__cr(import.meta.url);"
+        OutExtension: [".js=.mjs"]
+        EntryPoints: [src/handlers/chaos.ts]
+
+  # --- Explicit log groups so LogRetentionDays actually applies (SAM default = never expire) ---
+  # Named to match Lambda's auto-created group (/aws/lambda/<function-name>) so Lambda reuses them.
+  HealthLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${HealthFunction}"
+      RetentionInDays: !Ref LogRetentionDays
+  EventLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${EventFunction}"
+      RetentionInDays: !Ref LogRetentionDays
+  LeaderboardLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${LeaderboardFunction}"
+      RetentionInDays: !Ref LogRetentionDays
+  OracleLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${OracleFunction}"
+      RetentionInDays: !Ref LogRetentionDays
+  ChaosLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ChaosFunction}"
+      RetentionInDays: !Ref LogRetentionDays
+
+Outputs:
+  ApiUrl:
+    Description: Base URL of the Cloud Yatra HTTP API
+    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
+  TableName:
+    Description: DynamoDB table name
+    Value: !Ref DataTable
