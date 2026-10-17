@@ -20,18 +20,22 @@ describe('three-region route accessibility', () => {
     }
   });
 
-  it('keeps the challenge budget consistent across regions', () => {
+  it('escalates difficulty across regions while staying fair', () => {
     const levels = LEVEL_ORDER.map((id) => LEVELS[id]);
-    expect(new Set(levels.map((level) => level.parTimeMs)).size).toBe(1);
-    expect(new Set(levels.map((level) => level.hazards.length)).size).toBe(1);
-    expect(levels.every((level) => level.hazards.length === 7)).toBe(true);
+    // Par time TIGHTENS toward the summit (the journey should intensify, not stay flat).
+    const parTimes = levels.map((level) => level.parTimeMs);
+    expect(parTimes[0]).toBeGreaterThan(parTimes[1]);
+    expect(parTimes[1]).toBeGreaterThan(parTimes[2]);
+    // Each region still presents a readable number of hazards and fair speeds.
+    expect(levels.every((level) => level.hazards.length >= 5)).toBe(true);
     expect(
       levels.every((level) => {
         const moving = level.hazards.filter((hazard) => hazard.kind !== 'rockfall');
         const rockfalls = level.hazards.filter((hazard) => hazard.kind === 'rockfall');
         return (
-          Math.max(...moving.map((hazard) => hazard.speed)) <= 120 &&
-          Math.max(...rockfalls.map((hazard) => hazard.speed)) <= 200
+          Math.max(...moving.map((hazard) => hazard.speed)) <= 140 &&
+          (rockfalls.length === 0 ||
+            Math.max(...rockfalls.map((hazard) => hazard.speed)) <= 220)
         );
       }),
     ).toBe(true);

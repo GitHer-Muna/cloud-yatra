@@ -47,8 +47,10 @@ export interface LevelConfig {
   worldWidth: number;
   palette: LevelPalette;
   platforms: Array<{ x: number; dy: number; w: number }>;
-  blooms: Array<{ x: number; y: number }>;
-  bells: Array<{ x: number; y: number }>;
+  // Blooms and bells are placed at world-x `x` ON the route surface (see surfaceTopAt in
+  // the scene), so only `x` is needed here.
+  blooms: Array<{ x: number }>;
+  bells: Array<{ x: number }>;
   hazards: Hazard[];
   cuttables: Cuttable[];
   checkpoints: number[];
@@ -58,20 +60,29 @@ export interface LevelConfig {
 // Shared scoring (level-independent).
 export const SCORING = {
   scorePerBloom: 10,
-  comboWindowMs: 2500,
-  comboStep: 0.5,
+  // Combo tuned to be ACTUALLY reachable in a clean run: a wider window to chain the
+  // next bloom, and a bigger step so the x4 cap arrives in 5 blooms (not 7). This makes
+  // the headline multiplier — and Guru Megh's "combo streak" cheer — visible in normal play.
+  comboWindowMs: 3500,
+  comboStep: 0.75,
   comboMax: 4,
   timeBonusMax: 500,
-  livesBonus: 100,
+  // Lower than before so simply surviving no longer dwarfs actual collecting at the end
+  // of a level (it used to be 100/life → up to 600, more than the whole bloom haul).
+  livesBonus: 60,
   bellPoints: 50,
   levelClearBonus: 300, // awarded per level cleared
   cutPoints: 15, // awarded for clearing a khukuri-cuttable obstacle
+  // Planting a pennant (checkpoint) is a signature beat — reward it so it feels earned,
+  // not a silent save point.
+  checkpointPoints: 40,
 
   // --- Reward economy: makes collecting MEANINGFUL (not just an abstract score) ---
   // Every GARLAND_SIZE blooms completes a "garland" (mala) that grants +1 life. This
   // gives a concrete survival reason to chase every bloom, not only points.
   garlandSize: 12,
   garlandBonusPoints: 150, // points awarded alongside the garland life
+  garlandCapConvertPoints: 100, // extra points when a garland completes but lives are full
   // A prayer bell is a rare blessing: it grants +1 life immediately (big, felt reward)
   // on top of its points. At the life cap it converts to a large point bonus instead.
   bellLifeBonus: 1,
@@ -87,7 +98,7 @@ const TERAI: LevelConfig = {
   name: 'Terai Lowlands',
   subtitle: 'Through the sal forest & tall grass',
   worldWidth: 3400,
-  parTimeMs: 75000,
+  parTimeMs: 82000, // Terai: the gentlest, most generous introduction
   palette: {
     skyTop: 0x4a90c2,
     skyUpper: 0x77b3d9,
@@ -113,14 +124,14 @@ const TERAI: LevelConfig = {
     { x: 3160, dy: -100, w: 150 },
   ],
   blooms: [
-    { x: 340, y: 430 }, { x: 620, y: 430 }, { x: 900, y: 430 }, { x: 1180, y: 430 },
-    { x: 1460, y: 430 }, { x: 1740, y: 430 }, { x: 2020, y: 430 }, { x: 2300, y: 430 },
-    { x: 2560, y: 430 }, { x: 2820, y: 430 }, { x: 3000, y: 430 }, { x: 3120, y: 430 },
+    { x: 340 }, { x: 620 }, { x: 900 }, { x: 1180 },
+    { x: 1460 }, { x: 1740 }, { x: 2020 }, { x: 2300 },
+    { x: 2560 }, { x: 2820 }, { x: 3000 }, { x: 3120 },
   ],
   bells: [
-    { x: 1150, y: 430 },  // spread across the journey, on the ground path (all before END)
-    { x: 2250, y: 430 },
-    { x: 3080, y: 430 },
+    { x: 1150 },  // spread across the journey, on the ground path (all before END)
+    { x: 2250 },
+    { x: 3080 },
   ],
   // Seven readable challenge moments: two upper-route eagles, one rockfall, and a
   // small number of predictable ground hazards. The lower trail remains viable.
@@ -153,7 +164,7 @@ const HILLS: LevelConfig = {
   name: 'Middle Hills',
   subtitle: 'Terraced paddy, temples & prayer flags',
   worldWidth: 3600,
-  parTimeMs: 75000,
+  parTimeMs: 72000, // Hills: a step up — longer world, tighter time
   palette: {
     skyTop: 0x2f5aa8,
     skyUpper: 0x5b8fd6,
@@ -174,12 +185,12 @@ const HILLS: LevelConfig = {
     { x: 2900, dy: -170, w: 120 }, { x: 3180, dy: -110, w: 160 },
   ],
   blooms: [
-    { x: 320, y: 430 }, { x: 600, y: 430 }, { x: 880, y: 430 }, { x: 1160, y: 430 },
-    { x: 1440, y: 430 }, { x: 1720, y: 430 }, { x: 2000, y: 430 }, { x: 2280, y: 430 },
-    { x: 2560, y: 430 }, { x: 2840, y: 430 }, { x: 3120, y: 430 }, { x: 3380, y: 430 },
+    { x: 320 }, { x: 600 }, { x: 880 }, { x: 1160 },
+    { x: 1440 }, { x: 1720 }, { x: 2000 }, { x: 2280 },
+    { x: 2560 }, { x: 2840 }, { x: 3120 }, { x: 3380 },
   ],
   bells: [
-    { x: 1250, y: 430 }, { x: 2350, y: 430 }, { x: 3300, y: 430 },
+    { x: 1250 }, { x: 2350 }, { x: 3300 },
   ],
   // The same seven-moment rhythm as the other regions: fair, readable, and optional.
   hazards: [
@@ -210,7 +221,7 @@ const HIMAL: LevelConfig = {
   name: 'High Himalaya',
   subtitle: 'The final ascent to the summit',
   worldWidth: 3800,
-  parTimeMs: 75000,
+  parTimeMs: 64000, // Himal: the tightest, most urgent final ascent
   palette: {
     skyTop: 0x14335f,
     skyUpper: 0x2f5aa8,
@@ -231,12 +242,12 @@ const HIMAL: LevelConfig = {
     { x: 3020, dy: -140, w: 140 }, { x: 3320, dy: -100, w: 170 },
   ],
   blooms: [
-    { x: 320, y: 420 }, { x: 620, y: 420 }, { x: 920, y: 420 }, { x: 1220, y: 420 },
-    { x: 1520, y: 420 }, { x: 1820, y: 420 }, { x: 2120, y: 420 }, { x: 2420, y: 420 },
-    { x: 2720, y: 420 }, { x: 3020, y: 420 }, { x: 3320, y: 420 }, { x: 3520, y: 420 },
+    { x: 320 }, { x: 620 }, { x: 920 }, { x: 1220 },
+    { x: 1520 }, { x: 1820 }, { x: 2120 }, { x: 2420 },
+    { x: 2720 }, { x: 3020 }, { x: 3320 }, { x: 3520 },
   ],
   bells: [
-    { x: 1350, y: 420 }, { x: 2420, y: 420 }, { x: 3420, y: 420 },
+    { x: 1350 }, { x: 2420 }, { x: 3420 },
   ],
   // The summit keeps its snow/eagle identity but uses the same seven readable moments.
   hazards: [

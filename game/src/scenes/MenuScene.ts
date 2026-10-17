@@ -69,6 +69,22 @@ export class MenuScene extends Phaser.Scene {
     this.playerName = this.loadName();
     this.focused = false;
 
+    // Phaser reuses the SAME scene instance across restarts (Leaderboard → Menu → …), so
+    // our GameObject fields still point at the PREVIOUS run's objects — which Phaser has
+    // already destroyed. If we don't clear them, drawNameField()→redrawField()→
+    // refreshStartButton() runs before drawStartButton() recreates the button and the
+    // `if (!this.startBg) return` guards pass on STALE destroyed objects, so
+    // `startLabel.setColor()` touches a null canvas → "drawImage of null" crash. Resetting
+    // the references here makes the guards behave the same as on a fresh first load.
+    this.nameValueText = undefined;
+    this.caret = undefined;
+    this.fieldBox = undefined;
+    this.fieldHintText = undefined;
+    this.nameHit = undefined;
+    this.startBg = undefined;
+    this.startLabel = undefined;
+    this.startHint = undefined;
+
     this.drawBackdrop();
     this.drawMascot();
     this.drawPanel();
@@ -171,9 +187,9 @@ export class MenuScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(10);
     this.add
-      .text(VIEW_WIDTH / 2, 106, 'A journey across the Himalaya — run, jump, collect', {
+      .text(VIEW_WIDTH / 2, 106, 'Climb from the Terai jungle to the Himalayan summit — guided by Guru Megh', {
         fontFamily: 'system-ui, sans-serif',
-        fontSize: '16px',
+        fontSize: '15px',
         color: '#ffffff',
         fontStyle: 'bold',
         stroke: '#10233b',
@@ -463,10 +479,10 @@ export class MenuScene extends Phaser.Scene {
       }
     });
 
-    // A click blurs the field ONLY if it was not on the field itself. Phaser's
-    // event.stopPropagation() does NOT stop this scene-level input event, so we must
-    // check what's under the pointer — otherwise clicking the field would focus then
-    // immediately blur it (the bug where you couldn't type).
+    // A click blurs the name field ONLY if it was not on the field itself. We check what
+    // is under the pointer (rather than relying on stopPropagation, which does not stop
+    // this scene-level input event) so that clicking the field focuses it and keeps it
+    // focused instead of immediately blurring.
     this.input.on(
       'pointerdown',
       (_p: Phaser.Input.Pointer, currentlyOver: Phaser.GameObjects.GameObject[]) => {

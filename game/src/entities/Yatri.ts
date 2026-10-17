@@ -1,20 +1,18 @@
 /**
- * Yatri.ts — the playable character: YATRINI, an original Nepali woman traveler in a
+ * Yatri.ts — the playable character: YATRI, an original Nepali traveler in a
  * traditional gunyu-cholo (crimson blouse + saffron wrap-skirt with a green hem), a red
  * patuka sash, a dhaka-weave shawl, hair gathered in a bun with a red tika — and she
  * carries a KHUKURI, the iconic curved Nepali blade, which she can swing to cut through
  * certain obstacles on the path.
  *
  * ARCHITECTURE (kept deliberately simple + robust):
- *  - Yatri is a plain Arcade physics SPRITE. The physics body auto-aligns to the sprite,
- *    so there is NO manual offset math to get wrong (the previous container approach had
- *    fragile body-offset + art-base-Y alignment).
- *  - The ORIGINAL bug (jitter/desync) was mutating `setDisplayOrigin` every frame, which
- *    shifts the body. The fix: all per-frame animation is done with `setScale` (which
- *    pivots around the sprite's centre origin and does NOT move the physics body) — never
- *    by moving the sprite position or origin.
+ *  - Yatri is a plain Arcade physics SPRITE, so the physics body auto-aligns to the
+ *    sprite with no manual offset math.
+ *  - All per-frame animation uses `setScale` only, which pivots around the sprite's
+ *    centre origin and does NOT move the physics body — so collisions stay aligned and
+ *    the figure never jitters. (We never move the sprite position/origin for animation.)
  *  - The KHUKURI SWING is a short-lived separate blade sprite drawn in front of the
- *    Yatrini; while it is active the scene can query `getAttackHitbox()` to cut obstacles.
+ *    Yatri; while it is active the scene can query `getAttackHitbox()` to cut obstacles.
  *  - TELEMETRY-READY: the Yatri never touches the network. It calls an optional `onEvent`
  *    callback for meaningful moments (jump, land, damaged, died, respawn, attack).
  *  - ART: 100% original, drawn in code (no external files). See CREDITS.md.
@@ -47,7 +45,7 @@ type DressPalette = {
 };
 
 /**
- * Respectful regional dress accents: the same Yatrini travels in one silhouette, while
+ * Respectful regional dress accents: the same Yatri travels in one silhouette, while
  * colours/material cues change with the geography. These are original game-art palettes,
  * not claims that one outfit represents every Nepali community.
  */
@@ -259,13 +257,13 @@ export class Yatri extends Phaser.Physics.Arcade.Sprite {
     return this.scene.time.now < this.attackUntil;
   }
 
-  /** Which way the Yatrini is facing (1 = right, -1 = left). */
+  /** Which way the Yatri is facing (1 = right, -1 = left). */
   getFacing(): 1 | -1 {
     return this.facing;
   }
 
   /**
-   * The world-space rectangle the khukuri sweeps this frame, in FRONT of the Yatrini.
+   * The world-space rectangle the khukuri sweeps this frame, in FRONT of the Yatri.
    * Returns null when not attacking. The scene uses this to cut obstacles.
    */
   getAttackHitbox(): Phaser.Geom.Rectangle | null {
@@ -468,7 +466,7 @@ export class Yatri extends Phaser.Physics.Arcade.Sprite {
   }
 
   /**
-   * Build the Yatrini texture once from an explicit PIXEL-ART grid so every cultural
+   * Build the Yatri texture once from an explicit PIXEL-ART grid so every cultural
    * detail reads clearly: hair gathered in a bun with a red tika, a crimson cholo blouse
    * with gold trim, a dhaka-weave shawl over one shoulder, a saffron gunyu wrap-skirt with
    * a green hem border, a red patuka sash — and a khukuri held at her side.
@@ -519,7 +517,8 @@ export class Yatri extends Phaser.Physics.Arcade.Sprite {
       W: c.white,
     };
 
-    // A Nepali woman traveler (Yatrini). Columns ~9..20 hold the figure; a khukuri is
+    // The Yatri figure (here drawn in traditional gunyu-cholo). Columns ~9..20 hold the
+    // figure; a khukuri is
     // held low at her right side (right = higher columns here since she faces right).
     //  - Hair bun on top, face with a red tika between the brows, gold earrings.
     //  - Crimson cholo with a gold neck/cuff trim; a dhaka shawl draped diagonally.

@@ -35,12 +35,15 @@ import { RhododendronBloom } from '../entities/RhododendronBloom';
 import { PrayerBell } from '../entities/PrayerBell';
 import { MistWisp } from '../entities/MistWisp';
 import { Eagle } from '../entities/Eagle';
+import { Monkey } from '../entities/Monkey';
 import { Rockfall } from '../entities/Rockfall';
 import { CuttableObstacle } from '../entities/CuttableObstacle';
 import { Checkpoint } from '../entities/Checkpoint';
 import { Hud } from '../ui/Hud';
 import { GuruMegh } from '../ui/GuruMegh';
+import { TouchControls, isTouchDevice } from '../ui/TouchControls';
 import { askOracle } from '../telemetry/oracleClient';
+import { recordLocalScore } from '../telemetry/localLeaderboard';
 import { TelemetryService } from '../telemetry/TelemetryService';
 import { ConsoleSink, FaroSink, HttpBatchSink, MultiSink, type TelemetrySink } from '../telemetry/sinks';
 import { getFaro } from '../telemetry/faro';
@@ -57,6 +60,7 @@ export class HimalRajyaScene extends Phaser.Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: Record<'up' | 'left' | 'right' | 'attack', Phaser.Input.Keyboard.Key>;
   private attackAltKey?: Phaser.Input.Keyboard.Key;
+  private touch?: TouchControls;
   private hud!: Hud;
   private guru!: GuruMegh;
   private apiBase = '';
@@ -69,6 +73,7 @@ export class HimalRajyaScene extends Phaser.Scene {
   private clouds: Phaser.GameObjects.Container[] = [];
   private wisps: MistWisp[] = [];
   private eagles: Eagle[] = [];
+  private monkeys: Monkey[] = [];
   private rockfalls: Rockfall[] = [];
   private cuttables: CuttableObstacle[] = [];
   private checkpoints: Checkpoint[] = [];
@@ -106,13 +111,23 @@ export class HimalRajyaScene extends Phaser.Scene {
   }
 
   /** Receives continuation data across scene restarts (which level + carried score). */
-  init(data: { levelIndex?: number; cumulativeScore?: number; playerName?: string }): void {
+  init(data: {
+    levelIndex?: number;
+    cumulativeScore?: number;
+    playerName?: string;
+    attempt?: number;
+  }): void {
     const levelIndex = Math.max(1, Math.min(3, data.levelIndex ?? 1));
     this.level = levelByIndex(levelIndex);
     this.palette = this.level.palette;
     this.worldWidth = this.level.worldWidth;
     this.cumulativeScore = data.cumulativeScore ?? 0;
     this.playerName = data.playerName ?? '';
+    // `attempt` = how many times THIS journey has been (re)started from the Terai. It is
+    // carried across level advances (1→2→3 keep the same attempt) and only incremented
+    // when the player restarts a fresh journey after death or completion. Fed to the
+    // dashboard + Guru Megh so "attempts" is a truthful per-journey metric.
+    this.attempt = Math.max(1, data.attempt ?? 1);
     try {
       this.bestScore = Number(localStorage.getItem('cy_best_score') ?? '0') || 0;
     } catch {
@@ -136,6 +151,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.clouds = [];
     this.wisps = [];
     this.eagles = [];
+    this.monkeys = [];
     this.rockfalls = [];
     this.cuttables = [];
     this.checkpoints = [];
@@ -170,22 +186,26 @@ export class HimalRajyaScene extends Phaser.Scene {
     );
     this.physics.add.collider(this.yatri, platforms);
 
-    // Blooms are placed from the actual route surface, not hand-authored Y values. This
-    // prevents a platform from covering a lali gurans and makes every collectible visible.
-    // IMPORTANT: the group is created with allowGravity:false. Adding a sprite to a
-    // physics group re-applies the group's defaults, which would otherwise RE-ENABLE
-    // gravity and make every flower fall off the screen on spawn (the "falling" bug).
+    // Blooms are placed from the actual route surface (never a hand-authored Y), so a
+    // platform never covers one and every collectible is visible. The group uses
+    // allowGravity:false; since adding a sprite to a physics group re-applies the group's
+    // defaults, this keeps blooms from gaining gravity and falling on spawn.
     const blooms = this.physics.add.group({ allowGravity: false, immovable: true });
-    // Region-true flowers: rhododendron (lali gurans) grows in Nepal's HILLS & HIMALAYA;
-    // the subtropical Terai lowlands get warm marigold (sayapatri) blooms instead.
-    const bloomVariant = this.level.id === 'terai' ? 'marigold' : 'rhododendron';
+    // Region-true flora: Terai villages → cultivated marigold (sayapatri) garland flowers;
+    // the middle HILLS → rhododendron (lali gurans), Nepal's national flower; the high
+    // HIMAL → the blue Himalayan poppy, a genuine high-altitude alpine bloom.
+    const bloomVariant =
+      this.level.id === 'terai'
+        ? 'marigold'
+        : this.level.id === 'himal'
+          ? 'himalPoppy'
+          : 'rhododendron';
     for (const b of this.level.blooms) {
+      // Flowers GROW FROM THE GROUND: the stem base rests on the actual route surface
+      // (ground or platform top). The bloom sprite uses a bottom-centre origin, so passing
+      // the surface top places it sitting on the trail — collectible by simply walking past.
       const surfaceTop = this.surfaceTopAt(b.x, groundTop);
-      // Float the bloom clearly above the surface so it's fully visible in the play area
-      // and never clipped by the bottom controls bar. The bloom's tall collision box
-      // still reaches down to the walking player, so it's collectible on the ground path.
-      const visibleY = surfaceTop - 62;
-      blooms.add(new RhododendronBloom(this, b.x, visibleY, bloomVariant));
+      blooms.add(new RhododendronBloom(this, b.x, surfaceTop, bloomVariant));
     }
     this.physics.add.overlap(this.yatri, blooms, (_p, obj) =>
       this.collectBloom(obj as RhododendronBloom),
@@ -194,7 +214,12 @@ export class HimalRajyaScene extends Phaser.Scene {
     // Prayer bells (rare bonus, big points) — spread across the journey. Same
     // allowGravity:false group default so bells don't fall on spawn either.
     const bells = this.physics.add.group({ allowGravity: false, immovable: true });
-    for (const b of this.level.bells) bells.add(new PrayerBell(this, b.x, b.y));
+    // Bells REST ON THE SURFACE (ground or platform top), not floating in the sky. The
+    // sprite uses a bottom-centre origin, so we pass the surface top at the bell's x.
+    for (const b of this.level.bells) {
+      const surfaceTop = this.surfaceTopAt(b.x, groundTop);
+      bells.add(new PrayerBell(this, b.x, surfaceTop));
+    }
     this.physics.add.overlap(this.yatri, bells, (_p, obj) =>
       this.collectBell(obj as PrayerBell),
     );
@@ -238,19 +263,33 @@ export class HimalRajyaScene extends Phaser.Scene {
     const attackAlt = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.J);
     this.attackAltKey = attackAlt;
 
-    this.hud = new Hud(this);
+    // Capture the movement keys so arrows/space never scroll the embedding page (the
+    // game is meant to sit above a Grafana dashboard on one scrollable page). Keeps the
+    // canvas authoritative over directional + jump input while playing.
+    this.input.keyboard?.addCapture(['UP', 'DOWN', 'LEFT', 'RIGHT', 'SPACE', 'W', 'A', 'S', 'D']);
+
+    // Touch controls for phones/tablets (keyboard-only otherwise). Enable extra pointers
+    // so multi-touch (e.g. hold RIGHT + tap JUMP) works. Only drawn on touch devices.
+    if (isTouchDevice()) {
+      this.input.addPointer(2);
+      this.touch = new TouchControls(this);
+    }
+
+    this.hud = new Hud(this, `rhodo-bloom-${bloomVariant}`);
     this.hud.setScore(this.score);
     this.hud.setLives(this.yatri.getLives());
     this.hud.setCombo(0);
     this.hud.showIntro(2600, `Level ${this.level.index} — ${this.level.name}`, this.level.subtitle);
 
     this.statusText = this.add
-      .text(VIEW_WIDTH / 2, VIEW_HEIGHT * 0.4, '', {
+      .text(VIEW_WIDTH / 2, VIEW_HEIGHT * 0.34, '', {
         fontFamily: 'system-ui, sans-serif',
         fontSize: '22px',
-        color: '#10233b',
-        backgroundColor: 'rgba(255,255,255,0.92)',
-        padding: { x: 18, y: 14 },
+        color: '#eaf4ff',
+        backgroundColor: 'rgba(16,35,59,0.92)',
+        stroke: '#10233b',
+        strokeThickness: 2,
+        padding: { x: 20, y: 16 },
         align: 'center',
       })
       .setOrigin(0.5)
@@ -263,11 +302,12 @@ export class HimalRajyaScene extends Phaser.Scene {
     let service = this.registry.get('telemetry') as TelemetryService | undefined;
     const firstLoad = !service;
     if (!service) {
-      const sinks: TelemetrySink[] = [new ConsoleSink()];
-      // Send to the live backend when a public API URL is configured (Vite build-time).
       const env =
-        (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
-      const apiBase = env.VITE_API_BASE_URL;
+        (import.meta as unknown as { env?: Record<string, string | undefined | boolean> }).env ?? {};
+      // Log events to the console only in development; a public production build stays quiet.
+      const sinks: TelemetrySink[] = env.DEV ? [new ConsoleSink()] : [];
+      // Send to the live backend when a public API URL is configured (Vite build-time).
+      const apiBase = env.VITE_API_BASE_URL as string | undefined;
       if (apiBase) {
         // Use /ingest (not /event) — a neutral path that browser ad/privacy blockers
         // don't target, so telemetry reaches the backend for reviewers with blockers.
@@ -312,6 +352,7 @@ export class HimalRajyaScene extends Phaser.Scene {
         levelIndex: this.level.index,
         cumulativeScore: this.cumulativeScore,
         playerName: this.playerName,
+        attempt: this.attempt, // same journey, same level → keep attempt
       });
     });
     this.input.keyboard?.on('keydown-L', () => {
@@ -333,7 +374,7 @@ export class HimalRajyaScene extends Phaser.Scene {
 
     // Telemetry-ready lifecycle events.
     this.levelStartTime = this.time.now;
-    this.nextGuruEncouragementAt = this.time.now + 18000;
+    this.nextGuruEncouragementAt = this.time.now + 10000;
     if (firstLoad) this.telemetry.record({ type: 'game_started' });
     this.telemetry.record({ type: 'level_started', attempt: this.attempt });
 
@@ -349,7 +390,7 @@ export class HimalRajyaScene extends Phaser.Scene {
         sessionId: this.telemetry.getSessionId(),
         levelId: this.level.id,
         recentEvent: 'level_started',
-        attempts: this.level.index,
+        attempts: this.attempt,
       }),
       5000,
     );
@@ -364,6 +405,7 @@ export class HimalRajyaScene extends Phaser.Scene {
 
     for (const w of this.wisps) w.patrol();
     for (const e of this.eagles) e.patrol();
+    for (const m of this.monkeys) m.patrol();
     for (const r of this.rockfalls) r.fall(deltaMs);
 
     // Expire the combo if the player waited too long.
@@ -380,16 +422,18 @@ export class HimalRajyaScene extends Phaser.Scene {
       this.time.now >= this.nextGuruEncouragementAt
     ) {
       this.guruMoment('hint', 'journey_progress');
-      this.nextGuruEncouragementAt = this.time.now + 22000;
+      this.nextGuruEncouragementAt = this.time.now + 15000;
     }
 
     if (!this.levelComplete && !this.gameOver) {
       this.yatri.updateFromInput(this.cursors, deltaMs, {
-        left: this.wasd.left,
-        right: this.wasd.right,
-        up: this.wasd.up,
+        left: { isDown: Boolean(this.wasd.left.isDown || this.touch?.state.left) },
+        right: { isDown: Boolean(this.wasd.right.isDown || this.touch?.state.right) },
+        up: { isDown: Boolean(this.wasd.up.isDown || this.touch?.state.up) },
         attack: {
-          isDown: Boolean(this.wasd.attack.isDown || this.attackAltKey?.isDown),
+          isDown: Boolean(
+            this.wasd.attack.isDown || this.attackAltKey?.isDown || this.touch?.state.attack,
+          ),
         },
       });
       this.resolveKhukuriCuts();
@@ -462,10 +506,12 @@ export class HimalRajyaScene extends Phaser.Scene {
           break;
         }
         case 'monkey': {
-          // Reuse the MistWisp movement but tint it brown so it reads as a monkey.
-          const monkey = new MistWisp(this, h.x, h.y, h.range, h.speed);
-          monkey.setTint(0x8a5a2b);
-          this.wisps.push(monkey);
+          // A real macaque that paces the jungle trail (distinct art + a little hop). It
+          // belongs ON the ground: place its centre a half-sprite above the surface so it
+          // stands on the trail (the hop then lifts it slightly).
+          const surfaceTop = this.surfaceTopAt(h.x, groundTop);
+          const monkey = new Monkey(this, h.x, surfaceTop - 15, h.range, h.speed);
+          this.monkeys.push(monkey);
           this.physics.add.overlap(this.yatri, monkey, () => this.hitHazard('monkey'));
           break;
         }
@@ -477,10 +523,9 @@ export class HimalRajyaScene extends Phaser.Scene {
         }
         case 'rockfall': {
           // For rockfall the config `y` is the top spawn height and `speed` the fall speed.
-          // Stop/reset the rock at the HIGHEST surface under its column (a platform top
-          // if one sits beneath, else the ground) so it lands ON the surface instead of
-          // tunnelling THROUGH solid ledges — which previously let it strike a player who
-          // was standing safely on that platform.
+          // The rock stops/resets at the HIGHEST surface under its column (a platform top
+          // if one sits beneath, else the ground) so it lands ON the surface rather than
+          // passing through a solid ledge a player may be standing on.
           const landY = this.surfaceTopAt(h.x, groundTop);
           const rock = new Rockfall(this, h.x, h.y, h.speed, landY);
           this.rockfalls.push(rock);
@@ -559,7 +604,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.sound_?.play('bell');
     if (!this.saidFirstBell) {
       this.saidFirstBell = true;
-      this.guruMoment('hint', 'found_prayer_bell');
+      this.guruMoment('celebrate', 'found_prayer_bell');
     }
     this.telemetry.record({
       type: 'collectible_collected',
@@ -592,13 +637,15 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.hud.setBlooms(this.bloomsCollected, SCORING.garlandSize);
     // Only celebrate the moment the combo FIRST hits max (rising edge) — not every bloom
     // thereafter — so Guru Megh doesn't repeat and Bedrock spend stays low.
-    if (this.combo >= comboCap && !wasAtMax) this.guruMoment('hint', 'combo_streak');
+    if (this.combo >= comboCap && !wasAtMax) this.guruMoment('celebrate', 'combo_streak');
 
     // Floating "+points" feedback + a juicy burst at the bloom so the pickup clearly
     // registers. The label shows points and the combo when active.
     const label = multiplier > 1 ? `+${points}  (x${multiplier.toFixed(1)})` : `+${points}`;
     this.floatText(bloom.x, bloom.y, label, multiplier > 1 ? '#f3c623' : '#ffffff');
-    this.collectBurst(bloom.x, bloom.y, this.level.id === 'terai' ? 0xffa41e : 0xe0294a);
+    const burstColor =
+      this.level.id === 'terai' ? 0xffa41e : this.level.id === 'himal' ? 0x4f8fe0 : 0xe0294a;
+    this.collectBurst(bloom.x, bloom.y, burstColor);
     this.sound_?.play('collect');
 
     // GARLAND (mala) milestone: every `garlandSize` blooms completes a garland that grants
@@ -624,19 +671,30 @@ export class HimalRajyaScene extends Phaser.Scene {
       this.hud.setLives(this.yatri.getLives());
       this.statusBurst('Garland complete!  +1 \u2764  +' + SCORING.garlandBonusPoints);
     } else {
-      this.statusBurst('Garland complete!  +' + (SCORING.garlandBonusPoints + 100) + ' (lives full)');
-      this.score += 100;
+      this.statusBurst(
+        'Garland complete!  +' +
+          (SCORING.garlandBonusPoints + SCORING.garlandCapConvertPoints) +
+          ' (lives full)',
+      );
+      this.score += SCORING.garlandCapConvertPoints;
     }
     this.hud.setScore(this.score);
     this.cameras.main.flash(140, 224, 41, 74, false);
     this.sound_?.play('complete');
+    // A completed garland is a signature joyful beat — let Guru Megh cheer it.
+    this.guruMoment('celebrate', 'garland_completed');
   }
 
-  /** A brief centred status pop for milestone rewards (auto-hides). */
+  /** A brief centred status pop for milestone rewards (auto-hides). While it is up, Guru
+   * Megh docks to the mid-lower band so the celebratory line never overlaps the card. */
   private statusBurst(msg: string): void {
     this.statusText.setText(msg).setVisible(true);
+    this.guru.setDock('bottom');
     this.time.delayedCall(1300, () => {
-      if (!this.gameOver && !this.levelComplete) this.statusText.setVisible(false);
+      if (!this.gameOver && !this.levelComplete) {
+        this.statusText.setVisible(false);
+        this.guru.setDock('sky'); // back to the normal in-play position
+      }
     });
   }
 
@@ -648,7 +706,7 @@ export class HimalRajyaScene extends Phaser.Scene {
   }
 
   /**
-   * Eagle contact. If the Yatrini is descending onto the eagle's head (a stomp), the
+   * Eagle contact. If the Yatri is descending onto the eagle's head (a stomp), the
    * eagle is defeated and she bounces — this makes the high platform route WINNABLE while
    * still rewarding good timing. Any other contact (side/below) costs a life as before.
    */
@@ -656,7 +714,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     if (this.gameOver || this.levelComplete || eagle.isDead()) return;
     const body = this.yatri.body as Phaser.Physics.Arcade.Body;
     const eagleBody = eagle.body as Phaser.Physics.Arcade.Body;
-    // A stomp = the Yatrini is moving downward and her feet are near/above the eagle's top.
+    // A stomp = the Yatri is moving downward and her feet are near/above the eagle's top.
     const falling = body.velocity.y > 40;
     const feetAboveHead = body.bottom <= eagleBody.top + eagleBody.height * 0.6;
     const attacking = this.yatri.isAttacking();
@@ -676,6 +734,7 @@ export class HimalRajyaScene extends Phaser.Scene {
         );
         this.cameras.main.shake(80, 0.004);
         this.sound_?.play('stomp');
+        this.guruMoment('celebrate', 'eagle_defeated');
         this.telemetry.record({
           type: 'player_stomp',
           points: SCORING.bellPoints,
@@ -752,8 +811,13 @@ export class HimalRajyaScene extends Phaser.Scene {
       cp.worldX,
       cp.groundTopY - (PLAYER.gridRows * PLAYER.px) / 2,
     );
-    this.floatText(cp.worldX, cp.groundTopY - 140, 'Pennant planted!', '#f3c623');
-    this.guruMoment('hint', 'checkpoint_reached');
+    // Planting a pennant is a signature beat — reward it so it feels earned.
+    this.score += SCORING.checkpointPoints;
+    this.hud.setScore(this.score);
+    this.floatText(cp.worldX, cp.groundTopY - 140, `Pennant planted!  +${SCORING.checkpointPoints}`, '#f3c623');
+    this.cameras.main.flash(90, 243, 198, 35, false);
+    this.sound_?.play('bell');
+    this.guruMoment('celebrate', 'checkpoint_reached');
     this.telemetry.record({ type: 'flag_planted', checkpoint: cp.worldX });
   }
 
@@ -768,10 +832,16 @@ export class HimalRajyaScene extends Phaser.Scene {
     }
   }
 
-  /** Fire a spontaneous Guru Megh line, throttled locally to avoid chatter. */
-  private guruMoment(useCase: 'hint' | 'death' | 'completed', recentEvent: string): void {
+  /** Fire a spontaneous Guru Megh line, throttled locally to avoid chatter. Celebratory
+   * cheers use a shorter throttle so the big joyful beats (garland, bell, pennant, combo,
+   * eagle) are not swallowed by the general encouragement cadence. */
+  private guruMoment(
+    useCase: 'hint' | 'death' | 'completed' | 'celebrate',
+    recentEvent: string,
+  ): void {
     const now = this.time.now;
-    if (now - this.lastGuruAt < 12000) return; // at most one spontaneous line / 12s
+    const throttle = useCase === 'celebrate' ? 3500 : 8000;
+    if (now - this.lastGuruAt < throttle) return;
     this.lastGuruAt = now;
     this.guru.sayAsync(
       askOracle(this.apiBase, {
@@ -779,7 +849,7 @@ export class HimalRajyaScene extends Phaser.Scene {
         sessionId: this.telemetry.getSessionId(),
         levelId: this.level.id,
         recentEvent,
-        attempts: this.level.index,
+        attempts: this.attempt,
       }),
       4500,
     );
@@ -788,6 +858,10 @@ export class HimalRajyaScene extends Phaser.Scene {
   private completeLevel(): void {
     this.levelComplete = true;
     this.yatri.setVelocity(0, 0);
+    // Music belongs to ACTIVE play only: stop the loop on the win card. On levels 1–2 it
+    // restarts when the next level begins (scene.restart → kickAudio); on the finale it
+    // stays silent into the leaderboard. One-shot win SFX below are unaffected.
+    this.sound_?.stop();
     const timeMs = Math.round(this.time.now - this.levelStartTime);
 
     // Completion bonuses: fast finish + remaining lives + a per-level clear bonus.
@@ -821,22 +895,26 @@ export class HimalRajyaScene extends Phaser.Scene {
 
     // Telemetry: on levels 1–2 record the per-level completion (region-keyed, for the
     // dashboard). On the FINALE we do NOT fire a per-level event here — submitFinalScore()
-    // records the single authoritative 'himal_rajya' leaderboard entry below. This avoids
-    // two competing level_completed events for the same run (the double-score bug).
+    // records the single authoritative 'himal_rajya' leaderboard entry below, so the run
+    // is counted exactly once.
     if (!isFinale) {
       this.telemetry.record({ type: 'level_completed', score: runScore, timeMs });
     }
 
-    this.victoryCelebration();
+    if (isFinale) this.finaleCelebration();
+    else this.victoryCelebration();
 
     // Guru Megh gives a special victory blessing (Bedrock), aware of the level reached.
+    // Dock Guru Megh to the bottom so its blessing never overlaps the centred
+    // level-won / summit status card.
+    this.guru.setDock('bottom');
     this.guru.sayAsync(
       askOracle(this.apiBase, {
         useCase: 'completed',
         sessionId: this.telemetry.getSessionId(),
         levelId: this.level.id,
         recentEvent: 'level_completed',
-        attempts: this.level.index,
+        attempts: this.attempt,
       }),
       8000,
     );
@@ -867,13 +945,15 @@ export class HimalRajyaScene extends Phaser.Scene {
       this.submitFinalScore(timeMs);
       this.statusText
         .setText(
-          `🏆  LEVEL 3 WON — SUMMIT REACHED!  (${secs}s)\n\n` +
+          `🏔  SUMMIT REACHED — THE JOURNEY IS COMPLETE!  (${secs}s)\n\n` +
+            `You climbed from the Terai jungle to the roof of Himal Rajya.\n\n` +
             `Final score: ${this.cumulativeScore}\n` +
             (newBest ? '⭐ NEW BEST!\n' : `Best: ${this.bestScore}\n`) +
-            `\nOpening the leaderboard…`,
+            `\nThe prayer flags fly for you. Opening the leaderboard…`,
         )
         .setVisible(true);
-      this.time.delayedCall(700, () => void this.openLeaderboard());
+      // Hold on the summit so the finale lands as a climax, not a quick cut.
+      this.time.delayedCall(3200, () => void this.openLeaderboard());
     }
   }
 
@@ -896,6 +976,9 @@ export class HimalRajyaScene extends Phaser.Scene {
    * name field, so we don't extend it here).
    */
   private submitFinalScore(timeMs: number): void {
+    // Always record locally (zero-cost, no backend needed) so the Top Pilgrims board is a
+    // real, working feature showing this browser's past runs ranked against each other.
+    recordLocalScore(this.cumulativeScore, this.playerName || undefined, timeMs);
     this.telemetry.setLevel('himal_rajya');
     this.telemetry.record({
       type: 'level_completed',
@@ -912,13 +995,11 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.gameOver = true;
     this.yatri.setVelocity(0, 0);
 
-    // Music lifecycle: on game over, let the theme play on for ~3s (a moment to breathe),
-    // then STOP it. It stays stopped on the game-over screen and only starts again when
-    // the player restarts (scene.restart → create() → kickAudio). Guard against the case
-    // where the player restarts within those 3s (don't stop the freshly-restarted music).
-    this.time.delayedCall(3000, () => {
-      if (this.gameOver && this.scene.isActive()) this.sound_?.stop();
-    });
+    // Music lifecycle: the journey's music belongs to ACTIVE play only. The moment the
+    // game ends, stop it immediately — a silent game-over screen feels calmer and avoids
+    // music droning on. It restarts from the top when the player begins a new journey
+    // (scene.restart → create() → kickAudio).
+    this.sound_?.stop();
 
     this.telemetry.record({
       type: 'game_over',
@@ -940,6 +1021,9 @@ export class HimalRajyaScene extends Phaser.Scene {
       lahara: 'ensnared by a creeper vine',
     };
     const label = DEATH_LABELS[cause] ?? 'lost on the mountain path';
+    // Dock Guru Megh to the bottom so its death line never overlaps the centred
+    // game-over status card.
+    this.guru.setDock('bottom');
     this.guru.sayAsync(
       askOracle(this.apiBase, {
         useCase: 'death',
@@ -965,11 +1049,18 @@ export class HimalRajyaScene extends Phaser.Scene {
 
   /** After death: R restarts a fresh journey from level 1. */
   private armDeathRestart(): void {
-    this.input.keyboard?.once('keydown-R', () => {
-      this.attempt += 1;
+    const restart = (): void => {
       this.telemetry.record({ type: 'game_restarted', fromReason: 'died' });
-      this.scene.restart({ levelIndex: 1, cumulativeScore: 0, playerName: this.playerName });
-    });
+      this.scene.restart({
+        levelIndex: 1,
+        cumulativeScore: 0,
+        playerName: this.playerName,
+        attempt: this.attempt + 1, // a brand-new journey → next attempt
+      });
+    };
+    this.input.keyboard?.once('keydown-R', restart);
+    // Touch players: tap anywhere on the game-over card to begin a new journey.
+    this.input.once('pointerdown', restart);
   }
 
   /** After a win, N/Enter/Space advances immediately; the timer prevents a stalled run. */
@@ -978,13 +1069,20 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.input.keyboard?.once('keydown-N', advance);
     this.input.keyboard?.once('keydown-ENTER', advance);
     this.input.keyboard?.once('keydown-SPACE', advance);
+    // Touch players: tap anywhere on the win card to continue.
+    this.input.once('pointerdown', advance);
     this.time.delayedCall(8000, advance);
 
     this.input.keyboard?.once('keydown-R', () => {
       if (this.levelTransitionStarted) return;
       this.levelTransitionStarted = true;
       this.telemetry.record({ type: 'game_restarted', fromReason: 'completed' });
-      this.scene.restart({ levelIndex: 1, cumulativeScore: 0, playerName: this.playerName });
+      this.scene.restart({
+        levelIndex: 1,
+        cumulativeScore: 0,
+        playerName: this.playerName,
+        attempt: this.attempt + 1, // fresh journey from the Terai → next attempt
+      });
     });
   }
 
@@ -996,6 +1094,7 @@ export class HimalRajyaScene extends Phaser.Scene {
       levelIndex: this.level.index + 1,
       cumulativeScore: this.cumulativeScore,
       playerName: this.playerName,
+      attempt: this.attempt, // same journey → keep the attempt number
     });
   }
 
@@ -1024,6 +1123,65 @@ export class HimalRajyaScene extends Phaser.Scene {
         onComplete: () => dot.destroy(),
       });
     }
+  }
+
+  /**
+   * The CLIMACTIC summit finale — a bigger, longer sequence than a normal level win so
+   * the end of the whole journey feels earned: a brief slow-motion beat, a multi-wave
+   * fountain of prayer-flag-coloured petals rising from the base of the screen, repeated
+   * golden flashes, and a layered bell stinger. Prayer-flag colours in traditional order
+   * (blue, white, red, green, yellow). Screen-fixed so it reads over the status card.
+   */
+  private finaleCelebration(): void {
+    const cam = this.cameras.main;
+    const W = this.scale.width;
+    const H = this.scale.height;
+    const flagColors = [0x2b6cff, 0xffffff, 0xe23b3b, 0x2fae5a, 0xf3c623];
+
+    // A short slow-motion beat, then ease back to normal — a classic "big moment" cue.
+    this.time.timeScale = 0.55;
+    this.tweens.timeScale = 0.55;
+    this.time.delayedCall(90, () => {
+      this.time.timeScale = 1;
+      this.tweens.timeScale = 1;
+    });
+
+    // Stinger: the completion chord plus a rising run of bells.
+    this.sound_?.play('complete');
+    for (let b = 0; b < 4; b++) {
+      this.time.delayedCall(260 + b * 220, () => this.sound_?.play('bell'));
+    }
+
+    // Three waves of a rising petal fountain across the screen width.
+    const spawnWave = (count: number): void => {
+      for (let i = 0; i < count; i++) {
+        const x = Phaser.Math.Between(20, W - 20);
+        const color = flagColors[i % flagColors.length];
+        const petal = this.add
+          .circle(x, H + 10, Phaser.Math.Between(3, 7), color)
+          .setScrollFactor(0)
+          .setDepth(2600);
+        this.tweens.add({
+          targets: petal,
+          y: Phaser.Math.Between(40, H * 0.55),
+          x: x + Phaser.Math.Between(-70, 70),
+          alpha: 0,
+          scale: 0.3,
+          duration: Phaser.Math.Between(1300, 2200),
+          ease: 'Quad.out',
+          onComplete: () => petal.destroy(),
+        });
+      }
+    };
+    spawnWave(42);
+    this.time.delayedCall(500, () => spawnWave(42));
+    this.time.delayedCall(1050, () => spawnWave(36));
+
+    // Repeated gentle golden flashes building the crescendo (kept soft to avoid harsh
+    // full-brightness strobing).
+    cam.flash(260, 243, 193, 27, false);
+    this.time.delayedCall(700, () => cam.flash(220, 255, 240, 200, false));
+    this.time.delayedCall(1500, () => cam.flash(220, 243, 193, 27, false));
   }
 
   /** A small floating text that rises and fades — quick, readable feedback. */
@@ -1176,56 +1334,57 @@ export class HimalRajyaScene extends Phaser.Scene {
     }
   }
 
-  // ===================== HILLS backdrop (preserved from the original) =====================
+  // ===================== HILLS backdrop =====================
 
-  /** Level 2 — the classic valley: terraced hills, fishtail Himalaya, pagoda, stupa. */
+  /** Level 2 — the middle-hills valley, redrawn CLEAN + MINIMAL for high visibility:
+   *  a crisp snow-peak skyline, soft mist, bold readable rice terraces, and a few iconic
+   *  Nepali landmarks (pagoda, stupa, prayer wheels, rhododendron, prayer flags) spaced
+   *  with breathing room instead of dense clutter. Each element lives on its own parallax
+   *  layer so depth reads at a glance and nothing fights the gameplay plane. */
   private createHillsBackdrop(): void {
     this.createHimalaya();
     this.createHillsHaze();
     this.createHills();
+    this.createHillRhododendron();
     this.createPagoda();
     this.createPrayerFlags();
   }
 
   /**
-   * A soft warm haze band sitting between the cold grey peaks and the green valley. This
-   * is the classic mid-hills look — distant ridges fading into golden morning mist — and
-   * it stops the grey Himalaya from dominating, giving the level its own warm identity.
+   * A clean warm mist band between the cold peaks and the green valley, plus two smooth
+   * rolling ridge silhouettes. Kept intentionally simple (few, soft layers) so the scene
+   * reads as calm depth rather than busy noise.
    */
   private createHillsHaze(): void {
+    // One soft warm mist band sitting just under the peaks. A few feathered steps at the
+    // top edge avoid a hard horizontal line while staying clean.
     const haze = this.add.graphics().setScrollFactor(0.12).setDepth(-88);
-    const bandTop = WORLD_HEIGHT * 0.44;
-    const bandH = WORLD_HEIGHT * 0.26;
-    // Smooth gradient from warm peach (near the peaks) to a soft green (toward the valley).
-    const steps = 10;
-    for (let i = 0; i < steps; i++) {
-      const t = i / steps;
-      const y = bandTop + t * bandH;
-      // Interpolate peach → soft green.
-      const r = Math.round(0xff + t * (0xcf - 0xff));
-      const gch = Math.round(0xe3 + t * (0xe0 - 0xe3));
-      const b = Math.round(0xb0 + t * (0xa8 - 0xb0));
-      const color = (Math.max(0, r) << 16) | (gch << 8) | Math.max(0, b);
-      haze.fillStyle(color, 0.16);
-      haze.fillRect(0, y, this.worldWidth, bandH / steps + 1);
+    const bandTop = WORLD_HEIGHT * 0.46;
+    const bandH = WORLD_HEIGHT * 0.2;
+    for (let i = 0; i < 4; i++) {
+      haze.fillStyle(0xfff0d6, 0.16);
+      haze.fillRect(0, bandTop - i * 4, this.worldWidth, bandH + i * 4);
     }
-    // A couple of soft, hazy mid-distance ridge silhouettes (rolling green hills) that
-    // fade into the mist — reinforcing the layered middle-hills depth.
+    haze.fillStyle(0xffe6c0, 0.26);
+    haze.fillRect(0, bandTop + bandH * 0.5, this.worldWidth, bandH * 0.6);
+
+    // Two smooth rolling ridges, pale → deeper green, fading into the mist. Big smooth
+    // sine curves (no high-frequency jitter) so they read as distant hills at a glance.
     const ridge = this.add.graphics().setScrollFactor(0.22).setDepth(-86);
     const drawRidge = (yBase: number, amp: number, color: number, alpha: number) => {
       ridge.fillStyle(color, alpha);
       ridge.beginPath();
       ridge.moveTo(0, yBase);
-      for (let x = 0; x <= this.worldWidth; x += 40) {
-        ridge.lineTo(x, yBase - Math.sin(x / 220) * amp - Math.sin(x / 90) * (amp * 0.3));
+      for (let x = 0; x <= this.worldWidth; x += 48) {
+        ridge.lineTo(x, yBase - Math.sin(x / 260) * amp);
       }
       ridge.lineTo(this.worldWidth, WORLD_HEIGHT);
       ridge.lineTo(0, WORLD_HEIGHT);
       ridge.closePath();
       ridge.fillPath();
     };
-    drawRidge(WORLD_HEIGHT * 0.56, 26, 0x8fb68a, 0.5);
-    drawRidge(WORLD_HEIGHT * 0.62, 34, 0x74a26f, 0.6);
+    drawRidge(WORLD_HEIGHT * 0.58, 30, 0x9ec493, 0.55);
+    drawRidge(WORLD_HEIGHT * 0.66, 40, 0x79ad6e, 0.7);
   }
 
   private createHimalaya(): void {
@@ -1301,33 +1460,27 @@ export class HimalRajyaScene extends Phaser.Scene {
       g.fillPath();
     };
 
-    // Far range (pale, low, hazy).
+    // Far range (pale, low, hazy) — fewer, well-spaced peaks for a clean skyline.
     for (const p of [
-      { x: 220, w: 380, h: 250 },
-      { x: 720, w: 440, h: 290 },
-      { x: 1250, w: 400, h: 260 },
-      { x: 1780, w: 470, h: 300 },
-      { x: 2350, w: 420, h: 270 },
-      { x: 2950, w: 450, h: 300 },
-      { x: 3450, w: 400, h: 260 },
+      { x: 300, w: 440, h: 260 },
+      { x: 1500, w: 470, h: 290 },
+      { x: 2600, w: 450, h: 270 },
+      { x: 3400, w: 420, h: 260 },
     ]) {
       peak(far, p.x, p.w, p.h, peakFar, peakMid, snow, snowShade);
     }
-    // Mid range (taller, rockier giants).
+    // Mid range (taller, rockier giants) — spaced out so each peak reads distinctly.
     for (const p of [
-      { x: 420, w: 460, h: 380 },
-      { x: 1000, w: 540, h: 450 }, // a dominant giant (Everest-like)
-      { x: 1620, w: 470, h: 400 },
-      { x: 2200, w: 560, h: 460 },
-      { x: 2800, w: 480, h: 410 },
-      { x: 3350, w: 500, h: 430 },
+      { x: 650, w: 520, h: 420 },
+      { x: 1850, w: 500, h: 410 },
+      { x: 3050, w: 520, h: 430 },
     ]) {
       peak(mid, p.x, p.w, p.h, peakRock, peakShade, snow, snowShade);
     }
 
     // --- Machapuchare "Fishtail": Nepal's iconic TWIN-summit peak (the Matterhorn of
-    //     Nepal). Two sharp snow points close together resembling a fish's tail. ---
-    const fx = 1000;
+    //     Nepal). The single hero landmark of the skyline, centred for emphasis. ---
+    const fx = 1250;
     const fbaseY = baseY;
     const fh = 470;
     const apex = fbaseY - fh;
@@ -1369,37 +1522,67 @@ export class HimalRajyaScene extends Phaser.Scene {
     mid.fillPath();
   }
 
+  /**
+   * Bold, READABLE rice terraces. Instead of many thin noisy strips, each hill band is a
+   * solid green fill topped by a few clearly-separated terrace shelves — each shelf a
+   * bright grassy lip, a thin flooded-paddy water sheen, and a shadowed riser. The result
+   * reads instantly as Nepal's carved middle-hill paddies, clean and high-contrast.
+   */
   private createHills(): void {
     const g = this.add.graphics().setScrollFactor(0.4).setDepth(-80);
-    const hillFar = 0x8fc47f;
-    const hillMid = 0x5fa64f;
-    const hillNear = 0x3f8a37;
-    const terraceLip = 0xc3e59e;
-    const terraceLine = 0x2a5530;
-    const paddyWater = 0xbfe8d8; // flooded-paddy sheen that catches the morning light
-    // Stepped RICE TERRACES: each hill is a stack of gently-undulating shelves. Every
-    // shelf has a lit grassy top, a thin paddy-water glint, and a darker riser below —
-    // the carved, flooded-paddy look of the middle hills.
-    const terracedHill = (topY: number, height: number, base: number, lip: number, riser: number) => {
-      const steps = Math.floor(height / 13);
+    // One solid hill band + evenly-spaced terrace shelves across it. `stepH` is large
+    // (clear separation) and the shelf is drawn as three crisp stripes.
+    const band = (topY: number, height: number, fill: number, lip: number, riser: number) => {
+      // Solid green body first (no gaps → high visibility, no busy see-through stripes).
+      g.fillStyle(fill, 1);
+      g.fillRect(0, topY, this.worldWidth, height + 2);
+      const stepH = 30; // fewer, bolder, clearly-separated shelves (clean minimalist read)
+      const steps = Math.floor(height / stepH);
       for (let s = 0; s < steps; s++) {
-        const y = topY + s * 13;
-        g.fillStyle(base, 1);
-        g.fillRect(0, y, this.worldWidth, 13);
-        for (let x = 0; x < this.worldWidth; x += 8) {
-          const wob = Math.sin((x + s * 40) / 130) * 3;
-          g.fillStyle(lip, 0.9);
-          g.fillRect(x, y + wob, 8, 2); // grassy lit lip
-          g.fillStyle(paddyWater, 0.35);
-          g.fillRect(x, y + wob + 2, 8, 2); // thin water sheen on the shelf
-          g.fillStyle(riser, 0.55);
-          g.fillRect(x, y + wob + 4, 8, 3); // shadowed riser
+        const y = topY + s * stepH;
+        // A gentle whole-shelf undulation (one low-frequency sine) so terraces look carved
+        // along the slope without high-frequency jitter.
+        for (let x = 0; x < this.worldWidth; x += 28) {
+          const wob = Math.sin((x + s * 180) / 460) * 5;
+          g.fillStyle(lip, 1);
+          g.fillRect(x, y + wob, 28, 5); // bright grassy lit lip (the terrace edge)
+          g.fillStyle(riser, 0.5);
+          g.fillRect(x, y + wob + 5, 28, 4); // soft shadowed riser beneath it
         }
       }
     };
-    terracedHill(WORLD_HEIGHT * 0.5, 60, hillFar, terraceLip, terraceLine);
-    terracedHill(WORLD_HEIGHT * 0.6, 78, hillMid, terraceLip, terraceLine);
-    terracedHill(WORLD_HEIGHT * 0.73, 100, hillNear, terraceLip, terraceLine);
+    const terraceLip = 0xc3e59e;
+    const terraceLine = 0x2a5530;
+    band(WORLD_HEIGHT * 0.54, 56, 0x8fc47f, terraceLip, terraceLine); // far, pale
+    band(WORLD_HEIGHT * 0.66, 80, 0x5fa64f, terraceLip, terraceLine); // mid
+    band(WORLD_HEIGHT * 0.8, 120, 0x3f8a37, terraceLip, terraceLine); // near, deep green
+  }
+
+  /**
+   * A few rhododendron (lali gurans — the national flower) shrubs dotted along the mid
+   * hillside: simple red-blossom clusters on green, spaced generously. A clean, unmistakably
+   * Nepali colour accent that does not clutter the gameplay plane.
+   */
+  private createHillRhododendron(): void {
+    const g = this.add.graphics().setScrollFactor(0.4).setDepth(-79);
+    const baseY = WORLD_HEIGHT * 0.78;
+    const bush = (bx: number, by: number, scale: number) => {
+      // Leafy green mound.
+      g.fillStyle(0x2f7d4f, 1);
+      g.fillCircle(bx, by, 16 * scale);
+      g.fillCircle(bx - 12 * scale, by + 4 * scale, 12 * scale);
+      g.fillCircle(bx + 12 * scale, by + 4 * scale, 12 * scale);
+      // Red blossom clusters (lali gurans).
+      for (const [dx, dy] of [[-8, -6], [6, -8], [0, 2], [-12, 2], [12, 0]] as const) {
+        g.fillStyle(0xe0294a, 1);
+        g.fillCircle(bx + dx * scale, by + dy * scale, 4.5 * scale);
+        g.fillStyle(0xff6b86, 0.9);
+        g.fillCircle(bx + dx * scale - 1, by + dy * scale - 1, 1.8 * scale);
+      }
+    };
+    for (let x = 520, i = 0; x < this.worldWidth; x += 620, i++) {
+      bush(x, baseY + (i % 2) * 14, 0.9 + (i % 3) * 0.12);
+    }
   }
 
   private createPagoda(): void {

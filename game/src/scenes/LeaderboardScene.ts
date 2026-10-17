@@ -1,16 +1,18 @@
 /**
- * LeaderboardScene — the public "Top Pilgrims" board for Himal Rajya.
+ * LeaderboardScene — the "Top Pilgrims" board for Himal Rajya.
  *
- * Screen-fixed UI (no camera scroll): a dark-navy panel with a gold title, the top 10
- * scores fetched from the backend, and prompts to play again (SPACE) or return to the
- * menu (L). If the player just finished a run, their final score is highlighted.
+ * A dark-navy panel with a gold title, a ranked, scrollable list of scores, and prompts
+ * to play again (Enter/Space) or return to the menu (L/Esc). If the player just finished
+ * a run, their row is highlighted in gold.
  *
- * All fetching goes through leaderboardClient (6s timeout, never throws). The scene
- * shows a friendly message for empty/error states so it always renders something sane.
+ * Data source: the backend leaderboard when a public API URL is configured; otherwise a
+ * zero-cost local (browser-stored) leaderboard so the board always works offline. Both
+ * fetches are resilient — the scene always renders a sensible state.
  */
 import Phaser from 'phaser';
 import { VIEW_WIDTH, VIEW_HEIGHT } from '../config/constants';
 import { fetchLeaderboardStatus, type LeaderboardEntry } from '../telemetry/leaderboardClient';
+import { getLocalLeaderboard } from '../telemetry/localLeaderboard';
 
 interface LeaderboardInit {
   score?: number;
@@ -29,6 +31,11 @@ export class LeaderboardScene extends Phaser.Scene {
 
   /** Holds dynamic rows/messages so we can clear + re-render after the fetch. */
   private listContainer?: Phaser.GameObjects.Container;
+  /** Scrolling state for a long list. */
+  private scrollY = 0;
+  private scrollMin = 0; // most-negative offset (how far the list can move up)
+  /** Top y of the action-button strip; drag-to-scroll must not start over the buttons. */
+  private buttonBandTop = Number.POSITIVE_INFINITY;
 
   constructor() {
     super('Leaderboard');
@@ -112,32 +119,58 @@ export class LeaderboardScene extends Phaser.Scene {
     // Loading placeholder while the fetch is in flight.
     this.setMessage(listTop + 40, 'Summoning the pilgrims…');
 
-    // Clear actions: replay immediately, or return to the name/menu screen.
+    // Clear actions: replay immediately, or return to the name/menu screen. Each button
+    // is a label plus a dedicated transparent hit-rectangle at a high depth, so the click
+    // target is generous and nothing (list rows, mask) can sit above and swallow the tap.
     const promptY = panelY + panelH - 48;
-    const playButton = this.add
-      .text(VIEW_WIDTH / 2 - 130, promptY, '▶  PLAY AGAIN', {
-        fontFamily: FONT,
-        fontSize: '17px',
-        color: INK,
-        fontStyle: 'bold',
-        backgroundColor: 'rgba(46,204,113,0.28)',
-        padding: { x: 12, y: 7 },
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
-    const menuButton = this.add
-      .text(VIEW_WIDTH / 2 + 130, promptY, '☰  MENU', {
-        fontFamily: FONT,
-        fontSize: '17px',
-        color: INK,
-        fontStyle: 'bold',
-        backgroundColor: 'rgba(142,203,255,0.2)',
-        padding: { x: 12, y: 7 },
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
-    playButton.on('pointerdown', () => this.startNewJourney());
-    menuButton.on('pointerdown', () => this.goToMenu());
+    const BTN_W = 170;
+    const BTN_H = 40;
+
+    // Record the action-button strip so the list's drag-to-scroll handler can never
+    // start a drag (and thus swallow a tap) when the pointer is over a button.
+    this.buttonBandTop = promptY - BTN_H / 2;
+
+    const makeButton = (
+      cx: number,
+      label: string,
+      fill: number,
+      onClick: () => void,
+    ): void => {
+      // The hit-rectangle IS the button: it carries a visible fill, sits at the top
+      // depth, and is the interactive target — so nothing can render above and steal the
+      // tap, and the clickable area matches exactly what the player sees.
+      const btn = this.add
+        .rectangle(cx, promptY, BTN_W, BTN_H, fill, 0.9)
+        .setStrokeStyle(1.5, 0xf3c623, 0.5)
+        .setDepth(5000)
+        .setInteractive({ useHandCursor: true });
+
+      this.add
+        .text(cx, promptY, label, {
+          fontFamily: FONT,
+          fontSize: '17px',
+          color: INK,
+          fontStyle: 'bold',
+        })
+        .setOrigin(0.5)
+        .setDepth(5001); // label above the button fill, but it is NOT interactive
+
+      // Fire once per tap, on pointerup, and guard against any double-trigger. A hover
+      // tint gives clear affordance that the control is live.
+      let fired = false;
+      btn.on('pointerover', () => btn.setFillStyle(fill, 1));
+      btn.on('pointerout', () => btn.setFillStyle(fill, 0.9));
+      const activate = (p?: Phaser.Input.Pointer): void => {
+        p?.event?.stopPropagation();
+        if (fired) return;
+        fired = true;
+        onClick();
+      };
+      btn.on('pointerup', activate);
+    };
+
+    makeButton(VIEW_WIDTH / 2 - 110, '▶  PLAY AGAIN', 0x2e8b57, () => this.startNewJourney());
+    makeButton(VIEW_WIDTH / 2 + 110, '☰  MENU', 0x2f5f8f, () => this.goToMenu());
 
     const prompt = this.add
       .text(VIEW_WIDTH / 2, promptY + 26, 'Enter / Space: play again   ·   L / Esc: menu', {
@@ -146,6 +179,7 @@ export class LeaderboardScene extends Phaser.Scene {
         color: INK,
       })
       .setOrigin(0.5)
+      .setDepth(5000)
       .setAlpha(0.75);
     this.tweens.add({ targets: prompt, alpha: 0.35, duration: 900, yoyo: true, repeat: -1 });
 
@@ -156,7 +190,7 @@ export class LeaderboardScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-ESC', () => this.goToMenu());
 
     // Fetch after the screen is usable; loading never blocks the action buttons.
-    void this.loadAndRender(listTop + 40, colRankX, colNameX, colScoreX, panelX, panelW);
+    void this.loadAndRender(listTop + 40, colRankX, colNameX, colScoreX, panelX, panelW, panelY, panelH);
   }
 
   private startNewJourney(): void {
@@ -171,7 +205,7 @@ export class LeaderboardScene extends Phaser.Scene {
     this.scene.start('Menu', { playerName: this.playerName });
   }
 
-  /** Fetch the board and render the top 10 (or a friendly empty/error message). */
+  /** Fetch the board and render the ranked list (scrollable if long). */
   private async loadAndRender(
     top: number,
     colRankX: number,
@@ -179,6 +213,8 @@ export class LeaderboardScene extends Phaser.Scene {
     colScoreX: number,
     panelX: number,
     panelW: number,
+    panelY: number,
+    panelH: number,
   ): Promise<void> {
     const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
     const base = env.VITE_API_BASE_URL ?? '';
@@ -198,15 +234,17 @@ export class LeaderboardScene extends Phaser.Scene {
         status = retry.status;
       }
     }
+    // No backend (or it was unavailable) → use the local, browser-stored leaderboard so
+    // the board is always a real, working feature (your past runs persist and rank).
+    if (!base || status === 'unavailable') {
+      entries = getLocalLeaderboard();
+      status = entries.length > 0 ? 'ok' : 'empty';
+    }
 
     // Scene may have been stopped/restarted before the fetch resolved.
     if (!this.scene.isActive() || !this.listContainer) return;
     this.listContainer.removeAll(true);
 
-    if (!base || status === 'unavailable') {
-      this.setMessage(top, 'Leaderboard unavailable right now. Your journey is still safe.');
-      return;
-    }
     if (status === 'empty' || entries.length === 0) {
       this.setMessage(top, 'No completed journeys yet — be the first to reach the summit!');
       return;
@@ -216,7 +254,9 @@ export class LeaderboardScene extends Phaser.Scene {
     const highlightScore = this.justFinished ? this.score : null;
     let highlightedOnce = false;
 
-    entries.slice(0, 10).forEach((entry, i) => {
+    // Render EVERY entry into the container; the viewport is masked and scrollable so a
+    // long board doesn't overflow the panel.
+    entries.forEach((entry, i) => {
       const y = top + i * rowH;
       const isMine = highlightScore !== null && !highlightedOnce && entry.score === highlightScore;
       if (isMine) highlightedOnce = true;
@@ -258,6 +298,63 @@ export class LeaderboardScene extends Phaser.Scene {
 
       this.listContainer?.add([rankText, nameText, scoreText]);
     });
+
+    // --- Scrolling: mask the list to a viewport and allow wheel/drag when it overflows ---
+    const viewportTop = top - rowH / 2;
+    const viewportBottom = panelY + panelH - 70; // leave room for the action buttons
+    const viewportH = viewportBottom - viewportTop;
+    const contentH = entries.length * rowH;
+
+    this.scrollY = 0;
+    this.scrollMin = Math.min(0, viewportH - contentH); // negative when content is taller
+
+    // Geometry mask so rows outside the viewport are clipped (don't cover the buttons).
+    const maskG = this.make.graphics({ x: 0, y: 0 });
+    maskG.fillStyle(0xffffff);
+    maskG.fillRect(panelX + 16, viewportTop, panelW - 32, viewportH);
+    const mask = maskG.createGeometryMask();
+    this.listContainer.setMask(mask);
+
+    if (this.scrollMin < 0) {
+      // A subtle "scroll for more" hint + wheel/drag handlers.
+      const hint = this.add
+        .text(VIEW_WIDTH / 2, viewportBottom + 2, '▲ scroll / drag for more ▼', {
+          fontFamily: FONT,
+          fontSize: '12px',
+          color: GOLD,
+        })
+        .setOrigin(0.5, 0)
+        .setAlpha(0.7);
+      this.tweens.add({ targets: hint, alpha: 0.3, duration: 900, yoyo: true, repeat: -1 });
+
+      const applyScroll = (delta: number): void => {
+        this.scrollY = Phaser.Math.Clamp(this.scrollY - delta, this.scrollMin, 0);
+        this.listContainer?.setY(this.scrollY);
+      };
+      this.input.on(
+        'wheel',
+        (_p: unknown, _o: unknown, _dx: number, dy: number) => applyScroll(dy),
+      );
+      // Touch/pointer drag to scroll (phones + mouse).
+      let dragging = false;
+      let lastPointerY = 0;
+      this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
+        // Never begin a drag over the action buttons, or their taps get eaten.
+        if (p.y >= this.buttonBandTop) return;
+        if (p.y >= viewportTop && p.y <= viewportBottom) {
+          dragging = true;
+          lastPointerY = p.y;
+        }
+      });
+      this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
+        if (!dragging) return;
+        applyScroll(lastPointerY - p.y);
+        lastPointerY = p.y;
+      });
+      this.input.on('pointerup', () => {
+        dragging = false;
+      });
+    }
   }
 
   /** Clear the list container and show a single centered status message. */

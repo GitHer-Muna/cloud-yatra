@@ -3,9 +3,9 @@
  * a respawn point. Starts as a bare pole; when the Yatri reaches it, the double-pennant
  * unfurls and it glows. It's an overlap sensor (touch, not push). Original art in code.
  *
- * FIX: the sensor sprite previously used an EMPTY texture key ('') which makes Phaser
- * emit a "missing texture" green box + console warnings. We now generate a tiny 1x1
- * transparent texture once and use that as the sensor key — no warnings, nothing drawn.
+ * The physics sensor uses a tiny 1×1 transparent texture (generated once) so Phaser has
+ * a valid texture to attach the body to while nothing is actually drawn for it; the
+ * visible pole and pennant are separate graphics.
  */
 import Phaser from 'phaser';
 import { PALETTE } from '../config/constants';
@@ -93,7 +93,10 @@ export class Checkpoint extends Phaser.Physics.Arcade.Sprite {
   private redrawPennant(x: number, top: number, waveScale: number): void {
     const g = this.pennant;
     g.clear();
-    const drawPennant = (topY: number, height: number) => {
+    // Nepal's flag carries TWO DISTINCT white emblems: a crescent MOON on the upper
+    // pennon and a SUN on the lower, larger pennon. We draw them differently so the
+    // national symbol reads correctly (drawing the same dot on both would misrepresent it).
+    const drawPennant = (topY: number, height: number, emblem: 'moon' | 'sun') => {
       const width = 46 * waveScale;
       g.fillStyle(PALETTE.flagBlue, 1);
       g.beginPath();
@@ -109,12 +112,37 @@ export class Checkpoint extends Phaser.Physics.Arcade.Sprite {
       g.lineTo(x + 3, topY + height - 4);
       g.closePath();
       g.fillPath();
-      // Tiny white sun/moon emblem hints (abstract, non-photographic).
-      g.fillStyle(0xffffff, 0.9);
-      g.fillCircle(x + 10, topY + height * 0.5, 1.6);
+
+      const ex = x + 11; // emblem x (toward the hoist)
+      const ey = topY + height * 0.5; // emblem y (vertically centred on the pennon)
+      g.fillStyle(0xffffff, 0.95);
+      if (emblem === 'moon') {
+        // Crescent: a white disc with a crimson disc offset to carve the crescent.
+        g.fillCircle(ex, ey, 4);
+        g.fillStyle(PALETTE.flagCrimson, 1);
+        g.fillCircle(ex + 2, ey - 1, 3.2);
+        // A few straight rays below the crescent (the moon pennon's emblem has rays too).
+        g.fillStyle(0xffffff, 0.95);
+        g.fillTriangle(ex - 3, ey + 4, ex + 3, ey + 4, ex, ey + 7);
+      } else {
+        // Sun: a white disc with short triangular rays all around.
+        const R = 3.4;
+        for (let i = 0; i < 12; i++) {
+          const a = (i / 12) * Math.PI * 2;
+          g.fillTriangle(
+            ex + Math.cos(a) * R,
+            ey + Math.sin(a) * R,
+            ex + Math.cos(a + 0.26) * R,
+            ey + Math.sin(a + 0.26) * R,
+            ex + Math.cos(a + 0.13) * (R + 3),
+            ey + Math.sin(a + 0.13) * (R + 3),
+          );
+        }
+        g.fillCircle(ex, ey, R);
+      }
     };
-    drawPennant(top, 36);
-    drawPennant(top + 34, 42);
+    drawPennant(top, 36, 'moon'); // upper, smaller pennon → crescent moon
+    drawPennant(top + 34, 42, 'sun'); // lower, larger pennon → sun
   }
 
   /** Generate a 1x1 fully-transparent texture once, used for invisible sensors. */

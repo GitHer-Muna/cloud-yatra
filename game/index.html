@@ -2,21 +2,45 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Cloud Yatra — Himal Rajya</title>
+    <meta
+      name="description"
+      content="Cloud Yatra — an original 2D browser platformer. Play Yatri, a Nepali traveler climbing from the Terai jungle through the middle hills to the Himalayan summit. Collect blooms, plant the pennant, and heed Guru Megh the cloud-sage."
+    />
+    <meta name="theme-color" content="#0e1726" />
+
+    <!-- Social link preview (shared with reviewers) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Cloud Yatra — Himal Rajya" />
+    <meta
+      property="og:description"
+      content="Climb from the Terai jungle to the Himalayan summit as Yatri. An original Nepal-inspired platformer."
+    />
+    <meta name="twitter:card" content="summary" />
+
+    <!-- Original inline favicon: a prayer-flag/peak motif (no external asset). -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230e1726'/%3E%3Cpolygon points='4,24 12,10 20,24' fill='%23f3f8ff'/%3E%3Cpolygon points='14,24 22,8 30,24' fill='%23dfe9f5'/%3E%3Crect x='6' y='6' width='4' height='3' fill='%232b6cff'/%3E%3Crect x='11' y='6' width='4' height='3' fill='%23e23b3b'/%3E%3Crect x='16' y='6' width='4' height='3' fill='%232fae5a'/%3E%3Crect x='21' y='6' width='4' height='3' fill='%23f3c623'/%3E%3C/svg%3E"
+    />
+
     <style>
-      html, body {
+      html,
+      body {
         margin: 0;
+        min-height: 100%;
         background: #0e1726;
         font-family: system-ui, sans-serif;
         color: #e9f6ff;
       }
-      /* Fixed-height game container so a Grafana dashboard can later sit BELOW it
-         on the same page (see product brief). */
+      /* Responsive game container: keeps the 16:9 design ratio, scales DOWN on small or
+         short viewports, and never exceeds the visible area (dvh accounts for mobile
+         browser chrome). A Grafana dashboard can later sit BELOW it on the same page. */
       #game-root {
-        width: 100%;
-        max-width: 960px;
-        height: 540px;
+        width: min(960px, 100vw);
+        aspect-ratio: 16 / 9;
+        max-height: 100dvh;
         margin: 16px auto;
         display: flex;
         align-items: center;
@@ -25,12 +49,26 @@
       #game-root canvas {
         border-radius: 8px;
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        max-width: 100%;
+        max-height: 100%;
+      }
+      /* Lightweight loading placeholder shown until Phaser mounts its canvas. */
+      #cy-loading {
+        color: #8ecbff;
+        font-size: 15px;
+        letter-spacing: 0.04em;
+        opacity: 0.85;
       }
     </style>
   </head>
   <body>
-    <!-- Phaser injects its <canvas> here (see src/main.ts). -->
-    <div id="game-root"></div>
+    <!-- Phaser injects its <canvas> here (see src/main.ts), replacing the loader. -->
+    <div id="game-root" role="application" aria-label="Cloud Yatra — a Nepali platformer game. Use arrow keys or WASD to move, up or space to jump, F to use the khukuri. On touch devices, on-screen buttons appear.">
+      <div id="cy-loading">Loading Cloud Yatra…</div>
+    </div>
+    <noscript>
+      <p style="text-align: center">Cloud Yatra needs JavaScript enabled to play.</p>
+    </noscript>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

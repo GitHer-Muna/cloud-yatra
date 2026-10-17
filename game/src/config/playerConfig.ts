@@ -1,5 +1,5 @@
 /**
- * playerConfig.ts — tuning knobs for the Yatrini character (a Nepali woman traveler in
+ * playerConfig.ts — tuning knobs for the Yatri character (a Nepali traveler in
  * gunyu-cholo dress, carrying a khukuri). Plain data, no Phaser import.
  * Adjust how the character FEELS here without touching game logic.
  */
@@ -45,7 +45,7 @@ export const PLAYER = {
   },
 
   /**
-   * Culturally-accurate palette for the YATRINI — a Nepali woman traveler dressed in a
+   * Culturally-accurate palette for the YATRI — a Nepali traveler dressed in a
    * traditional GUNYU-CHOLO, carrying a KHUKURI.
    *  - cholo: a fitted blouse (deep Nepali red / crimson) with gold trim at the cuffs.
    *  - gunyu / patuki: a pleated wrap-skirt in warm saffron/orange with a green sari-style

@@ -18,7 +18,10 @@ export class Hud {
   private muteText?: Phaser.GameObjects.Text;
   private banner?: Phaser.GameObjects.Container;
 
-  constructor(private scene: Phaser.Scene) {
+  constructor(
+    private scene: Phaser.Scene,
+    private bloomTextureKey = 'rhodo-bloom-rhododendron',
+  ) {
     const style: Phaser.Types.GameObjects.Text.TextStyle = {
       fontFamily: 'system-ui, sans-serif',
       fontSize: '20px',
@@ -50,7 +53,7 @@ export class Hud {
       .text(
         w / 2,
         scene.scale.height - 10,
-        '← → / A D  RUN   •   ↑ / W / SPACE  JUMP   •   F / J  KHUKURI   •   REACH 🇳🇵 END TO WIN   •   R RESTART',
+        '← → / A D  RUN   •   ↑ / W / SPACE  JUMP   •   F / J  KHUKURI   •   REACH THE PENNANT TO WIN   •   R RESTART',
         {
           fontFamily: 'system-ui, sans-serif',
           fontSize: '13px',
@@ -71,8 +74,8 @@ export class Hud {
 
   /**
    * A live "what you're collecting and why" panel:
-   *   🌸 Rhododendron  N  (▢▢▢… progress to the next +1 ❤ garland)
-   *   🔔 Prayer Bell    M  (each = +1 ❤)
+   *   🌸 Blooms  N  (progress to the next +1 ❤ garland)
+   *   🔔 Bells   M  (each = +1 ❤)
    */
   private buildCollectiblePanel(scene: Phaser.Scene, w: number): void {
     const panelW = 250;
@@ -98,7 +101,7 @@ export class Hud {
       }
     };
 
-    iconFor('rhodo-bloom-rhododendron', '🌸', y + 17, 0.26);
+    iconFor(this.bloomTextureKey, '🌸', y + 17, 0.26);
     iconFor('prayer-bell', '🔔', y + 41, 0.26);
 
     const textStyle: Phaser.Types.GameObjects.Text.TextStyle = {

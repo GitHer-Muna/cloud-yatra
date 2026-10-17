@@ -1,5 +1,5 @@
 /**
- * CuttableObstacle.ts — an obstacle on the path that the Yatrini can slash apart with her
+ * CuttableObstacle.ts — an obstacle on the path that the Yatri can slash apart with her
  * KHUKURI. These are the natural tangles a hill traveler really clears with a khukuri:
  *   - 'thorn'  : a thicket of thorn bush (kaande jhaadi) in the Terai lowlands.
  *   - 'bamboo' : a clump of tall bamboo (baans) barring the hill trail.
@@ -9,7 +9,7 @@
  *
  * BEHAVIOUR:
  *   - It is a STATIC, immovable body sitting on the ground. Touching it (walking into it)
- *     costs the Yatrini a life — so it is a real obstacle, not just decoration.
+ *     costs the Yatri a life — so it is a real obstacle, not just decoration.
  *   - A khukuri swing whose hitbox overlaps it CUTS it: it plays a quick fall-apart tween,
  *     awards points, and is removed so the path opens. This is the core new verb.
  *
