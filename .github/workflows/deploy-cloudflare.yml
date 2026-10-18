@@ -45,6 +45,18 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Wrangler v4 no longer auto-creates the Pages project on first deploy, so ensure it
+      # exists. `continue-on-error` makes re-runs idempotent: if the project already exists
+      # the create fails harmlessly and the deploy proceeds. Static Pages projects are free.
+      - name: Ensure Pages project exists
+        continue-on-error: true
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: game
+          command: pages project create cloud-yatra --production-branch=main
+
       - name: Publish to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
