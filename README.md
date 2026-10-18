@@ -9,8 +9,9 @@ The game is the vehicle; the point is the full-stack observability pipeline it f
 (game → telemetry → dashboard → AI). Everything (art, audio) is original and drawn/synthesised
 in code — no external asset files.
 
-> **Live demo:** hosted as a static site on Amazon S3. Play with a keyboard on desktop, or
-> with the on-screen touch controls on a phone/tablet.
+> **Live demo:** [cloud-yatra.pages.dev](https://cloud-yatra.pages.dev) — a free static
+> site on Cloudflare Pages. Play with a keyboard on desktop, or with on-screen touch
+> controls on a phone/tablet (rotate to **landscape** for the best experience).
 
 ## Gameplay
 
@@ -28,11 +29,22 @@ in code — no external asset files.
 ## Tech
 
 - **Frontend:** [Phaser 3](https://phaser.io/) + TypeScript, built with [Vite](https://vitejs.dev/).
-- **Telemetry:** a small event schema + swappable sinks (console in dev, HTTP batch to the
-  backend, and Grafana Faro RUM) — see `src/telemetry/`.
-- **Backend (optional):** API Gateway → Lambda (Node 20) → DynamoDB, for the leaderboard,
-  telemetry ingest, and the Bedrock-backed Guru Megh. The game runs fully without it.
-- **Observability:** custom game events + AWS metrics + Faro RUM → Grafana Cloud.
+- **Hosting:** [Cloudflare Pages](https://pages.cloudflare.com/) — a 100% static build,
+  free with unlimited bandwidth, auto-deployed from `main` via GitHub Actions.
+- **Telemetry:** a small event schema + swappable sinks (console in dev, Grafana **Faro**
+  RUM in the browser, and an optional HTTP batch sink) — see `src/telemetry/`.
+- **Observability:** custom gameplay events + browser RUM (web vitals, errors, resource
+  timing) + sampled FPS → **Grafana Cloud** via Faro, powering a live dashboard.
+- **Backend (optional, not required):** the code also supports an API Gateway → Lambda →
+  DynamoDB backend for a shared leaderboard, telemetry ingest, and a Bedrock-backed Guru
+  Megh. The public demo runs **without** it (static-only), so it has no server cost.
+
+## Responsive & mobile
+
+- **Desktop:** keyboard — arrows/WASD to move, up/space to jump, `F`/`J` for the khukuri.
+- **Phone / tablet:** on-screen touch controls (D-pad + jump + khukuri) appear automatically
+  on touch devices; the game fills the screen. In portrait it shows a *rotate to landscape*
+  prompt, since this is a landscape platformer.
 
 ## Project layout
 
