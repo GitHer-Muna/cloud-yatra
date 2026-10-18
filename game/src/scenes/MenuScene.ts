@@ -40,12 +40,12 @@ export class MenuScene extends Phaser.Scene {
   private startRect = { cx: 0, y: 0, w: 250, h: 54 };
   private nameHit?: Phaser.GameObjects.Rectangle;
   /**
-   * On touch devices the name field is Phaser-drawn, so tapping it cannot open the OS
-   * keyboard. We overlay a real (visually hidden) <input> so a tap focuses it and the
-   * mobile keyboard appears; its value mirrors into `playerName`. Desktop stays on the
-   * existing click-to-type keyboard path and never creates this element.
+   * A real but visually hidden <input> overlaid on the Phaser-drawn name field, used on
+   * EVERY device. It makes keyboard entry robust (keystrokes go to a real DOM input, not
+   * dependent on the canvas holding focus) and accessible, and on touch it opens the OS
+   * keyboard. Its value mirrors into `playerName`; it is removed on scene shutdown.
    */
-  private mobileInput?: HTMLInputElement;
+  private hiddenInput?: HTMLInputElement;
 
   constructor() {
     super('Menu');
@@ -92,7 +92,7 @@ export class MenuScene extends Phaser.Scene {
     this.startBg = undefined;
     this.startLabel = undefined;
     this.startHint = undefined;
-    this.mobileInput = undefined;
+    this.hiddenInput = undefined;
 
     this.drawBackdrop();
     this.drawMascot();
@@ -104,8 +104,12 @@ export class MenuScene extends Phaser.Scene {
     this.drawCornerExtras();
     this.wireInput();
 
-    // Auto-focus the name field on load so it's immediately obvious where to type.
+    // Auto-focus the name field on load so it's immediately obvious where to type. Also
+    // create + focus the real hidden <input> on desktop so keystrokes land without needing
+    // a click first. On touch we DON'T auto-focus the input (that would pop the keyboard
+    // uninvited); the field's gold ring still shows and a tap opens the keyboard.
     this.setFocused(true);
+    if (!isTouchDevice()) this.ensureHiddenInput().focus();
   }
 
   // ---------------------------------------------------------------- backdrop
@@ -267,9 +271,10 @@ export class MenuScene extends Phaser.Scene {
     hit.on('pointerdown', (p: Phaser.Input.Pointer) => {
       p.event.stopPropagation();
       this.setFocused(true);
-      // On touch devices, focusing the hidden <input> within this tap gesture is what
-      // triggers the mobile OS keyboard to open.
-      if (isTouchDevice()) this.ensureMobileInput().focus();
+      // Focus the real hidden <input> on EVERY device. This makes keyboard entry robust:
+      // it no longer depends on the Phaser canvas holding keyboard focus (a real DOM input
+      // reliably receives keystrokes), and on touch devices the OS keyboard opens too.
+      this.ensureHiddenInput().focus();
     });
 
     this.redrawField();
@@ -284,11 +289,11 @@ export class MenuScene extends Phaser.Scene {
   /**
    * Lazily create (once) the hidden real <input> used on touch devices. It is positioned
    * over the Phaser name field and kept visually invisible, but remains a focusable form
-   * control so the mobile keyboard opens and emits input/key events. Its value is the
-   * single source of truth while present; we mirror it into `playerName`.
+   * control so keystrokes land reliably (and the mobile OS keyboard opens). Its value is
+   * the single source of truth while present; we mirror it into `playerName`.
    */
-  private ensureMobileInput(): HTMLInputElement {
-    if (this.mobileInput) return this.mobileInput;
+  private ensureHiddenInput(): HTMLInputElement {
+    if (this.hiddenInput) return this.hiddenInput;
     const input = document.createElement('input');
     input.type = 'text';
     input.inputMode = 'text';
@@ -333,17 +338,17 @@ export class MenuScene extends Phaser.Scene {
     input.addEventListener('blur', () => this.setFocused(false));
 
     document.body.appendChild(input);
-    this.mobileInput = input;
+    this.hiddenInput = input;
 
     // Remove the DOM element when the scene shuts down to avoid leaks across restarts.
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.destroyMobileInput());
-    this.events.once(Phaser.Scenes.Events.DESTROY, () => this.destroyMobileInput());
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.destroyHiddenInput());
+    this.events.once(Phaser.Scenes.Events.DESTROY, () => this.destroyHiddenInput());
     return input;
   }
 
-  private destroyMobileInput(): void {
-    this.mobileInput?.remove();
-    this.mobileInput = undefined;
+  private destroyHiddenInput(): void {
+    this.hiddenInput?.remove();
+    this.hiddenInput = undefined;
   }
 
   private redrawField(): void {
@@ -543,6 +548,9 @@ export class MenuScene extends Phaser.Scene {
         return;
       }
       if (!this.focused) return; // not focused → ignore typing entirely
+      // When the real hidden <input> is the active element it owns text editing (its
+      // `input` event updates playerName). Skip here to avoid appending each key twice.
+      if (this.hiddenInput && document.activeElement === this.hiddenInput) return;
       if (ev.key === 'Escape') {
         this.setFocused(false);
         return;
