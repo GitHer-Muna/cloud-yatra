@@ -14,6 +14,7 @@
 import Phaser from 'phaser';
 import { VIEW_WIDTH, VIEW_HEIGHT, PALETTE } from '../config/constants';
 import { Yatri } from '../entities/Yatri';
+import { isTouchDevice } from '../ui/TouchControls';
 
 const NAME_KEY = 'cy_player_name';
 const BEST_KEY = 'cy_best_score';
@@ -38,6 +39,13 @@ export class MenuScene extends Phaser.Scene {
   private startHint?: Phaser.GameObjects.Text;
   private startRect = { cx: 0, y: 0, w: 250, h: 54 };
   private nameHit?: Phaser.GameObjects.Rectangle;
+  /**
+   * On touch devices the name field is Phaser-drawn, so tapping it cannot open the OS
+   * keyboard. We overlay a real (visually hidden) <input> so a tap focuses it and the
+   * mobile keyboard appears; its value mirrors into `playerName`. Desktop stays on the
+   * existing click-to-type keyboard path and never creates this element.
+   */
+  private mobileInput?: HTMLInputElement;
 
   constructor() {
     super('Menu');
@@ -84,6 +92,7 @@ export class MenuScene extends Phaser.Scene {
     this.startBg = undefined;
     this.startLabel = undefined;
     this.startHint = undefined;
+    this.mobileInput = undefined;
 
     this.drawBackdrop();
     this.drawMascot();
@@ -258,6 +267,9 @@ export class MenuScene extends Phaser.Scene {
     hit.on('pointerdown', (p: Phaser.Input.Pointer) => {
       p.event.stopPropagation();
       this.setFocused(true);
+      // On touch devices, focusing the hidden <input> within this tap gesture is what
+      // triggers the mobile OS keyboard to open.
+      if (isTouchDevice()) this.ensureMobileInput().focus();
     });
 
     this.redrawField();
@@ -267,6 +279,71 @@ export class MenuScene extends Phaser.Scene {
   private setFocused(on: boolean): void {
     this.focused = on;
     this.redrawField();
+  }
+
+  /**
+   * Lazily create (once) the hidden real <input> used on touch devices. It is positioned
+   * over the Phaser name field and kept visually invisible, but remains a focusable form
+   * control so the mobile keyboard opens and emits input/key events. Its value is the
+   * single source of truth while present; we mirror it into `playerName`.
+   */
+  private ensureMobileInput(): HTMLInputElement {
+    if (this.mobileInput) return this.mobileInput;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.inputMode = 'text';
+    input.autocapitalize = 'words';
+    input.autocomplete = 'off';
+    input.maxLength = NAME_MAX;
+    input.value = this.playerName;
+    input.setAttribute('aria-label', 'Your name');
+    // Visually hidden but still focusable and able to summon the keyboard. We avoid
+    // display:none / visibility:hidden because those block focus on some browsers.
+    Object.assign(input.style, {
+      position: 'fixed',
+      left: '50%',
+      bottom: '0',
+      transform: 'translateX(-50%)',
+      width: '280px',
+      height: '1px',
+      opacity: '0',
+      border: '0',
+      padding: '0',
+      margin: '0',
+      zIndex: '-1',
+      background: 'transparent',
+      color: 'transparent',
+    } as Partial<CSSStyleDeclaration>);
+
+    input.addEventListener('input', () => {
+      // Keep only the characters the game allows, then mirror into the Phaser field.
+      const cleaned = input.value.replace(/[^A-Za-z0-9 ]/g, '').replace(/^ +/, '').slice(0, NAME_MAX);
+      if (cleaned !== input.value) input.value = cleaned;
+      this.playerName = cleaned;
+      this.saveName(this.playerName);
+      this.redrawField();
+    });
+    input.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') {
+        ev.preventDefault();
+        input.blur();
+        this.startGame();
+      }
+    });
+    input.addEventListener('blur', () => this.setFocused(false));
+
+    document.body.appendChild(input);
+    this.mobileInput = input;
+
+    // Remove the DOM element when the scene shuts down to avoid leaks across restarts.
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.destroyMobileInput());
+    this.events.once(Phaser.Scenes.Events.DESTROY, () => this.destroyMobileInput());
+    return input;
+  }
+
+  private destroyMobileInput(): void {
+    this.mobileInput?.remove();
+    this.mobileInput = undefined;
   }
 
   private redrawField(): void {
@@ -297,7 +374,11 @@ export class MenuScene extends Phaser.Scene {
     this.caret.setX(endX).setVisible(this.focused);
 
     this.fieldHintText.setText(
-      this.focused ? 'Type your name • Enter to start' : 'Click here to type your name',
+      this.focused
+        ? 'Type your name • Enter to start'
+        : isTouchDevice()
+          ? 'Tap here to type your name'
+          : 'Click here to type your name',
     );
 
     // A name change flips the START button between enabled/disabled.
@@ -393,8 +474,11 @@ export class MenuScene extends Phaser.Scene {
   private drawControlsLine(): void {
     const cx = VIEW_WIDTH / 2;
     const y = PANEL_BOTTOM - 34;
+    const controls = isTouchDevice()
+      ? 'Move  ◀ ▶   ·   Jump  ⤒   ·   Khukuri  🗡   (on-screen)'
+      : 'Move  ← →   ·   Jump  ↑   ·   Khukuri  F';
     this.add
-      .text(cx, y, 'Move  ← →   ·   Jump  ↑   ·   Khukuri  F', {
+      .text(cx, y, controls, {
         fontFamily: 'system-ui, sans-serif',
         fontSize: '14px',
         color: '#ffffff',
