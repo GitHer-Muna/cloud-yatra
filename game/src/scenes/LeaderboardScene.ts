@@ -11,8 +11,10 @@
  */
 import Phaser from 'phaser';
 import { VIEW_WIDTH, VIEW_HEIGHT } from '../config/constants';
-import { fetchLeaderboardStatus, type LeaderboardEntry } from '../telemetry/leaderboardClient';
-import { getLocalLeaderboard } from '../telemetry/localLeaderboard';
+import { fetchLeaderboardStatus } from '../telemetry/leaderboardClient';
+import { getRankedBoard, findRank, type RankedEntry } from '../telemetry/localLeaderboard';
+
+const TOP_N = 10;
 
 interface LeaderboardInit {
   score?: number;
@@ -31,11 +33,6 @@ export class LeaderboardScene extends Phaser.Scene {
 
   /** Holds dynamic rows/messages so we can clear + re-render after the fetch. */
   private listContainer?: Phaser.GameObjects.Container;
-  /** Scrolling state for a long list. */
-  private scrollY = 0;
-  private scrollMin = 0; // most-negative offset (how far the list can move up)
-  /** Top y of the action-button strip; drag-to-scroll must not start over the buttons. */
-  private buttonBandTop = Number.POSITIVE_INFINITY;
 
   constructor() {
     super('Leaderboard');
@@ -126,10 +123,6 @@ export class LeaderboardScene extends Phaser.Scene {
     const BTN_W = 170;
     const BTN_H = 40;
 
-    // Record the action-button strip so the list's drag-to-scroll handler can never
-    // start a drag (and thus swallow a tap) when the pointer is over a button.
-    this.buttonBandTop = promptY - BTN_H / 2;
-
     const makeButton = (
       cx: number,
       label: string,
@@ -190,7 +183,7 @@ export class LeaderboardScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-ESC', () => this.goToMenu());
 
     // Fetch after the screen is usable; loading never blocks the action buttons.
-    void this.loadAndRender(listTop + 40, colRankX, colNameX, colScoreX, panelX, panelW, panelY, panelH);
+    void this.loadAndRender(listTop + 40, panelX, panelW, panelY, panelH);
   }
 
   private startNewJourney(): void {
@@ -205,12 +198,9 @@ export class LeaderboardScene extends Phaser.Scene {
     this.scene.start('Menu', { playerName: this.playerName });
   }
 
-  /** Fetch the board and render the ranked list (scrollable if long). */
+  /** Fetch the board and render the Top-10 ranked list (+ the player's pinned rank). */
   private async loadAndRender(
     top: number,
-    colRankX: number,
-    colNameX: number,
-    colScoreX: number,
     panelX: number,
     panelW: number,
     panelY: number,
@@ -218,8 +208,12 @@ export class LeaderboardScene extends Phaser.Scene {
   ): Promise<void> {
     const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
     const base = env.VITE_API_BASE_URL ?? '';
-    let entries: LeaderboardEntry[] = [];
+    let entries: RankedEntry[] = [];
     let status: 'ok' | 'empty' | 'unavailable' = 'unavailable';
+    // The player's 1-based rank on the full board, and whether this run is a personal
+    // best — used to pin a "you are here" row and show an encouraging banner.
+    let myRank: number | null = null;
+    let myTotal = 0;
     if (base) {
       const result = await fetchLeaderboardStatus(base, 'himal_rajya');
       entries = result.entries;
@@ -234,11 +228,17 @@ export class LeaderboardScene extends Phaser.Scene {
         status = retry.status;
       }
     }
-    // No backend (or it was unavailable) → use the local, browser-stored leaderboard so
-    // the board is always a real, working feature (your past runs persist and rank).
+    // No backend (or it was unavailable) → use the local ranked board (your best-per-name
+    // scores merged with the built-in legends) so the board is always a real, competitive
+    // feature with aspirational targets to chase.
     if (!base || status === 'unavailable') {
-      entries = getLocalLeaderboard();
+      entries = getRankedBoard();
       status = entries.length > 0 ? 'ok' : 'empty';
+      if (this.justFinished) {
+        const r = findRank(this.score);
+        myRank = r.rank;
+        myTotal = r.total;
+      }
     }
 
     // Ensure we run AFTER create() has finished and the scene is RUNNING. On the
@@ -258,111 +258,131 @@ export class LeaderboardScene extends Phaser.Scene {
       return;
     }
 
-    const rowH = 30;
-    const highlightScore = this.justFinished ? this.score : null;
+    // --- Vertical layout budget ------------------------------------------------------
+    // Rows must fit between `top` and the action-button strip. When the player is outside
+    // the Top 10 we anchor a pinned "your rank" row just above the buttons and give the
+    // Top-10 list only the space above that, so nothing ever overlaps the buttons.
+    const buttonBandTop = panelY + panelH - 48 - 24; // promptY - ~half button height
+    const needPinnedRow = this.justFinished && myRank !== null && myRank > TOP_N;
+    const pinnedReserve = needPinnedRow ? 38 : 0; // separator + pinned row height
+    const visibleCount = Math.min(entries.length, TOP_N);
+    const listBottom = buttonBandTop - pinnedReserve - 4;
+    const available = listBottom - top;
+    const rowH = Math.max(18, Math.min(30, visibleCount > 0 ? available / visibleCount : 30));
+    const top10 = entries.slice(0, TOP_N);
+
+    // The player's own row is the one at their computed rank (local board). On the backend
+    // path we fall back to matching by score. Highlighting by rank index is precise even
+    // when two runs share a score.
+    const myIndex =
+      myRank !== null ? myRank - 1 : this.justFinished ? entries.findIndex((e) => e.score === this.score) : -1;
     let highlightedOnce = false;
 
-    // Render EVERY entry into the container; the viewport is masked and scrollable so a
-    // long board doesn't overflow the panel.
-    entries.forEach((entry, i) => {
+    top10.forEach((entry, i) => {
       const y = top + i * rowH;
-      const isMine = highlightScore !== null && !highlightedOnce && entry.score === highlightScore;
+      const isMine = this.justFinished && i === myIndex && !highlightedOnce;
       if (isMine) highlightedOnce = true;
-
-      if (isMine) {
-        const hl = this.add.graphics();
-        hl.fillStyle(0xf3c623, 0.16);
-        hl.fillRoundedRect(panelX + 24, y - rowH / 2 + 3, panelW - 48, rowH - 4, 6);
-        this.listContainer?.add(hl);
-      }
-
-      const rowColor = isMine ? GOLD : INK;
-      const name = entry.name && entry.name.trim() ? entry.name.trim() : 'Anonymous Yatri';
-
-      const rankText = this.add
-        .text(colRankX, y, String(i + 1), {
-          fontFamily: FONT,
-          fontSize: '18px',
-          color: rowColor,
-          fontStyle: isMine ? 'bold' : 'normal',
-        })
-        .setOrigin(0, 0.5);
-      const nameText = this.add
-        .text(colNameX, y, name, {
-          fontFamily: FONT,
-          fontSize: '18px',
-          color: rowColor,
-          fontStyle: isMine ? 'bold' : 'normal',
-        })
-        .setOrigin(0, 0.5);
-      const scoreText = this.add
-        .text(colScoreX, y, String(entry.score), {
-          fontFamily: FONT,
-          fontSize: '18px',
-          color: rowColor,
-          fontStyle: 'bold',
-        })
-        .setOrigin(1, 0.5);
-
-      this.listContainer?.add([rankText, nameText, scoreText]);
+      this.renderRow(entry, i + 1, y, rowH, isMine, panelX, panelW);
     });
 
-    // --- Scrolling: mask the list to a viewport and allow wheel/drag when it overflows ---
-    const viewportTop = top - rowH / 2;
-    const viewportBottom = panelY + panelH - 70; // leave room for the action buttons
-    const viewportH = viewportBottom - viewportTop;
-    const contentH = entries.length * rowH;
+    // If the player finished but their score didn't make the Top 10, pin a dedicated
+    // "you are here" row just above the buttons — the standard arcade pattern that always
+    // shows a player their position and the gap to climb, which drives "one more try".
+    if (needPinnedRow && myRank !== null) {
+      const pinnedY = buttonBandTop - 14;
+      const sepY = pinnedY - 18;
+      const sep = this.add.graphics();
+      sep.lineStyle(1, 0xf3c623, 0.35);
+      sep.beginPath();
+      sep.moveTo(panelX + 28, sepY);
+      sep.lineTo(panelX + panelW - 28, sepY);
+      sep.strokePath();
+      this.listContainer?.add(sep);
 
-    this.scrollY = 0;
-    this.scrollMin = Math.min(0, viewportH - contentH); // negative when content is taller
-
-    // Geometry mask so rows outside the viewport are clipped (don't cover the buttons).
-    const maskG = this.make.graphics({ x: 0, y: 0 });
-    maskG.fillStyle(0xffffff);
-    maskG.fillRect(panelX + 16, viewportTop, panelW - 32, viewportH);
-    const mask = maskG.createGeometryMask();
-    this.listContainer.setMask(mask);
-
-    if (this.scrollMin < 0) {
-      // A subtle "scroll for more" hint + wheel/drag handlers.
-      const hint = this.add
-        .text(VIEW_WIDTH / 2, viewportBottom + 2, '▲ scroll / drag for more ▼', {
-          fontFamily: FONT,
-          fontSize: '12px',
-          color: GOLD,
-        })
-        .setOrigin(0.5, 0)
-        .setAlpha(0.7);
-      this.tweens.add({ targets: hint, alpha: 0.3, duration: 900, yoyo: true, repeat: -1 });
-
-      const applyScroll = (delta: number): void => {
-        this.scrollY = Phaser.Math.Clamp(this.scrollY - delta, this.scrollMin, 0);
-        this.listContainer?.setY(this.scrollY);
+      const myRow: RankedEntry = {
+        score: this.score,
+        name: this.playerName ? `${this.playerName} (you)` : 'You',
       };
-      this.input.on(
-        'wheel',
-        (_p: unknown, _o: unknown, _dx: number, dy: number) => applyScroll(dy),
-      );
-      // Touch/pointer drag to scroll (phones + mouse).
-      let dragging = false;
-      let lastPointerY = 0;
-      this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
-        // Never begin a drag over the action buttons, or their taps get eaten.
-        if (p.y >= this.buttonBandTop) return;
-        if (p.y >= viewportTop && p.y <= viewportBottom) {
-          dragging = true;
-          lastPointerY = p.y;
-        }
-      });
-      this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
-        if (!dragging) return;
-        applyScroll(lastPointerY - p.y);
-        lastPointerY = p.y;
-      });
-      this.input.on('pointerup', () => {
-        dragging = false;
-      });
+      this.renderRow(myRow, myRank, pinnedY, 24, true, panelX, panelW);
     }
+
+    // Encouraging banner shown directly beneath the header (not at the panel bottom, which
+    // belongs to the buttons). Celebrates a Top-10 placement or shows the climb ahead.
+    if (this.justFinished && myRank !== null) {
+      let msg: string;
+      if (myRank === 1) msg = '👑 You top the board! Can anyone catch you?';
+      else if (myRank <= TOP_N) msg = `🏔 Top ${TOP_N}! You are #${myRank} of ${myTotal}.`;
+      else {
+        const ahead = entries[Math.max(0, myRank - 2)];
+        const gap = ahead ? ahead.score - this.score : 0;
+        msg = `#${myRank} of ${myTotal} — ${gap > 0 ? `${gap} pts` : 'a push'} to climb higher!`;
+      }
+      const banner = this.add
+        .text(VIEW_WIDTH / 2, top - 16, msg, {
+          fontFamily: FONT,
+          fontSize: '13px',
+          color: GOLD,
+          fontStyle: 'bold',
+          align: 'center',
+          wordWrap: { width: panelW - 80 },
+        })
+        .setOrigin(0.5)
+        .setDepth(4000);
+      this.tweens.add({ targets: banner, alpha: { from: 1, to: 0.55 }, duration: 1000, yoyo: true, repeat: -1 });
+    }
+  }
+
+  /** Render a single leaderboard row (rank, name, score) into the list container. */
+  private renderRow(
+    entry: RankedEntry,
+    rank: number,
+    y: number,
+    rowH: number,
+    isMine: boolean,
+    panelX: number,
+    panelW: number,
+  ): void {
+    const colRankX = panelX + 40;
+    const colNameX = panelX + 110;
+    const colScoreX = panelX + panelW - 40;
+
+    if (isMine) {
+      const hl = this.add.graphics();
+      hl.fillStyle(0xf3c623, 0.16);
+      hl.fillRoundedRect(panelX + 24, y - rowH / 2 + 3, panelW - 48, rowH - 4, 6);
+      this.listContainer?.add(hl);
+    }
+
+    // Legends (seeded aspirational scores) are dimmed slightly so real runs stand out.
+    const rowColor = isMine ? GOLD : entry.legend ? '#c9d6e6' : INK;
+    const name = entry.name && entry.name.trim() ? entry.name.trim() : 'Anonymous Yatri';
+
+    const rankText = this.add
+      .text(colRankX, y, String(rank), {
+        fontFamily: FONT,
+        fontSize: '18px',
+        color: rowColor,
+        fontStyle: isMine ? 'bold' : 'normal',
+      })
+      .setOrigin(0, 0.5);
+    const nameText = this.add
+      .text(colNameX, y, name, {
+        fontFamily: FONT,
+        fontSize: '18px',
+        color: rowColor,
+        fontStyle: isMine ? 'bold' : 'normal',
+      })
+      .setOrigin(0, 0.5);
+    const scoreText = this.add
+      .text(colScoreX, y, String(entry.score), {
+        fontFamily: FONT,
+        fontSize: '18px',
+        color: rowColor,
+        fontStyle: 'bold',
+      })
+      .setOrigin(1, 0.5);
+
+    this.listContainer?.add([rankText, nameText, scoreText]);
   }
 
   /** Clear the list container and show a single centered status message. */
