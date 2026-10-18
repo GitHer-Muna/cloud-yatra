@@ -241,8 +241,16 @@ export class LeaderboardScene extends Phaser.Scene {
       status = entries.length > 0 ? 'ok' : 'empty';
     }
 
-    // Scene may have been stopped/restarted before the fetch resolved.
-    if (!this.scene.isActive() || !this.listContainer) return;
+    // Ensure we run AFTER create() has finished and the scene is RUNNING. On the
+    // no-backend path there is no network await, so without this yield the code below
+    // would execute while the scene is still initializing — at which point
+    // scene.isActive() is false and the old guard bailed out, leaving the board stuck on
+    // "Summoning the pilgrims…". A single microtask hop guarantees the scene is live.
+    await Promise.resolve();
+
+    // Bail only if the scene was actually shut down/destroyed before we got here (e.g. the
+    // player left during a slow backend fetch). listContainer is destroyed on shutdown.
+    if (!this.listContainer || !this.listContainer.active || !this.sys.isActive()) return;
     this.listContainer.removeAll(true);
 
     if (status === 'empty' || entries.length === 0) {
