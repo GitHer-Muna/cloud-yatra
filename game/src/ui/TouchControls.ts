@@ -28,22 +28,23 @@ export function isTouchDevice(): boolean {
 
 export class TouchControls {
   readonly state: TouchState = { left: false, right: false, up: false, attack: false };
-  private buttons: Phaser.GameObjects.Container[] = [];
+  private buttons: Phaser.GameObjects.Arc[] = [];
 
   constructor(private scene: Phaser.Scene) {
     const W = scene.scale.width;
     const H = scene.scale.height;
-    const r = 34; // button radius
-    const pad = 20;
+    const r = 44; // button radius — larger = easier to hit with a thumb
+    const pad = 26;
+    const gap = 18; // space between the two D-pad buttons
     const baseY = H - r - pad;
 
-    // Bottom-left: LEFT / RIGHT.
+    // Bottom-left: LEFT / RIGHT (well separated so a thumb doesn't hit both).
     this.makeButton(pad + r, baseY, r, '◀', ['left']);
-    this.makeButton(pad + r * 3 + 8, baseY, r, '▶', ['right']);
+    this.makeButton(pad + r * 3 + gap, baseY, r, '▶', ['right']);
 
     // Bottom-right: KHUKURI (left of) + JUMP (far right, larger).
-    this.makeButton(W - pad - r * 3 - 8, baseY, r, '🗡', ['attack']);
-    this.makeButton(W - pad - r, baseY - 6, r + 6, '⤒', ['up']);
+    this.makeButton(W - pad - r * 3 - gap, baseY, r, '🗡', ['attack']);
+    this.makeButton(W - pad - r, baseY - 8, r + 8, '⤒', ['up']);
   }
 
   /** Draw a round, semi-transparent button that sets the given state keys while pressed. */
@@ -54,50 +55,44 @@ export class TouchControls {
     glyph: string,
     keys: Array<keyof TouchState>,
   ): void {
-    const g = this.scene.add.graphics();
-    g.fillStyle(0x10233b, 0.42);
-    g.fillCircle(0, 0, r);
-    g.lineStyle(2, 0xf3c623, 0.5);
-    g.strokeCircle(0, 0, r);
+    // Use an Arc (circle) GameObject as the interactive target. Unlike a Container with a
+    // manual geometry hit-area (which is error-prone and was NOT registering touches on
+    // mobile), an Arc has a correct built-in circular hit region, so presses always land.
+    const circle = this.scene.add
+      .circle(x, y, r, 0x10233b, 0.42)
+      .setStrokeStyle(2, 0xf3c623, 0.5)
+      .setScrollFactor(0)
+      .setDepth(2400)
+      .setInteractive({ useHandCursor: true });
 
-    const label = this.scene.add
-      .text(0, 0, glyph, { fontFamily: 'system-ui, sans-serif', fontSize: `${r}px`, color: '#eaf4ff' })
-      .setOrigin(0.5);
-
-    const container = this.scene.add.container(x, y, [g, label]);
-    container.setScrollFactor(0).setDepth(2400).setAlpha(0.9);
-    // A circular hit area so presses outside the circle don't trigger.
-    container.setSize(r * 2, r * 2);
-    container.setInteractive(
-      new Phaser.Geom.Circle(0, 0, r),
-      Phaser.Geom.Circle.Contains,
-    );
+    // Glyph label centered on the button (purely visual; not interactive).
+    this.scene.add
+      .text(x, y, glyph, {
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: `${r}px`,
+        color: '#eaf4ff',
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(2401);
 
     const press = (): void => {
       for (const k of keys) this.state[k] = true;
-      container.setAlpha(1);
-      g.clear();
-      g.fillStyle(0xf3c623, 0.5);
-      g.fillCircle(0, 0, r);
-      g.lineStyle(2, 0xffffff, 0.8);
-      g.strokeCircle(0, 0, r);
+      circle.setFillStyle(0xf3c623, 0.5).setStrokeStyle(2, 0xffffff, 0.8);
     };
     const release = (): void => {
       for (const k of keys) this.state[k] = false;
-      container.setAlpha(0.9);
-      g.clear();
-      g.fillStyle(0x10233b, 0.42);
-      g.fillCircle(0, 0, r);
-      g.lineStyle(2, 0xf3c623, 0.5);
-      g.strokeCircle(0, 0, r);
+      circle.setFillStyle(0x10233b, 0.42).setStrokeStyle(2, 0xf3c623, 0.5);
     };
 
-    container.on('pointerdown', press);
-    container.on('pointerup', release);
-    container.on('pointerout', release);
-    container.on('pointerupoutside', release);
+    // pointerdown/up/out/upoutside cover: press, lift, slide-off, and lift-outside — so a
+    // held direction never "sticks" if the finger slides away.
+    circle.on('pointerdown', press);
+    circle.on('pointerup', release);
+    circle.on('pointerout', release);
+    circle.on('pointerupoutside', release);
 
-    this.buttons.push(container);
+    this.buttons.push(circle);
   }
 
   /** Release every button (used on pause / scene teardown). */

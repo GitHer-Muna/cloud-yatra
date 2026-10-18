@@ -33,10 +33,15 @@
         background: #0e1726;
         font-family: system-ui, sans-serif;
         color: #e9f6ff;
+        /* Stop the browser from treating in-game touches as scroll/zoom gestures, which
+           otherwise "eat" the on-screen control presses on phones/tablets. */
+        touch-action: none;
+        overscroll-behavior: none;
+        -webkit-user-select: none;
+        user-select: none;
       }
-      /* Responsive game container: keeps the 16:9 design ratio, scales DOWN on small or
-         short viewports, and never exceeds the visible area (dvh accounts for mobile
-         browser chrome). A Grafana dashboard can later sit BELOW it on the same page. */
+      /* Desktop / large screens: a centered, bordered 16:9 stage (a Grafana dashboard can
+         later sit BELOW it on the same page). */
       #game-root {
         width: min(960px, 100vw);
         aspect-ratio: 16 / 9;
@@ -52,6 +57,51 @@
         max-width: 100%;
         max-height: 100%;
       }
+      /* Phones / small or coarse-pointer devices: fill the WHOLE viewport so the game is
+         big and the on-screen touch buttons are easy to reach. Phaser's Scale.FIT keeps
+         the 16:9 aspect inside this area (letterboxed top/bottom in portrait). This is the
+         fix for "the game is a tiny strip and I can't move" on mobile. */
+      @media (max-width: 820px), (pointer: coarse) {
+        body {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 100dvh;
+        }
+        #game-root {
+          width: 100vw;
+          height: 100dvh;
+          max-height: none;
+          margin: 0;
+          aspect-ratio: auto;
+        }
+        #game-root canvas {
+          border-radius: 0;
+          box-shadow: none;
+        }
+      }
+      /* Landscape nudge for small screens — platformers play best wide. Shown only in
+         portrait on phones, hidden the moment the device is rotated. */
+      #cy-rotate {
+        display: none;
+      }
+      @media (max-width: 820px) and (orientation: portrait), (pointer: coarse) and (orientation: portrait) {
+        #cy-rotate {
+          display: block;
+          position: fixed;
+          left: 50%;
+          bottom: 10px;
+          transform: translateX(-50%);
+          z-index: 50;
+          background: rgba(16, 35, 59, 0.85);
+          color: #eaf4ff;
+          font-size: 13px;
+          padding: 6px 12px;
+          border-radius: 999px;
+          pointer-events: none;
+          white-space: nowrap;
+        }
+      }
       /* Lightweight loading placeholder shown until Phaser mounts its canvas. */
       #cy-loading {
         color: #8ecbff;
@@ -66,6 +116,7 @@
     <div id="game-root" role="application" aria-label="Cloud Yatra — a Nepali platformer game. Use arrow keys or WASD to move, up or space to jump, F to use the khukuri. On touch devices, on-screen buttons appear.">
       <div id="cy-loading">Loading Cloud Yatra…</div>
     </div>
+    <div id="cy-rotate">↻ Rotate to landscape for the best experience</div>
     <noscript>
       <p style="text-align: center">Cloud Yatra needs JavaScript enabled to play.</p>
     </noscript>
