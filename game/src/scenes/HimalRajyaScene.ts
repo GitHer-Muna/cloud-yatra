@@ -372,6 +372,24 @@ export class HimalRajyaScene extends Phaser.Scene {
       this.hud.setFps(avgFps);
     });
 
+    // Low-volume session heartbeat (~15s) so the dashboard can count ACTIVE sessions and
+    // chart session duration accurately. One timer per browser session (stored on the
+    // registry) so scene restarts don't stack multiple heartbeats. ~4 events/min = tiny.
+    if (!this.registry.get('heartbeatStarted')) {
+      this.registry.set('heartbeatStarted', true);
+      const svc = this.telemetry;
+      const heartbeat = this.time.addEvent({
+        delay: 15000,
+        loop: true,
+        callback: () => svc.record({ type: 'session_heartbeat', uptimeMs: svc.sinceStartMs() }),
+      });
+      // Stop the timer if this scene is torn down and no other scene revives it.
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+        heartbeat.remove(false);
+        this.registry.set('heartbeatStarted', false);
+      });
+    }
+
     // Telemetry-ready lifecycle events.
     this.levelStartTime = this.time.now;
     this.nextGuruEncouragementAt = this.time.now + 10000;

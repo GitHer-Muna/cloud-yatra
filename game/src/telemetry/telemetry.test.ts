@@ -73,12 +73,23 @@ describe('TelemetryService', () => {
   });
 
   it('has exactly the documented event types', () => {
-    expect(EVENT_TYPES).toHaveLength(13);
+    expect(EVENT_TYPES).toHaveLength(14);
     expect(EVENT_TYPES).toContain('client_perf');
     expect(EVENT_TYPES).toContain('flag_planted');
     // Added with the khukuri-cut obstacle + eagle-stomp gameplay.
     expect(EVENT_TYPES).toContain('obstacle_cut');
     expect(EVENT_TYPES).toContain('player_stomp');
+    // Low-volume liveness ping for the live dashboard's active-sessions/duration panels.
+    expect(EVENT_TYPES).toContain('session_heartbeat');
+  });
+
+  it('records a valid session_heartbeat with a numeric uptime', () => {
+    const sink = new MemorySink();
+    const svc = new TelemetryService(sink, fixedClock());
+    const ok = svc.record({ type: 'session_heartbeat', uptimeMs: 15000 });
+    expect(ok).toBe(true);
+    expect(sink.events[0].type).toBe('session_heartbeat');
+    expect((sink.events[0].attrs as { uptimeMs: number }).uptimeMs).toBe(15000);
   });
 });
 

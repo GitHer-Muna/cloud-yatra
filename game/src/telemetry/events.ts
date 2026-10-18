@@ -25,6 +25,7 @@ export type EventType =
   | 'game_restarted'
   | 'obstacle_cut'
   | 'player_stomp'
+  | 'session_heartbeat' // low-volume liveness ping (~15s) for active-sessions/duration panels
   | 'client_perf'; // sampled FPS (not per-frame)
 
 /** Per-event attribute shapes (discriminated union on `type`). */
@@ -41,6 +42,7 @@ export type EventAttrs =
   | { type: 'game_restarted'; fromReason?: 'died' | 'completed' | 'manual' }
   | { type: 'obstacle_cut'; kind: string; total: number; points?: number }
   | { type: 'player_stomp'; total: number; points?: number }
+  | { type: 'session_heartbeat'; uptimeMs: number }
   | { type: 'client_perf'; avgFps: number };
 
 /** The common envelope wrapped around every event. */
@@ -71,6 +73,7 @@ export const EVENT_TYPES: readonly EventType[] = [
   'game_restarted',
   'obstacle_cut',
   'player_stomp',
+  'session_heartbeat',
   'client_perf',
 ];
 
