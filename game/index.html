@@ -35,7 +35,7 @@
         color: #e9f6ff;
         /* Stop the browser from treating in-game touches as scroll/zoom gestures, which
            otherwise "eat" the on-screen control presses on phones/tablets. */
-        touch-action: none;
+        touch-action: auto;
         overscroll-behavior: none;
         -webkit-user-select: none;
         user-select: none;
@@ -57,15 +57,73 @@
         max-width: 100%;
         max-height: 100%;
       }
-      /* Phones / small or coarse-pointer devices: fill the WHOLE viewport so the game is
-         big and the on-screen touch buttons are easy to reach. Phaser's Scale.FIT keeps
-         the 16:9 aspect inside this area (letterboxed top/bottom in portrait). This is the
-         fix for "the game is a tiny strip and I can't move" on mobile. */
+      #game-root {
+        touch-action: none;
+      }
+      #cy-observatory {
+        width: min(960px, calc(100vw - 32px));
+        margin: 0 auto 28px;
+        padding: 20px;
+        box-sizing: border-box;
+        border: 1px solid rgba(142, 203, 255, 0.24);
+        border-radius: 14px;
+        background: linear-gradient(145deg, rgba(17, 35, 59, 0.96), rgba(10, 20, 35, 0.96));
+        box-shadow: 0 14px 45px rgba(0, 0, 0, 0.28);
+        touch-action: auto;
+      }
+      #cy-observatory .cy-observatory-heading {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 14px;
+      }
+      #cy-observatory h2 {
+        margin: 0;
+        color: #f3c623;
+        font-size: clamp(19px, 3vw, 28px);
+      }
+      #cy-observatory p {
+        margin: 4px 0 0;
+        color: #b9d8ed;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      #cy-observatory .cy-observatory-status {
+        flex: 0 0 auto;
+        color: #63d8b4;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      #cy-observatory iframe {
+        display: block;
+        width: 100%;
+        height: min(760px, 78vh);
+        min-height: 520px;
+        border: 1px solid rgba(142, 203, 255, 0.2);
+        border-radius: 10px;
+        background: #0b1422;
+      }
+      #cy-observatory .cy-observatory-empty {
+        display: grid;
+        min-height: 180px;
+        place-items: center;
+        padding: 24px;
+        border: 1px dashed rgba(243, 198, 35, 0.45);
+        border-radius: 10px;
+        color: #d7e9f7;
+        text-align: center;
+      }
+      #cy-observatory code {
+        color: #f3c623;
+      }
+      /* Phones / small or coarse-pointer devices: the game still occupies the viewport,
+         then the observatory follows below it and can be scrolled to. */
       @media (max-width: 820px), (pointer: coarse) {
         body {
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          display: block;
           min-height: 100dvh;
         }
         #game-root {
@@ -153,6 +211,26 @@
     <div id="game-root" role="application" aria-label="Cloud Yatra — a Nepali platformer game. Use arrow keys or WASD to move, up or space to jump, F to use the khukuri. On touch devices, on-screen buttons appear.">
       <div id="cy-loading">Loading Cloud Yatra…</div>
     </div>
+    <section id="cy-observatory" aria-labelledby="cy-observatory-title">
+      <div class="cy-observatory-heading">
+        <div>
+          <h2 id="cy-observatory-title">Cloud Yatra · Live Observatory</h2>
+          <p>Real browser experience, gameplay rhythm, and Yatri’s journey — powered by Grafana Faro.</p>
+        </div>
+        <span class="cy-observatory-status" id="cy-observatory-status">waiting for dashboard</span>
+      </div>
+      <div class="cy-observatory-empty" id="cy-observatory-empty">
+        Add <code>VITE_GRAFANA_DASHBOARD_URL</code> to the public build to show the shared Grafana Cloud
+        dashboard here. The game and Faro telemetry remain fully functional without it.
+      </div>
+      <iframe
+        id="cy-observatory-frame"
+        title="Cloud Yatra Live Observatory Grafana dashboard"
+        loading="lazy"
+        allow="fullscreen"
+        hidden
+      ></iframe>
+    </section>
     <div id="cy-rotate" role="alert" aria-label="Please rotate your device to landscape to play Cloud Yatra">
       <div class="cy-phone" aria-hidden="true"></div>
       <h2>Rotate your device</h2>
@@ -161,6 +239,26 @@
     <noscript>
       <p style="text-align: center">Cloud Yatra needs JavaScript enabled to play.</p>
     </noscript>
+    <script type="module">
+      const dashboardUrl = import.meta.env.VITE_GRAFANA_DASHBOARD_URL;
+      const frame = document.getElementById('cy-observatory-frame');
+      const empty = document.getElementById('cy-observatory-empty');
+      const status = document.getElementById('cy-observatory-status');
+      if (dashboardUrl && frame && empty && status) {
+        try {
+          const url = new URL(dashboardUrl, window.location.href);
+          url.searchParams.set('theme', 'dark');
+          url.searchParams.set('kiosk', 'tv');
+          if (!url.searchParams.has('refresh')) url.searchParams.set('refresh', '5s');
+          frame.src = url.toString();
+          frame.hidden = false;
+          empty.hidden = true;
+          status.textContent = 'live dashboard configured';
+        } catch {
+          status.textContent = 'dashboard URL needs attention';
+        }
+      }
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

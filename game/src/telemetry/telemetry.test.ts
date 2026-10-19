@@ -73,9 +73,11 @@ describe('TelemetryService', () => {
   });
 
   it('has exactly the documented event types', () => {
-    expect(EVENT_TYPES).toHaveLength(14);
+    expect(EVENT_TYPES).toHaveLength(16);
     expect(EVENT_TYPES).toContain('client_perf');
     expect(EVENT_TYPES).toContain('flag_planted');
+    expect(EVENT_TYPES).toContain('journey_progress');
+    expect(EVENT_TYPES).toContain('guru_guidance');
     // Added with the khukuri-cut obstacle + eagle-stomp gameplay.
     expect(EVENT_TYPES).toContain('obstacle_cut');
     expect(EVENT_TYPES).toContain('player_stomp');
@@ -83,13 +85,19 @@ describe('TelemetryService', () => {
     expect(EVENT_TYPES).toContain('session_heartbeat');
   });
 
-  it('records a valid session_heartbeat with a numeric uptime', () => {
+  it('records a valid heartbeat snapshot with bounded gameplay state', () => {
     const sink = new MemorySink();
     const svc = new TelemetryService(sink, fixedClock());
-    const ok = svc.record({ type: 'session_heartbeat', uptimeMs: 15000 });
+    const ok = svc.record({
+      type: 'session_heartbeat',
+      uptimeMs: 15000,
+      score: 240,
+      progressPct: 40,
+      lives: 2,
+      combo: 3,
+    });
     expect(ok).toBe(true);
-    expect(sink.events[0].type).toBe('session_heartbeat');
-    expect((sink.events[0].attrs as { uptimeMs: number }).uptimeMs).toBe(15000);
+    expect(sink.events[0].attrs).toMatchObject({ score: 240, progressPct: 40, lives: 2, combo: 3 });
   });
 });
 

@@ -1,67 +1,57 @@
 {
   "title": "Cloud Yatra — Grafana Cloud alert recommendations",
-  "version": 1,
-  "note": "Use these as managed Grafana alert rules after mapping the Prometheus and Loki data sources. Keep evaluation windows and labels bounded.",
+  "version": 2,
+  "note": "Faro custom events and measurements arrive in Loki with kind=event or kind=measurement. Map the Faro app_id and tune thresholds after observing real play; keep labels bounded.",
   "rules": [
     {
-      "uid": "cy-api-5xx",
-      "title": "Cloud Yatra API 5xx",
-      "source": "Prometheus",
-      "query": "sum(rate(aws_apigateway_5xx_sum{}[5m]))",
-      "condition": "> 0",
-      "for": "5m",
-      "severity": "critical",
-      "purpose": "Detect server-side API failures affecting gameplay and telemetry."
-    },
-    {
-      "uid": "cy-api-latency",
-      "title": "Cloud Yatra API latency",
-      "source": "Prometheus",
-      "query": "max(aws_apigateway_latency_p99{})",
-      "condition": "> 1000",
-      "for": "10m",
-      "severity": "warning",
-      "purpose": "Detect slow API requests without paging on normal short spikes."
-    },
-    {
-      "uid": "cy-lambda-errors",
-      "title": "Cloud Yatra Lambda errors",
-      "source": "Prometheus",
-      "query": "sum(rate(aws_lambda_errors_sum{}[5m]))",
-      "condition": "> 0",
-      "for": "5m",
-      "severity": "critical",
-      "purpose": "Catch failing backend functions."
-    },
-    {
-      "uid": "cy-dynamodb-throttles",
-      "title": "Cloud Yatra DynamoDB throttles",
-      "source": "Prometheus",
-      "query": "sum(rate(aws_dynamodb_throttled_requests_sum{}[5m]))",
+      "uid": "cy-faro-exceptions",
+      "title": "Cloud Yatra browser exceptions",
+      "source": "Loki / Faro",
+      "query": "sum(count_over_time({kind=\"exception\", app_id=\"APP_ID\"}[5m]))",
       "condition": "> 0",
       "for": "5m",
       "severity": "warning",
-      "purpose": "Detect unexpected data-layer pressure."
+      "purpose": "Catch JavaScript errors affecting the playable experience."
     },
     {
-      "uid": "cy-client-fps",
-      "title": "Cloud Yatra low client FPS",
-      "source": "Prometheus/Faro measurement",
-      "query": "avg(client_perf_fps{})",
+      "uid": "cy-faro-low-fps",
+      "title": "Cloud Yatra low sampled FPS",
+      "source": "Loki / Faro measurement",
+      "query": "avg_over_time({kind=\"measurement\", app_id=\"APP_ID\"} | logfmt | type=\"game_client_perf\" | unwrap fps [10m])",
       "condition": "< 30",
       "for": "10m",
       "severity": "warning",
-      "purpose": "Detect a poor player experience without treating one slow device as an incident."
+      "purpose": "Detect a sustained poor browser experience without treating one slow device as an incident."
     },
     {
-      "uid": "cy-oracle-fallback",
-      "title": "Guru Megh Bedrock fallbacks",
-      "source": "Loki",
-      "query": "sum(count_over_time({service_name=~\".*cloud-yatra.*\"} | json | msg=~\"oracle_bedrock_failed|oracle_rate_limited|oracle_guard_failed\" [15m]))",
-      "condition": "> 3",
+      "uid": "cy-faro-lcp",
+      "title": "Cloud Yatra slow LCP",
+      "source": "Loki / Faro measurement",
+      "query": "quantile_over_time(0.95, {kind=\"measurement\", app_id=\"APP_ID\"} | logfmt | type=\"web-vitals\" | unwrap lcp [10m])",
+      "condition": "> 4000",
+      "for": "10m",
+      "severity": "warning",
+      "purpose": "Detect a meaningful real-user loading regression."
+    },
+    {
+      "uid": "cy-game-deaths",
+      "title": "Cloud Yatra death spike",
+      "source": "Loki / Faro event",
+      "query": "sum(rate({kind=\"event\", app_id=\"APP_ID\"} | logfmt | name=\"player_died\" [5m])) * 60",
+      "condition": "> 10",
       "for": "5m",
       "severity": "info",
-      "purpose": "Observe AI availability and cost-guard activity; fallback never blocks gameplay."
+      "purpose": "Spot a sudden gameplay difficulty or level-design problem."
+    },
+    {
+      "uid": "cy-game-no-pulse",
+      "title": "Cloud Yatra telemetry quiet",
+      "source": "Loki / Faro event",
+      "query": "sum(count_over_time({kind=\"event\", app_id=\"APP_ID\"} | logfmt | name=\"game_started\" [15m]))",
+      "condition": "< 1",
+      "for": "15m",
+      "severity": "info",
+      "purpose": "A demo-room reminder that no new game session has arrived; investigate only during an active presentation."
     }
   ]
 }

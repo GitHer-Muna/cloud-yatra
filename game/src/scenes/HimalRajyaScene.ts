@@ -97,9 +97,10 @@ export class HimalRajyaScene extends Phaser.Scene {
   private saidFirstBell = false;
   private cuttableHintShown = false;
 
-  // Combo state.
   private combo = 0;
   private comboExpiresAt = 0;
+  private progressPct = 0;
+  private progressBucket = -1;
 
   private statusText!: Phaser.GameObjects.Text;
   private telemetry!: TelemetryService;
@@ -142,6 +143,8 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.bellsCollected = 0;
     this.combo = 0;
     this.comboExpiresAt = 0;
+    this.progressPct = 0;
+    this.progressBucket = -1;
     this.levelComplete = false;
     this.gameOver = false;
     this.levelTransitionStarted = false;
@@ -381,7 +384,15 @@ export class HimalRajyaScene extends Phaser.Scene {
       const heartbeat = this.time.addEvent({
         delay: 15000,
         loop: true,
-        callback: () => svc.record({ type: 'session_heartbeat', uptimeMs: svc.sinceStartMs() }),
+        callback: () =>
+          svc.record({
+            type: 'session_heartbeat',
+            uptimeMs: svc.sinceStartMs(),
+            score: this.score,
+            progressPct: this.progressPct,
+            lives: this.yatri.getLives(),
+            combo: this.combo,
+          }),
       });
       // Stop the timer if this scene is torn down and no other scene revives it.
       this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -393,8 +404,14 @@ export class HimalRajyaScene extends Phaser.Scene {
     // Telemetry-ready lifecycle events.
     this.levelStartTime = this.time.now;
     this.nextGuruEncouragementAt = this.time.now + 10000;
-    if (firstLoad) this.telemetry.record({ type: 'game_started' });
+    if (firstLoad)
+      this.telemetry.record({
+        type: 'game_started',
+        inputMode: isTouchDevice() ? 'touch' : 'keyboard',
+        reducedMotion: Boolean(this.registry.get('reducedMotion')),
+      });
     this.telemetry.record({ type: 'level_started', attempt: this.attempt });
+    this.telemetry.record({ type: 'guru_guidance', useCase: 'welcome', trigger: 'level_started' });
 
     // Guru Megh (Bedrock-powered cloud-sage). Greets on start; narrates death/completion.
     const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
@@ -459,7 +476,18 @@ export class HimalRajyaScene extends Phaser.Scene {
       // Use the body's leading edge (same reference as the win trigger) so the bar reads
       // 100% exactly when the player reaches the END pennant — not a hair early.
       const leadX = (this.yatri.body as Phaser.Physics.Arcade.Body).right;
-      this.hud.setProgress((leadX - 120) / (this.endX - 120));
+      this.progressPct = Math.max(0, Math.min(100, ((leadX - 120) / (this.endX - 120)) * 100));
+      this.hud.setProgress(this.progressPct / 100);
+      const bucket = Math.min(10, Math.floor(this.progressPct / 10));
+      if (bucket !== this.progressBucket) {
+        this.progressBucket = bucket;
+        this.telemetry.record({
+          type: 'journey_progress',
+          progressPct: Math.round(this.progressPct),
+          bucket,
+          score: this.score,
+        });
+      }
     } else {
       this.yatri.setVelocityX(0);
     }
@@ -861,6 +889,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     const throttle = useCase === 'celebrate' ? 3500 : 8000;
     if (now - this.lastGuruAt < throttle) return;
     this.lastGuruAt = now;
+    this.telemetry.record({ type: 'guru_guidance', useCase, trigger: recentEvent });
     this.guru.sayAsync(
       askOracle(this.apiBase, {
         useCase,

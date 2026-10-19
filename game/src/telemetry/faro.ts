@@ -17,6 +17,8 @@
  * later by just supplying the public key.
  */
 import { initializeFaro, getWebInstrumentations, type Faro } from '@grafana/faro-web-sdk';
+import { TracingInstrumentation } from '@grafana/faro-web-tracing';
+import { ReplayInstrumentation } from '@grafana/faro-instrumentation-replay';
 
 let faro: Faro | null = null;
 
@@ -43,6 +45,22 @@ export function initFaro(appVersion = '0.1.0'): Faro | null {
     instrumentations: [
       // Errors, web vitals, session, console, etc. (Faro's standard web set.)
       ...getWebInstrumentations(),
+      // HTTP/XHR tracing adds browser request timing and trace correlation without any
+      // application backend. Faro's own collector URLs are excluded by the package.
+      new TracingInstrumentation(),
+      // Replay is intentionally sampled: canvas recording makes Phaser sessions useful,
+      // while 10% keeps trial volume bounded. All form/input text remains masked.
+      new ReplayInstrumentation({
+        maskAllInputs: true,
+        maskTextSelector: '.grafana-mask, [contenteditable]',
+        blockSelector: '.grafana-block, input[type="hidden"]',
+        ignoreSelector: '.grafana-ignore',
+        recordCanvas: true,
+        samplingRate: 0.1,
+        inactivityThresholdMs: 60000,
+        recordAfter: 'DOMContentLoaded',
+        sanitizeMetaHref: true,
+      }),
     ],
   });
   return faro;

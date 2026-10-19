@@ -182,15 +182,39 @@ export class FaroSink implements TelemetrySink {
     if (event.type === 'client_perf') {
       const attrs = event.attrs as { avgFps?: number };
       if (typeof attrs.avgFps === 'number') {
-        this.faro.api.pushMeasurement({
-          type: 'client_perf',
-          values: { fps: attrs.avgFps },
-        });
+        this.faro.api.pushMeasurement(
+          {
+            type: 'game_client_perf',
+            values: { fps: attrs.avgFps },
+          },
+          { context: { level: String(event.levelId ?? 'unknown') } },
+        );
       }
       return;
     }
 
-    // Flatten attrs to string values (Faro event attributes are strings).
+    if (event.type === 'session_heartbeat') {
+      const attrs = event.attrs as {
+        uptimeMs?: number;
+        score?: number;
+        progressPct?: number;
+        lives?: number;
+        combo?: number;
+      };
+      const values: Record<string, number> = {};
+      for (const [key, value] of Object.entries(attrs)) {
+        if (typeof value === 'number' && Number.isFinite(value)) values[key] = value;
+      }
+      if (Object.keys(values).length > 0) {
+        this.faro.api.pushMeasurement(
+          { type: 'game_state', values },
+          { context: { level: String(event.levelId ?? 'unknown') } },
+        );
+      }
+    }
+
+    // Flatten attrs to string values (Faro event attributes are strings). The `gameplay`
+    // domain lets Grafana distinguish our bounded game signals from Faro's auto-RUM events.
     const attributes: Record<string, string> = {
       level: String(event.levelId ?? ''),
       session: event.sessionId, // log/trace field via Faro session, NOT a metric label
@@ -198,6 +222,6 @@ export class FaroSink implements TelemetrySink {
     for (const [k, v] of Object.entries(event.attrs as Record<string, unknown>)) {
       attributes[k] = String(v);
     }
-    this.faro.api.pushEvent(event.type, attributes);
+    this.faro.api.pushEvent(event.type, attributes, 'gameplay');
   }
 }

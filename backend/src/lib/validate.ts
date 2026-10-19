@@ -20,6 +20,8 @@ export const EVENT_TYPES = [
   'game_restarted',
   'obstacle_cut',
   'player_stomp',
+  'journey_progress',
+  'guru_guidance',
   'client_perf',
 ] as const;
 

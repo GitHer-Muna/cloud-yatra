@@ -25,12 +25,14 @@ export type EventType =
   | 'game_restarted'
   | 'obstacle_cut'
   | 'player_stomp'
-  | 'session_heartbeat' // low-volume liveness ping (~15s) for active-sessions/duration panels
+  | 'journey_progress' // bucketed 10% progress changes, never per-frame
+  | 'guru_guidance'
+  | 'session_heartbeat' // low-volume liveness ping (~15s) for active sessions/duration panels
   | 'client_perf'; // sampled FPS (not per-frame)
 
 /** Per-event attribute shapes (discriminated union on `type`). */
 export type EventAttrs =
-  | { type: 'game_started'; loadMs?: number }
+  | { type: 'game_started'; loadMs?: number; inputMode?: 'touch' | 'keyboard'; reducedMotion?: boolean }
   | { type: 'game_over'; reason: 'died' | 'quit' | 'completed'; score: number; durationMs?: number }
   | { type: 'level_started'; attempt?: number }
   | { type: 'player_jump'; x: number; y: number }
@@ -42,7 +44,16 @@ export type EventAttrs =
   | { type: 'game_restarted'; fromReason?: 'died' | 'completed' | 'manual' }
   | { type: 'obstacle_cut'; kind: string; total: number; points?: number }
   | { type: 'player_stomp'; total: number; points?: number }
-  | { type: 'session_heartbeat'; uptimeMs: number }
+  | { type: 'journey_progress'; progressPct: number; bucket: number; score: number }
+  | { type: 'guru_guidance'; useCase: 'welcome' | 'hint' | 'death' | 'completed' | 'celebrate'; trigger: string }
+  | {
+      type: 'session_heartbeat';
+      uptimeMs: number;
+      score?: number;
+      progressPct?: number;
+      lives?: number;
+      combo?: number;
+    }
   | { type: 'client_perf'; avgFps: number };
 
 /** The common envelope wrapped around every event. */
@@ -73,6 +84,8 @@ export const EVENT_TYPES: readonly EventType[] = [
   'game_restarted',
   'obstacle_cut',
   'player_stomp',
+  'journey_progress',
+  'guru_guidance',
   'session_heartbeat',
   'client_perf',
 ];
