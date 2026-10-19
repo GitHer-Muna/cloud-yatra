@@ -1,5 +1,5 @@
 /**
- * localLeaderboard.ts — a zero-backend, zero-cost leaderboard kept in the browser's
+ * localLeaderboard.ts — a zero-server, zero-cost leaderboard kept in the browser's
  * localStorage. Used when no API is configured so the "Top Pilgrims" board is always a
  * real, working feature (your past runs persist and rank), not a dead "unavailable" box.
  *
@@ -12,10 +12,14 @@
  *   • getRankedBoard() merges your scores with the legends into one ranked list, and
  *     findRank() tells you where a given score sits — used to pin a "you are here" row.
  *
- * It stores scores for THIS browser only (localStorage). If/when a real backend is wired
- * up, the scene prefers the backend and this remains a graceful offline fallback.
+ * It stores scores for THIS browser only (localStorage), so the board is always available
+ * with no network dependency.
  */
-import type { LeaderboardEntry } from './leaderboardClient';
+export interface LeaderboardEntry {
+  score: number;
+  name?: string;
+  timeMs?: number;
+}
 
 const STORAGE_KEY = 'cy_local_leaderboard_v1';
 const MAX_ENTRIES = 50;

@@ -5,7 +5,7 @@
  *  - `sessionId`: random UUID created fresh each page load; memory only; not a person.
  *  - `playerId`: OPTIONAL, OFF by default; only exists if the player explicitly opts in
  *    (random anonymous value in localStorage). Never a real identity.
- *  - `correlationId`: random short id tying one client action to one backend request.
+ *  - `correlationId`: random short id available for local signal correlation.
  *
  * We never collect names, emails, IPs, or browser fingerprints here.
  */
@@ -21,7 +21,7 @@ export function createUuid(): string {
   });
 }
 
-/** A short random id (12 hex chars) for correlating a client action ↔ backend call. */
+/** A short random id (12 hex chars) for local signal correlation. */
 export function createCorrelationId(): string {
   return createUuid().replace(/-/g, '').slice(0, 12);
 }

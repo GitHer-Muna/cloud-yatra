@@ -42,10 +42,10 @@ import { Checkpoint } from '../entities/Checkpoint';
 import { Hud } from '../ui/Hud';
 import { GuruMegh } from '../ui/GuruMegh';
 import { TouchControls, isTouchDevice } from '../ui/TouchControls';
-import { askOracle } from '../telemetry/oracleClient';
+import { askGuru, type GuruResponse, type GuruUseCase } from '../telemetry/guruLines';
 import { recordLocalScore } from '../telemetry/localLeaderboard';
 import { TelemetryService } from '../telemetry/TelemetryService';
-import { ConsoleSink, FaroSink, HttpBatchSink, MultiSink, type TelemetrySink } from '../telemetry/sinks';
+import { ConsoleSink, FaroSink, MultiSink, type TelemetrySink } from '../telemetry/sinks';
 import { getFaro } from '../telemetry/faro';
 import { FpsSampler } from '../telemetry/FpsSampler';
 import { NepaliAudio } from '../audio/NepaliAudio';
@@ -63,7 +63,6 @@ export class HimalRajyaScene extends Phaser.Scene {
   private touch?: TouchControls;
   private hud!: Hud;
   private guru!: GuruMegh;
-  private apiBase = '';
 
   // The active level config + its palette (both come from levels.ts).
   private level!: LevelConfig;
@@ -309,13 +308,6 @@ export class HimalRajyaScene extends Phaser.Scene {
         (import.meta as unknown as { env?: Record<string, string | undefined | boolean> }).env ?? {};
       // Log events to the console only in development; a public production build stays quiet.
       const sinks: TelemetrySink[] = env.DEV ? [new ConsoleSink()] : [];
-      // Send to the live backend when a public API URL is configured (Vite build-time).
-      const apiBase = env.VITE_API_BASE_URL as string | undefined;
-      if (apiBase) {
-        // Use /ingest (not /event) — a neutral path that browser ad/privacy blockers
-        // don't target, so telemetry reaches the backend for reviewers with blockers.
-        sinks.push(new HttpBatchSink(`${apiBase.replace(/\/$/, '')}/ingest`));
-      }
       const faro = getFaro();
       if (faro) sinks.push(new FaroSink(faro));
       const sink: TelemetrySink = sinks.length === 1 ? sinks[0] : new MultiSink(sinks);
@@ -413,22 +405,9 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.telemetry.record({ type: 'level_started', attempt: this.attempt });
     this.telemetry.record({ type: 'guru_guidance', useCase: 'welcome', trigger: 'level_started' });
 
-    // Guru Megh (Bedrock-powered cloud-sage). Greets on start; narrates death/completion.
-    const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
-    this.apiBase = env.VITE_API_BASE_URL ?? '';
+    // Guru Megh is a built-in cloud-sage guide with no network dependency.
     this.guru = new GuruMegh(this);
-    // Guru Megh is optional guidance, but each region gets its own contextual welcome so
-    // the model's purpose is clear throughout Terai → Hills → High Himalaya.
-    this.guru.sayAsync(
-      askOracle(this.apiBase, {
-        useCase: 'welcome',
-        sessionId: this.telemetry.getSessionId(),
-        levelId: this.level.id,
-        recentEvent: 'level_started',
-        attempts: this.attempt,
-      }),
-      5000,
-    );
+    this.guru.sayAsync(this.guruLine('welcome', 'level_started'), 5000);
   }
 
   update(_time: number, deltaMs: number): void {
@@ -450,7 +429,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     }
 
     // Calm progress encouragement during long stretches, in addition to checkpoints and
-    // level transitions. The local throttle prevents chatter and keeps Bedrock spend low.
+    // level transitions. The local throttle prevents chatter and keeps telemetry volume low.
     if (
       !this.levelComplete &&
       !this.gameOver &&
@@ -682,7 +661,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.hud.setCombo(multiplier > 1 ? multiplier : 0);
     this.hud.setBlooms(this.bloomsCollected, SCORING.garlandSize);
     // Only celebrate the moment the combo FIRST hits max (rising edge) — not every bloom
-    // thereafter — so Guru Megh doesn't repeat and Bedrock spend stays low.
+    // thereafter — so Guru Megh doesn't repeat and telemetry volume stays low.
     if (this.combo >= comboCap && !wasAtMax) this.guruMoment('celebrate', 'combo_streak');
 
     // Floating "+points" feedback + a juicy burst at the bloom so the pickup clearly
@@ -878,6 +857,10 @@ export class HimalRajyaScene extends Phaser.Scene {
     }
   }
 
+  private guruLine(useCase: GuruUseCase, recentEvent: string): Promise<GuruResponse> {
+    return askGuru({ useCase, levelId: this.level.id, recentEvent });
+  }
+
   /** Fire a spontaneous Guru Megh line, throttled locally to avoid chatter. Celebratory
    * cheers use a shorter throttle so the big joyful beats (garland, bell, pennant, combo,
    * eagle) are not swallowed by the general encouragement cadence. */
@@ -890,16 +873,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     if (now - this.lastGuruAt < throttle) return;
     this.lastGuruAt = now;
     this.telemetry.record({ type: 'guru_guidance', useCase, trigger: recentEvent });
-    this.guru.sayAsync(
-      askOracle(this.apiBase, {
-        useCase,
-        sessionId: this.telemetry.getSessionId(),
-        levelId: this.level.id,
-        recentEvent,
-        attempts: this.attempt,
-      }),
-      4500,
-    );
+    this.guru.sayAsync(this.guruLine(useCase, recentEvent), 4500);
   }
 
   private completeLevel(): void {
@@ -951,20 +925,11 @@ export class HimalRajyaScene extends Phaser.Scene {
     if (isFinale) this.finaleCelebration();
     else this.victoryCelebration();
 
-    // Guru Megh gives a special victory blessing (Bedrock), aware of the level reached.
+    // Guru Megh gives a special built-in victory blessing for the level reached.
     // Dock Guru Megh to the bottom so its blessing never overlaps the centred
     // level-won / summit status card.
     this.guru.setDock('bottom');
-    this.guru.sayAsync(
-      askOracle(this.apiBase, {
-        useCase: 'completed',
-        sessionId: this.telemetry.getSessionId(),
-        levelId: this.level.id,
-        recentEvent: 'level_completed',
-        attempts: this.attempt,
-      }),
-      8000,
-    );
+    this.guru.sayAsync(this.guruLine('completed', 'level_completed'), 8000);
 
     const secs = (timeMs / 1000).toFixed(1);
 
@@ -1015,15 +980,10 @@ export class HimalRajyaScene extends Phaser.Scene {
   }
 
   /**
-   * Submit the final run to the backend leaderboard. The backend writes a leaderboard
-   * entry from any `level_completed` event (see backend/src/handlers/event.ts), keyed by
-   * the event's `levelId`. We set the telemetry level to the shared 'himal_rajya' board
-   * key and record a final `level_completed` carrying the cumulative score. The player
-   * name is collected/handled by the Leaderboard scene (the strict event contract has no
-   * name field, so we don't extend it here).
+   * Save the final run to the browser-local leaderboard and emit the final Faro event.
    */
   private submitFinalScore(timeMs: number): void {
-    // Always record locally (zero-cost, no backend needed) so the Top Pilgrims board is a
+    // Always record locally so the Top Pilgrims board is a
     // real, working feature showing this browser's past runs ranked against each other.
     recordLocalScore(this.cumulativeScore, this.playerName || undefined, timeMs);
     this.telemetry.setLevel('himal_rajya');
@@ -1071,17 +1031,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     // Dock Guru Megh to the bottom so its death line never overlaps the centred
     // game-over status card.
     this.guru.setDock('bottom');
-    this.guru.sayAsync(
-      askOracle(this.apiBase, {
-        useCase: 'death',
-        sessionId: this.telemetry.getSessionId(),
-        levelId: this.level.id,
-        recentEvent: 'player_died',
-        deathReason: cause,
-        attempts: this.attempt,
-      }),
-      6000,
-    );
+    this.guru.sayAsync(this.guruLine('death', 'player_died'), 6000);
     this.statusText
       .setText(
         `The journey pauses —\n${label}.\n\n` +

@@ -39,7 +39,7 @@
       }
     ]
   },
-  "description": "Cloud Yatra \u2014 Live Observatory. A dark, presentation-ready Faro story: browser health \u2192 game performance \u2192 Yatri's journey \u2192 engagement. Cloudflare-only, zero-AWS, and driven by real browser telemetry.",
+  "description": "Cloud Yatra \u2014 Live Observatory. A dark, presentation-ready Faro story: browser health \u2192 game performance \u2192 Yatri's journey \u2192 engagement. Cloudflare-only, zero server dependency, and driven by real browser telemetry.",
   "editable": true,
   "graphTooltip": 2,
   "liveNow": true,
@@ -264,7 +264,7 @@
       "id": 4,
       "options": {
         "mode": "markdown",
-        "content": "**The game is the workload.** Play Cloud Yatra and watch the signals move. Faro auto-instrumentation supplies RUM, while the `gameplay` domain supplies the story: jumps, blooms, pennants, deaths, progress buckets, and Guru Megh moments.\n\nNo AWS panels are hidden here: this project is intentionally **Cloudflare Pages + Grafana Faro only**."
+        "content": "**The game is the workload.** Play Cloud Yatra and watch the signals move. Faro auto-instrumentation supplies RUM, while the `gameplay` domain supplies the story: jumps, blooms, pennants, deaths, progress buckets, and Guru Megh moments.\n\nThis project is intentionally **Cloudflare Pages + Grafana Faro only**."
       },
       "transparent": true,
       "fieldConfig": {
@@ -933,7 +933,7 @@
       "id": 60,
       "options": {
         "mode": "markdown",
-        "content": "## Cloud Yatra\n\n**Browser game \u2192 Grafana Faro \u2192 Grafana Cloud Frontend Observability**\n\nThis dashboard intentionally shows real frontend and gameplay telemetry only. Cloudflare Pages hosts static assets; there is no AWS, Lambda, database, Bedrock, or fabricated server health here.\n\n**Useful next click:** open Grafana's Frontend Observability app for session replay, error details, browser/device breakdown, resource timing, and drill-down from a metric to the originating session."
+        "content": "## Cloud Yatra\n\n**Browser game \u2192 Grafana Faro \u2192 Grafana Cloud Frontend Observability**\n\nThis dashboard intentionally shows real frontend and gameplay telemetry only. Cloudflare Pages hosts static assets; there is no fabricated server health here.\n\n**Useful next click:** open Grafana's Frontend Observability app for session replay, error details, browser/device breakdown, resource timing, and drill-down from a metric to the originating session."
       },
       "transparent": true,
       "fieldConfig": {

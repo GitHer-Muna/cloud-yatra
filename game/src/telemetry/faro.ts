@@ -46,7 +46,7 @@ export function initFaro(appVersion = '0.1.0'): Faro | null {
       // Errors, web vitals, session, console, etc. (Faro's standard web set.)
       ...getWebInstrumentations(),
       // HTTP/XHR tracing adds browser request timing and trace correlation without any
-      // application backend. Faro's own collector URLs are excluded by the package.
+      // external application endpoint. Faro's own collector URLs are excluded by the package.
       new TracingInstrumentation(),
       // Replay is intentionally sampled: canvas recording makes Phaser sessions useful,
       // while 10% keeps trial volume bounded. All form/input text remains masked.

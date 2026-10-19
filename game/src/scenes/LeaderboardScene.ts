@@ -5,13 +5,11 @@
  * to play again (Enter/Space) or return to the menu (L/Esc). If the player just finished
  * a run, their row is highlighted in gold.
  *
- * Data source: the backend leaderboard when a public API URL is configured; otherwise a
- * zero-cost local (browser-stored) leaderboard so the board always works offline. Both
- * fetches are resilient — the scene always renders a sensible state.
+ * Data source: a zero-cost local (browser-stored) leaderboard so the board always works
+ * offline and never depends on a server.
  */
 import Phaser from 'phaser';
 import { VIEW_WIDTH, VIEW_HEIGHT } from '../config/constants';
-import { fetchLeaderboardStatus } from '../telemetry/leaderboardClient';
 import { getRankedBoard, findRank, type RankedEntry } from '../telemetry/localLeaderboard';
 
 const TOP_N = 10;
@@ -206,50 +204,27 @@ export class LeaderboardScene extends Phaser.Scene {
     panelY: number,
     panelH: number,
   ): Promise<void> {
-    const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
-    const base = env.VITE_API_BASE_URL ?? '';
-    let entries: RankedEntry[] = [];
-    let status: 'ok' | 'empty' | 'unavailable' = 'unavailable';
-    // The player's 1-based rank on the full board, and whether this run is a personal
-    // best — used to pin a "you are here" row and show an encouraging banner.
+    // Cloud Yatra is intentionally browser-local: the board is always available without
+    // an API, database, or remote leaderboard service.
+    let entries: RankedEntry[] = getRankedBoard();
+    const status: 'ok' | 'empty' | 'unavailable' = entries.length > 0 ? 'ok' : 'empty';
     let myRank: number | null = null;
     let myTotal = 0;
-    if (base) {
-      const result = await fetchLeaderboardStatus(base, 'himal_rajya');
-      entries = result.entries;
-      status = result.status;
-      // The final telemetry flush normally wins the race, but one short retry keeps a
-      // newly completed pilgrim visible if DynamoDB/API propagation is slightly delayed.
-      const hasOwnScore = entries.some((entry) => entry.score === this.score);
-      if (this.justFinished && (status !== 'ok' || !hasOwnScore)) {
-        await new Promise((resolve) => setTimeout(resolve, 350));
-        const retry = await fetchLeaderboardStatus(base, 'himal_rajya');
-        entries = retry.entries;
-        status = retry.status;
-      }
-    }
-    // No backend (or it was unavailable) → use the local ranked board (your best-per-name
-    // scores merged with the built-in legends) so the board is always a real, competitive
-    // feature with aspirational targets to chase.
-    if (!base || status === 'unavailable') {
-      entries = getRankedBoard();
-      status = entries.length > 0 ? 'ok' : 'empty';
-      if (this.justFinished) {
-        const r = findRank(this.score);
-        myRank = r.rank;
-        myTotal = r.total;
-      }
+    if (this.justFinished) {
+      const r = findRank(this.score);
+      myRank = r.rank;
+      myTotal = r.total;
     }
 
     // Ensure we run AFTER create() has finished and the scene is RUNNING. On the
-    // no-backend path there is no network await, so without this yield the code below
+    // There is no network await, so without this yield the code below
     // would execute while the scene is still initializing — at which point
     // scene.isActive() is false and the old guard bailed out, leaving the board stuck on
     // "Summoning the pilgrims…". A single microtask hop guarantees the scene is live.
     await Promise.resolve();
 
     // Bail only if the scene was actually shut down/destroyed before we got here (e.g. the
-    // player left during a slow backend fetch). listContainer is destroyed on shutdown.
+    // player left during a scene transition). listContainer is destroyed on shutdown.
     if (!this.listContainer || !this.listContainer.active || !this.sys.isActive()) return;
     this.listContainer.removeAll(true);
 
@@ -271,8 +246,8 @@ export class LeaderboardScene extends Phaser.Scene {
     const rowH = Math.max(18, Math.min(30, visibleCount > 0 ? available / visibleCount : 30));
     const top10 = entries.slice(0, TOP_N);
 
-    // The player's own row is the one at their computed rank (local board). On the backend
-    // path we fall back to matching by score. Highlighting by rank index is precise even
+    // The player's own row is the one at their computed rank. Highlighting by rank index
+    // is precise even
     // when two runs share a score.
     const myIndex =
       myRank !== null ? myRank - 1 : this.justFinished ? entries.findIndex((e) => e.score === this.score) : -1;

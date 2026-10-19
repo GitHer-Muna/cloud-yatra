@@ -1,12 +1,11 @@
 /**
  * GuruMegh.ts — the on-screen dialogue for Guru Megh, the cloud-sage NPC.
  *
- * A small cloud avatar + a speech panel that slides in with a short line (from Bedrock
- * via /oracle, or a local fallback) and auto-dismisses. Screen-fixed (scrollFactor 0),
- * non-intrusive, and never blocks input. Original art, drawn in code.
+ * A small cloud avatar + a speech panel that slides in with a short built-in line. It is
+ * screen-fixed, non-intrusive, and never blocks input.
  */
 import Phaser from 'phaser';
-import type { OracleResponse } from '../telemetry/oracleClient';
+import type { GuruResponse } from '../telemetry/guruLines';
 
 export class GuruMegh {
   private container?: Phaser.GameObjects.Container;
@@ -46,7 +45,7 @@ export class GuruMegh {
 
   /** Show a line from Guru Megh. Replaces any current line. */
   say(text: string, holdMs = 5000): void {
-    // Any new line supersedes an in-flight Bedrock response.
+    // Any new line supersedes an in-flight local response.
     this.asyncGeneration += 1;
     this.dismiss();
 
@@ -107,7 +106,7 @@ export class GuruMegh {
   }
 
   /** Show a placeholder immediately, then replace it only if this scene/request is still current. */
-  sayAsync(promise: Promise<OracleResponse>, holdMs = 5000): void {
+  sayAsync(promise: Promise<GuruResponse>, holdMs = 5000): void {
     this.say('…', 1500);
     const requestGeneration = this.asyncGeneration;
     void promise
@@ -117,7 +116,7 @@ export class GuruMegh {
         this.say(response.text, holdMs);
       })
       .catch(() => {
-        // oracleClient already supplies a fallback; never create an unhandled UI rejection.
+        // Local Guru lines are resilient; never create an unhandled UI rejection.
       });
   }
 
