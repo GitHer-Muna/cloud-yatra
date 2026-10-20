@@ -4,9 +4,10 @@
  * vitest.config.ts (TEST_MIGRATIONS) and the pool's applyD1Migrations helper.
  */
 import { applyD1Migrations, env } from 'cloudflare:test';
+import type { Env } from '../src/env';
 
 declare module 'cloudflare:test' {
-  interface ProvidedEnv {
+  interface ProvidedEnv extends Env {
     TEST_MIGRATIONS: D1Migration[];
   }
 }
