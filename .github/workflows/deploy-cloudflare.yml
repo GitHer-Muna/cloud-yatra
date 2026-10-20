@@ -46,6 +46,7 @@ jobs:
         env:
           # These are public browser configuration values, not secrets. Empty values keep
           # the static game fully functional with local/offline telemetry fallbacks.
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
           VITE_FARO_URL: ${{ vars.VITE_FARO_URL }}
           VITE_FARO_APP_KEY: ${{ vars.VITE_FARO_APP_KEY }}
           VITE_GRAFANA_DASHBOARD_URL: ${{ vars.VITE_GRAFANA_DASHBOARD_URL }}

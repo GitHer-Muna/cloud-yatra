@@ -43,9 +43,10 @@ import { Hud } from '../ui/Hud';
 import { GuruMegh } from '../ui/GuruMegh';
 import { TouchControls, isTouchDevice } from '../ui/TouchControls';
 import { askGuru, type GuruResponse, type GuruUseCase } from '../telemetry/guruLines';
-import { recordLocalScore } from '../telemetry/localLeaderboard';
+import { submitScore as submitRemoteScore } from '../telemetry/api';
+import { apiBase } from '../telemetry/api';
 import { TelemetryService } from '../telemetry/TelemetryService';
-import { ConsoleSink, FaroSink, MultiSink, type TelemetrySink } from '../telemetry/sinks';
+import { ConsoleSink, FaroSink, HttpBatchSink, MultiSink, type TelemetrySink } from '../telemetry/sinks';
 import { getFaro } from '../telemetry/faro';
 import { FpsSampler } from '../telemetry/FpsSampler';
 import { NepaliAudio } from '../audio/NepaliAudio';
@@ -310,6 +311,11 @@ export class HimalRajyaScene extends Phaser.Scene {
       const sinks: TelemetrySink[] = env.DEV ? [new ConsoleSink()] : [];
       const faro = getFaro();
       if (faro) sinks.push(new FaroSink(faro));
+      // When a backend Worker is configured (VITE_API_BASE_URL), also forward every event
+      // to it for D1 persistence + the shared leaderboard + backend logs/metrics/traces.
+      // Offline-safe: a failed send drops the batch and never affects gameplay.
+      const base = apiBase();
+      if (base) sinks.push(new HttpBatchSink(base));
       const sink: TelemetrySink = sinks.length === 1 ? sinks[0] : new MultiSink(sinks);
       service = new TelemetryService(sink);
       this.registry.set('telemetry', service);
@@ -983,9 +989,17 @@ export class HimalRajyaScene extends Phaser.Scene {
    * Save the final run to the browser-local leaderboard and emit the final Faro event.
    */
   private submitFinalScore(timeMs: number): void {
-    // Always record locally so the Top Pilgrims board is a
-    // real, working feature showing this browser's past runs ranked against each other.
-    recordLocalScore(this.cumulativeScore, this.playerName || undefined, timeMs);
+    // Always record locally so the Top Pilgrims board is a real, working feature showing
+    // this browser's past runs. submitRemoteScore also forwards the run to the backend
+    // Worker (shared cross-player leaderboard) when VITE_API_BASE_URL is configured; it is
+    // offline-safe and never blocks or throws into gameplay.
+    submitRemoteScore(
+      this.cumulativeScore,
+      this.playerName || undefined,
+      timeMs,
+      'himal_rajya',
+      this.telemetry.getSessionId(),
+    );
     this.telemetry.setLevel('himal_rajya');
     this.telemetry.record({
       type: 'level_completed',

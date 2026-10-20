@@ -1,0 +1,60 @@
+# Deploy the Cloud Yatra backend Worker (Cloudflare Worker + D1) to Cloudflare.
+#
+# This is SEPARATE from the Pages deploy (deploy-cloudflare.yml). It runs only when files
+# under backend/** change. It type-checks, tests (in the real workerd runtime), applies any
+# new D1 migrations to the remote database, and deploys the Worker.
+#
+# Prerequisites (one-time, by the repo owner):
+#   1. Create the D1 database:  cd backend && npx wrangler d1 create cloud-yatra
+#      → paste the returned database_id into backend/wrangler.toml.
+#   2. Repository secrets (Settings → Secrets and variables → Actions):
+#        CLOUDFLARE_API_TOKEN   — token with "Workers Scripts: Edit" + "D1: Edit"
+#        CLOUDFLARE_ACCOUNT_ID  — your Cloudflare account id
+#   3. (Optional) Grafana push secrets set via `wrangler secret put ...` once locally:
+#        GRAFANA_LOKI_URL/USER/TOKEN, GRAFANA_OTLP_URL/USER/TOKEN
+name: Deploy backend Worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-worker.yml'
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check and test
+        run: |
+          npm run typecheck
+          npm test
+
+      - name: Apply D1 migrations (remote)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler d1 migrations apply cloud-yatra --remote
+
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: backend
+          command: deploy

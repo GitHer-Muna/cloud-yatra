@@ -106,3 +106,78 @@ export class FaroSink implements TelemetrySink {
     this.faro.api.pushEvent(event.type, attributes, 'gameplay');
   }
 }
+
+
+/**
+ * HttpBatchSink — forwards validated events to the Cloud Yatra backend Worker (which
+ * persists them in Cloudflare D1 and emits backend logs/metrics/traces to Grafana).
+ *
+ * Design for a game loop:
+ *   - BATCHES events (default up to 20, or every ~4s) so we make few, small requests and
+ *     stay well inside Cloudflare's free tier. No per-frame requests ever.
+ *   - OFFLINE-SAFE: a failed send simply drops that batch (telemetry is best-effort); it
+ *     NEVER throws into gameplay and NEVER blocks. The game plays identically if the
+ *     backend is down or unreachable.
+ *   - flush() uses sendBeacon when possible so the final batch survives the page hiding
+ *     (e.g. the victory → leaderboard transition).
+ *
+ * The base URL is injected (public config); if null this sink is simply never constructed.
+ */
+export class HttpBatchSink implements TelemetrySink {
+  private queue: TelemetryEvent[] = [];
+  private timer: ReturnType<typeof setTimeout> | null = null;
+
+  constructor(
+    private readonly baseUrl: string,
+    private readonly maxBatch = 20,
+    private readonly flushIntervalMs = 4000,
+  ) {}
+
+  emit(event: TelemetryEvent): void {
+    this.queue.push(event);
+    if (this.queue.length >= this.maxBatch) {
+      void this.send();
+      return;
+    }
+    if (this.timer === null) {
+      this.timer = setTimeout(() => void this.send(), this.flushIntervalMs);
+    }
+  }
+
+  async flush(): Promise<void> {
+    await this.send(true);
+  }
+
+  private async send(useBeacon = false): Promise<void> {
+    if (this.timer !== null) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
+    if (this.queue.length === 0) return;
+    const batch = this.queue.splice(0, this.maxBatch);
+    const url = `${this.baseUrl}/events`;
+    const payload = JSON.stringify({ events: batch });
+
+    if (useBeacon) {
+      try {
+        if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+          const blob = new Blob([payload], { type: 'application/json' });
+          if (navigator.sendBeacon(url, blob)) return;
+        }
+      } catch {
+        /* fall through to fetch */
+      }
+    }
+
+    try {
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+        keepalive: true,
+      });
+    } catch {
+      // Best-effort telemetry: drop the batch on any network failure. Never surface.
+    }
+  }
+}

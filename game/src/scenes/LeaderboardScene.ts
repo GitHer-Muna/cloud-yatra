@@ -5,12 +5,14 @@
  * to play again (Enter/Space) or return to the menu (L/Esc). If the player just finished
  * a run, their row is highlighted in gold.
  *
- * Data source: a zero-cost local (browser-stored) leaderboard so the board always works
- * offline and never depends on a server.
+ * Data source: the shared backend leaderboard (Cloudflare Worker + D1) when configured,
+ * MERGED with a zero-cost local (browser-stored) board so it always works offline and
+ * never depends on a server being reachable.
  */
 import Phaser from 'phaser';
 import { VIEW_WIDTH, VIEW_HEIGHT } from '../config/constants';
 import { getRankedBoard, findRank, type RankedEntry } from '../telemetry/localLeaderboard';
+import { fetchLeaderboard } from '../telemetry/api';
 
 const TOP_N = 10;
 
@@ -204,9 +206,11 @@ export class LeaderboardScene extends Phaser.Scene {
     panelY: number,
     panelH: number,
   ): Promise<void> {
-    // Cloud Yatra is intentionally browser-local: the board is always available without
-    // an API, database, or remote leaderboard service.
-    let entries: RankedEntry[] = getRankedBoard();
+    // The board is the shared backend leaderboard when configured, merged with this
+    // browser's local runs + legends. fetchLeaderboard() falls back to the local board on
+    // any network failure, so this await never leaves the board broken.
+    let entries: RankedEntry[] = await fetchLeaderboard(TOP_N + 10);
+    if (entries.length === 0) entries = getRankedBoard();
     const status: 'ok' | 'empty' | 'unavailable' = entries.length > 0 ? 'ok' : 'empty';
     let myRank: number | null = null;
     let myTotal = 0;

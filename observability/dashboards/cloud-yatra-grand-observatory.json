@@ -1,0 +1,2267 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_FARO",
+      "label": "Faro Logs (Loki)",
+      "description": "The Loki datasource behind Grafana Cloud Frontend Observability / Faro.",
+      "type": "datasource",
+      "pluginId": "loki",
+      "pluginName": "Loki"
+    },
+    {
+      "name": "DS_BACKEND_LOGS",
+      "label": "Backend Logs (Loki)",
+      "description": "Loki datasource receiving the Worker's structured JSON logs.",
+      "type": "datasource",
+      "pluginId": "loki",
+      "pluginName": "Loki"
+    },
+    {
+      "name": "DS_PROM",
+      "label": "Backend Metrics (Prometheus)",
+      "description": "Prometheus datasource scraping the Worker's /metrics (cy_* series).",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    },
+    {
+      "name": "DS_TEMPO",
+      "label": "Traces (Tempo)",
+      "description": "Tempo datasource receiving the Worker's OTLP request spans.",
+      "type": "datasource",
+      "pluginId": "tempo",
+      "pluginName": "Tempo"
+    },
+    {
+      "name": "DS_INFINITY",
+      "label": "D1 Stats (Infinity)",
+      "description": "Infinity datasource that reads the Worker's /stats and /leaderboard JSON (D1-derived).",
+      "type": "datasource",
+      "pluginId": "yesoreyeram-infinity-datasource",
+      "pluginName": "Infinity"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "10.4.0"
+    },
+    {
+      "type": "datasource",
+      "id": "loki",
+      "name": "Loki",
+      "version": "1.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "tempo",
+      "name": "Tempo",
+      "version": "1.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "yesoreyeram-infinity-datasource",
+      "name": "Infinity",
+      "version": "2.0.0"
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      },
+      {
+        "name": "Backend deploys",
+        "datasource": {
+          "type": "loki",
+          "uid": "${DS_BACKEND_LOGS}"
+        },
+        "enable": true,
+        "iconColor": "#f3c623",
+        "hide": false,
+        "target": {
+          "expr": "{service_name=\"cloud-yatra-api\"} | json | msg=\"startup\""
+        },
+        "titleFormat": "deploy"
+      }
+    ]
+  },
+  "description": "Cloud Yatra — Grand Observatory. A dark, presentation-ready, full-stack story: live pulse → Cloudflare Worker + D1 backend health (metrics, logs, traces) → browser RUM → game performance → Yatri's deep gameplay analytics → the shared D1 leaderboard. Frontend (Faro) + backend (Prometheus/Loki/Tempo) + database (D1 via Infinity).",
+  "editable": true,
+  "graphTooltip": 2,
+  "liveNow": true,
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "tags": [
+    "cloud-yatra",
+    "faro",
+    "cloudflare",
+    "d1",
+    "worker",
+    "full-stack",
+    "graduation"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "label": "Faro Logs",
+        "name": "DS_FARO",
+        "query": "loki",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "current": {},
+        "hide": 0,
+        "label": "Backend Logs",
+        "name": "DS_BACKEND_LOGS",
+        "query": "loki",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "current": {},
+        "hide": 0,
+        "label": "Backend Metrics",
+        "name": "DS_PROM",
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "current": {},
+        "hide": 0,
+        "label": "Traces",
+        "name": "DS_TEMPO",
+        "query": "tempo",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "current": {},
+        "hide": 0,
+        "label": "D1 Stats",
+        "name": "DS_INFINITY",
+        "query": "yesoreyeram-infinity-datasource",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "text": "2383",
+          "value": "2383"
+        },
+        "description": "Faro app_id from Frontend Observability (not a secret).",
+        "label": "Faro app_id",
+        "name": "faro_app_id",
+        "options": [],
+        "query": "cloud-yatra",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "https://cloud-yatra-api.workers.dev",
+          "value": "https://cloud-yatra-api.workers.dev"
+        },
+        "description": "Base URL of your deployed Cloud Yatra Worker (for the D1 Infinity panels).",
+        "label": "API base URL",
+        "name": "api_base_url",
+        "options": [],
+        "query": "https://cloud-yatra-api.workers.dev",
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m"
+    ],
+    "time_options": [
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "6h",
+      "24h"
+    ]
+  },
+  "timezone": "",
+  "title": "Cloud Yatra — Grand Observatory",
+  "uid": "cloud-yatra-grand-observatory",
+  "version": 1,
+  "panels": [
+    {
+      "type": "row",
+      "title": "LIVE NOW · the pulse of the pilgrimage",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "title": "Active pilgrims (5m)",
+      "description": "Anonymous game sessions seen by the backend in the last 5 minutes (from D1 via the Worker).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 0,
+        "y": 1
+      },
+      "id": 2,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#f3c623"
+          },
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "center"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "cy_sessions_active",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Requests / sec",
+      "description": "Backend Worker request rate across all routes (Prometheus).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 4,
+        "y": 1
+      },
+      "id": 3,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8ecbff"
+          },
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "center"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(cy_api_requests_total[5m]))",
+          "instant": false
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Events ingested / min",
+      "description": "Gameplay telemetry events accepted into D1 per minute (Prometheus).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 8,
+        "y": 1
+      },
+      "id": 4,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cpm",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#63d8b4"
+          },
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "center"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(cy_events_accepted_total[5m])) * 60",
+          "instant": false
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "p95 API latency",
+      "description": "95th-percentile backend request duration (Prometheus histogram).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 12,
+        "y": 1
+      },
+      "id": 5,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#b388ff"
+          },
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "center"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum(rate(cy_api_request_duration_ms_bucket[5m])) by (le))",
+          "instant": false
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Backend error rate",
+      "description": "Share of 5xx backend responses (Prometheus).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 16,
+        "y": 1
+      },
+      "id": 6,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#e0294a"
+          },
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "center"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(cy_api_requests_total{status_class=\"5xx\"}[5m])) / clamp_min(sum(rate(cy_api_requests_total[5m])),0.0001)",
+          "instant": false
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Gameplay events / min (Faro)",
+      "description": "Bounded gameplay signals arriving through Faro RUM per minute.",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_FARO}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 20,
+        "y": 1
+      },
+      "id": 7,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cpm",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#ff9e4a"
+          },
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "center"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | domain=\"gameplay\" [1m])) * 60"
+        }
+      ],
+      "links": [
+        {
+          "title": "Open Frontend Observability drill-down",
+          "url": "https://curioushalibut2108.grafana.net/a/grafana-kowalski-app/apps/2383",
+          "targetBlank": true
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "BACKEND · Cloudflare Worker + D1 health (metrics & traces)",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 7
+      },
+      "id": 8,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Request rate by route",
+      "description": "Per-route request throughput served by the Worker.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 9,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "decimals": 0,
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 16,
+            "gradientMode": "opacity",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "pointSize": 5,
+            "axisBorderShow": false,
+            "axisGridShow": true,
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (route) (rate(cy_api_requests_total[1m]))",
+          "legendFormat": "{{route}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Latency percentiles (p50/p90/p99)",
+      "description": "Backend request duration percentiles from the Prometheus histogram.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 10,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 0,
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 16,
+            "gradientMode": "opacity",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "pointSize": 5,
+            "axisBorderShow": false,
+            "axisGridShow": true,
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.50, sum(rate(cy_api_request_duration_ms_bucket[5m])) by (le))",
+          "legendFormat": "p50",
+          "range": true
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.90, sum(rate(cy_api_request_duration_ms_bucket[5m])) by (le))",
+          "legendFormat": "p90",
+          "range": true
+        },
+        {
+          "refId": "C",
+          "expr": "histogram_quantile(0.99, sum(rate(cy_api_request_duration_ms_bucket[5m])) by (le))",
+          "legendFormat": "p99",
+          "range": true
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Responses by status class",
+      "description": "2xx / 4xx / 5xx response mix — the backend reliability signal.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 15
+      },
+      "id": 11,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "decimals": 0,
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 60,
+            "gradientMode": "opacity",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "pointSize": 5,
+            "axisBorderShow": false,
+            "axisGridShow": true,
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (status_class) (rate(cy_api_requests_total[1m]))",
+          "legendFormat": "{{status_class}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Rejected vs accepted events",
+      "description": "Validation outcome at the ingest boundary. Rejections are grouped by reason.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 15
+      },
+      "id": 12,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cpm",
+          "decimals": 0,
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 16,
+            "gradientMode": "opacity",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "pointSize": 5,
+            "axisBorderShow": false,
+            "axisGridShow": true,
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(cy_events_accepted_total[5m])) * 60",
+          "legendFormat": "accepted / min",
+          "range": true
+        },
+        {
+          "refId": "B",
+          "expr": "sum by (reason) (rate(cy_events_rejected_total[5m])) * 60",
+          "legendFormat": "rejected · {{reason}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Recent backend traces (Tempo)",
+      "description": "Request spans emitted by the Worker (OTLP → Tempo). Click a trace to see the span.",
+      "datasource": {
+        "type": "tempo",
+        "uid": "${DS_TEMPO}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 15
+      },
+      "id": 13,
+      "transparent": true,
+      "targets": [
+        {
+          "refId": "A",
+          "queryType": "traceqlSearch",
+          "limit": 20,
+          "tableType": "traces",
+          "filters": [
+            {
+              "id": "service",
+              "tag": "service.name",
+              "operator": "=",
+              "scope": "resource",
+              "value": [
+                "cloud-yatra-api"
+              ],
+              "valueType": "string"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "BACKEND LOGS · structured request logs (Loki)",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "id": 14,
+      "panels": []
+    },
+    {
+      "type": "logs",
+      "title": "Live backend logs",
+      "description": "Structured JSON logs from the Worker: every request with correlationId, route, status, duration.",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_BACKEND_LOGS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 0,
+        "y": 23
+      },
+      "id": 15,
+      "transparent": true,
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": true,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{service_name=\"cloud-yatra-api\"} | json",
+          "queryType": "range"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Log volume by level",
+      "description": "Info / warn / error log throughput from the backend.",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_BACKEND_LOGS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 23
+      },
+      "id": 16,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cps",
+          "decimals": 0,
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 16,
+            "gradientMode": "opacity",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "pointSize": 5,
+            "axisBorderShow": false,
+            "axisGridShow": true,
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (level) (rate({service_name=\"cloud-yatra-api\"} | json [1m]))",
+          "legendFormat": "{{level}}"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "PLAYER EXPERIENCE · browser health (Faro RUM)",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 17,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Web Vitals · LCP / INP (p95)",
+      "description": "Real-user loading and interaction latency from Faro web-vitals.",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_FARO}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "id": 18,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 0,
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 16,
+            "gradientMode": "opacity",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "pointSize": 5,
+            "axisBorderShow": false,
+            "axisGridShow": true,
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "quantile_over_time(0.95, {kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"web-vitals\" | unwrap lcp [$__interval])",
+          "legendFormat": "LCP p95"
+        },
+        {
+          "refId": "B",
+          "expr": "quantile_over_time(0.95, {kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"web-vitals\" | unwrap inp [$__interval])",
+          "legendFormat": "INP p95"
+        }
+      ],
+      "links": [
+        {
+          "title": "Open Frontend Observability drill-down",
+          "url": "https://curioushalibut2108.grafana.net/a/grafana-kowalski-app/apps/2383",
+          "targetBlank": true
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Web Vitals · CLS / TTFB / FCP",
+      "description": "Layout stability and first-byte/paint timing.",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_FARO}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 12,
+        "y": 32
+      },
+      "id": 19,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 16,
+            "gradientMode": "opacity",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "pointSize": 5,
+            "axisBorderShow": false,
+            "axisGridShow": true,
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"web-vitals\" | unwrap cls [$__interval])",
+          "legendFormat": "CLS"
+        },
+        {
+          "refId": "B",
+          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"web-vitals\" | unwrap ttfb [$__interval])",
+          "legendFormat": "TTFB"
+        },
+        {
+          "refId": "C",
+          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"web-vitals\" | unwrap fcp [$__interval])",
+          "legendFormat": "FCP"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Browser exceptions",
+      "description": "JS errors + unhandled rejections (Faro). Drill into Frontend Observability for stacks.",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_FARO}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 20,
+        "y": 32
+      },
+      "id": 20,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#e0294a"
+          },
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "center"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(count_over_time({kind=\"exception\", app_id=\"$faro_app_id\"} [$__interval]))"
+        }
+      ],
+      "links": [
+        {
+          "title": "Investigate in Frontend Observability",
+          "url": "https://curioushalibut2108.grafana.net/a/grafana-kowalski-app/apps/2383",
+          "targetBlank": true
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "LIVE GAME PERFORMANCE · can Yatri move smoothly?",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 39
+      },
+      "id": 21,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Sampled FPS by region",
+      "description": "Average FPS sampled ~every 2s (never per-frame), split by Nepal region.",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_FARO}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 40
+      },
+      "id": 22,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "fps",
+          "decimals": 0,
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 16,
+            "gradientMode": "opacity",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "pointSize": 5,
+            "axisBorderShow": false,
+            "axisGridShow": true,
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "min": 0,
+          "max": 70,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#63d8b4"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_client_perf\" | unwrap fps [$__interval])",
+          "legendFormat": "FPS · {{level}}"
+        }
+      ],
+      "links": [
+        {
+          "title": "Open Frontend Observability drill-down",
+          "url": "https://curioushalibut2108.grafana.net/a/grafana-kowalski-app/apps/2383",
+          "targetBlank": true
+        }
+      ]
+    },
+    {
+      "type": "heatmap",
+      "title": "FPS distribution (heatmap)",
+      "description": "How smooth play actually feels across all players and devices.",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_FARO}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 40
+      },
+      "id": 23,
+      "transparent": true,
+      "options": {
+        "calculate": false,
+        "color": {
+          "scheme": "Turbo",
+          "mode": "scheme",
+          "steps": 64
+        },
+        "cellGap": 1,
+        "yAxis": {
+          "unit": "ms"
+        },
+        "legend": {
+          "show": true
+        },
+        "tooltip": {
+          "show": true,
+          "yHistogram": true
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_client_perf\" | unwrap fps [$__interval])",
+          "format": "heatmap",
+          "range": true
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Journey state · progress / lives / combo",
+      "description": "Game-state measurement emitted each heartbeat — correlate experience with progress.",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_FARO}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 47
+      },
+      "id": 24,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 16,
+            "gradientMode": "opacity",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "pointSize": 5,
+            "axisBorderShow": false,
+            "axisGridShow": true,
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_state\" | unwrap progressPct [$__interval])",
+          "legendFormat": "progress % · {{level}}"
+        },
+        {
+          "refId": "B",
+          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_state\" | unwrap lives [$__interval])",
+          "legendFormat": "lives · {{level}}"
+        },
+        {
+          "refId": "C",
+          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_state\" | unwrap combo [$__interval])",
+          "legendFormat": "combo · {{level}}"
+        }
+      ],
+      "links": [
+        {
+          "title": "Open Frontend Observability drill-down",
+          "url": "https://curioushalibut2108.grafana.net/a/grafana-kowalski-app/apps/2383",
+          "targetBlank": true
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "YATRI'S JOURNEY · deep gameplay analytics (D1 + Faro)",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 53
+      },
+      "id": 25,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Actions per minute",
+      "description": "The rhythm of play: jumps, obstacle cuts, collectibles, pennants (Faro event stream).",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_FARO}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 54
+      },
+      "id": 26,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cpm",
+          "decimals": 0,
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 16,
+            "gradientMode": "opacity",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "pointSize": 5,
+            "axisBorderShow": false,
+            "axisGridShow": true,
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | name=\"player_jump\" [5m])) * 60",
+          "legendFormat": "jumps"
+        },
+        {
+          "refId": "B",
+          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | name=\"obstacle_cut\" [5m])) * 60",
+          "legendFormat": "khukuri cuts"
+        },
+        {
+          "refId": "C",
+          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | name=\"collectible_collected\" [5m])) * 60",
+          "legendFormat": "collectibles"
+        },
+        {
+          "refId": "D",
+          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | name=\"flag_planted\" [5m])) * 60",
+          "legendFormat": "pennants"
+        },
+        {
+          "refId": "E",
+          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | name=\"player_stomp\" [5m])) * 60",
+          "legendFormat": "stomps"
+        }
+      ],
+      "links": [
+        {
+          "title": "Open Frontend Observability drill-down",
+          "url": "https://curioushalibut2108.grafana.net/a/grafana-kowalski-app/apps/2383",
+          "targetBlank": true
+        }
+      ]
+    },
+    {
+      "type": "barchart",
+      "title": "Deaths by cause (from D1)",
+      "description": "Where the trail teaches players. Computed by the backend directly from D1 (GET /stats → deathsByCause).",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 12,
+        "y": 54
+      },
+      "id": 27,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "hue",
+            "axisBorderShow": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "xField": "cause"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "${api_base_url}/stats",
+          "method": "GET",
+          "root_selector": "deathsByCause",
+          "parser": "backend",
+          "columns": [
+            {
+              "selector": "cause",
+              "text": "cause",
+              "type": "string"
+            },
+            {
+              "selector": "count",
+              "text": "count",
+              "type": "number"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "piechart",
+      "title": "Collectibles by kind (from D1)",
+      "description": "Marigold / rhododendron / blue-poppy / prayer-bell mix, from D1 (GET /stats → collectsByKind).",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 18,
+        "y": 54
+      },
+      "id": 28,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^count$/"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "value",
+            "percent"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "${api_base_url}/stats",
+          "method": "GET",
+          "root_selector": "collectsByKind",
+          "parser": "backend",
+          "columns": [
+            {
+              "selector": "kind",
+              "text": "kind",
+              "type": "string"
+            },
+            {
+              "selector": "count",
+              "text": "count",
+              "type": "number"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Damage & deaths by cause (live, Faro)",
+      "description": "Live per-cause damage and death rate from the Faro event stream (bounded vocabulary).",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_FARO}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 16,
+        "x": 0,
+        "y": 61
+      },
+      "id": 29,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cpm",
+          "decimals": 0,
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 55,
+            "gradientMode": "opacity",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "pointSize": 5,
+            "axisBorderShow": false,
+            "axisGridShow": true,
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (attributes_cause) (rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | name=\"player_damaged\" [5m])) * 60",
+          "legendFormat": "damage · {{attributes_cause}}"
+        },
+        {
+          "refId": "B",
+          "expr": "sum by (attributes_cause) (rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | name=\"player_died\" [5m])) * 60",
+          "legendFormat": "death · {{attributes_cause}}"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Progression funnel (from D1)",
+      "description": "Distinct sessions reaching each stage, computed from D1 (GET /stats → funnel).",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 61
+      },
+      "id": 30,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "${api_base_url}/stats",
+          "method": "GET",
+          "root_selector": "funnel",
+          "columns": [
+            {
+              "selector": "started",
+              "text": "Started",
+              "type": "number"
+            },
+            {
+              "selector": "reachedHills",
+              "text": "Reached Hills",
+              "type": "number"
+            },
+            {
+              "selector": "reachedHimal",
+              "text": "Reached Himal",
+              "type": "number"
+            },
+            {
+              "selector": "completed",
+              "text": "Completed",
+              "type": "number"
+            }
+          ],
+          "parser": "backend"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "SCORES & ENGAGEMENT · the shared leaderboard (D1)",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 68
+      },
+      "id": 31,
+      "panels": []
+    },
+    {
+      "type": "table",
+      "title": "🏔️ Shared leaderboard — Top Pilgrims (live from D1)",
+      "description": "The real cross-player leaderboard, served by the Worker from D1 (GET /leaderboard).",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 69
+      },
+      "id": 32,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "${api_base_url}/leaderboard?limit=15",
+          "method": "GET",
+          "root_selector": "entries",
+          "columns": [
+            {
+              "selector": "name",
+              "text": "Pilgrim",
+              "type": "string"
+            },
+            {
+              "selector": "score",
+              "text": "Score",
+              "type": "number"
+            },
+            {
+              "selector": "timeMs",
+              "text": "Time (ms)",
+              "type": "number"
+            },
+            {
+              "selector": "country",
+              "text": "Country",
+              "type": "string"
+            }
+          ],
+          "parser": "backend"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Total completions (D1)",
+      "description": "Summit/level completions persisted in D1 (GET /stats → totals.completions).",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 69
+      },
+      "id": 33,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#63d8b4"
+          },
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/.*completions.*/"
+        },
+        "textMode": "auto",
+        "justifyMode": "center"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "${api_base_url}/stats",
+          "method": "GET",
+          "root_selector": "totals",
+          "parser": "backend",
+          "columns": [
+            {
+              "selector": "completions",
+              "text": "completions",
+              "type": "number"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Total events (D1)",
+      "description": "All gameplay events persisted in D1 (GET /stats → totals.events).",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 69
+      },
+      "id": 34,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8ecbff"
+          },
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/.*events.*/"
+        },
+        "textMode": "auto",
+        "justifyMode": "center"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "${api_base_url}/stats",
+          "method": "GET",
+          "root_selector": "totals",
+          "parser": "backend",
+          "columns": [
+            {
+              "selector": "events",
+              "text": "events",
+              "type": "number"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "piechart",
+      "title": "How players enter",
+      "description": "Keyboard vs touch, from the bounded game_started context (Faro).",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_FARO}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 4,
+        "x": 20,
+        "y": 69
+      },
+      "id": 35,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "custom": {
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ]
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "displayLabels": [
+          "percent"
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (attributes_inputMode) (count_over_time({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | name=\"game_started\" [$__interval]))",
+          "legendFormat": "{{attributes_inputMode}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Reward loop & friction",
+      "description": "Guru moments, garlands/bells collected, and restarts — the engagement rhythm (Faro).",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_FARO}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 12,
+        "y": 73
+      },
+      "id": 36,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cpm",
+          "decimals": 0,
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 16,
+            "gradientMode": "opacity",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "pointSize": 5,
+            "axisBorderShow": false,
+            "axisGridShow": true,
+            "axisLabel": "",
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | name=\"guru_guidance\" [5m])) * 60",
+          "legendFormat": "Guru moments"
+        },
+        {
+          "refId": "B",
+          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | name=\"game_restarted\" [5m])) * 60",
+          "legendFormat": "restarts"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "WORLD & CONTEXT · where the pilgrims play",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 77
+      },
+      "id": 37,
+      "panels": []
+    },
+    {
+      "type": "table",
+      "title": "Top countries (from D1)",
+      "description": "Coarse edge-country of sessions, from D1 (GET /stats → topCountries). No IPs stored.",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 78
+      },
+      "id": 38,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "${api_base_url}/stats",
+          "method": "GET",
+          "root_selector": "topCountries",
+          "columns": [
+            {
+              "selector": "country",
+              "text": "Country",
+              "type": "string"
+            },
+            {
+              "selector": "sessions",
+              "text": "Sessions",
+              "type": "number"
+            }
+          ],
+          "parser": "backend"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Events by type (from D1)",
+      "description": "Full breakdown of every persisted gameplay signal (GET /stats → eventsByType).",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 78
+      },
+      "id": 39,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "${api_base_url}/stats",
+          "method": "GET",
+          "root_selector": "eventsByType",
+          "columns": [
+            {
+              "selector": "type",
+              "text": "Event type",
+              "type": "string"
+            },
+            {
+              "selector": "count",
+              "text": "Count",
+              "type": "number"
+            }
+          ],
+          "parser": "backend"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "title": "Architecture — Cloudflare + Grafana Cloud",
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 78
+      },
+      "id": 40,
+      "transparent": true,
+      "options": {
+        "mode": "markdown",
+        "content": "## Cloud Yatra — Grand Observatory\n\n**Browser (Phaser)** → **Cloudflare Pages** (static game)\n\n**Browser** → **Cloudflare Worker** `cloud-yatra-api` → **Cloudflare D1** (SQLite)\n\n**Signals into Grafana Cloud:**\n- Frontend RUM + gameplay → **Faro** (Loki)\n- Backend request metrics & histograms → **Prometheus** (`/metrics`)\n- Backend structured logs → **Loki**\n- Backend request traces → **Tempo**\n- D1-derived gameplay analytics → **Infinity** (`/stats`, `/leaderboard`)\n\nEverything is free-tier: Cloudflare Pages + Workers + D1, Grafana Cloud free."
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        }
+      }
+    }
+  ],
+  "links": [
+    {
+      "title": "Open Frontend Observability drill-down",
+      "type": "link",
+      "url": "https://curioushalibut2108.grafana.net/a/grafana-kowalski-app/apps/2383",
+      "targetBlank": true
+    },
+    {
+      "title": "Play Cloud Yatra",
+      "type": "link",
+      "url": "https://cloud-yatra.pages.dev",
+      "targetBlank": true
+    }
+  ]
+}

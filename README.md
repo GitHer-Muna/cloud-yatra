@@ -24,20 +24,23 @@ in code — no external asset files.
 - **Hazards** are predictable and learnable: drifting mist, swooping eagles, falling rocks,
   a jungle monkey. The difficulty tightens region by region toward the summit.
 - **Guru Megh**, a cloud-sage guide, encourages and guides you throughout the journey
-  (powered by Amazon Bedrock when a backend is configured; otherwise built-in lines).
+  (uses original built-in guidance lines in the browser).
 
 ## Tech
 
 - **Frontend:** [Phaser 3](https://phaser.io/) + TypeScript, built with [Vite](https://vitejs.dev/).
 - **Hosting:** [Cloudflare Pages](https://pages.cloudflare.com/) — a 100% static build,
   free with unlimited bandwidth, auto-deployed from `main` via GitHub Actions.
+- **Backend (optional):** a separate [Cloudflare Worker](https://workers.cloudflare.com/)
+  (`backend/`) backed by [Cloudflare D1](https://developers.cloudflare.com/d1/) (SQLite)
+  for telemetry ingest + a shared cross-player leaderboard. Free-tier only. The game plays
+  fully without it (local leaderboard + offline fallbacks) when `VITE_API_BASE_URL` is empty.
 - **Telemetry:** a small event schema + swappable sinks (console in dev, Grafana **Faro**
-  RUM in the browser, and an optional HTTP batch sink) — see `src/telemetry/`.
+  RUM in the browser, and an HTTP batch sink to the Worker) — see `src/telemetry/`.
 - **Observability:** custom gameplay events + browser RUM (web vitals, errors, resource
-  timing) + sampled FPS → **Grafana Cloud** via Faro, powering a live dashboard.
-- **Backend (optional, not required):** the code also supports an API Gateway → Lambda →
-  DynamoDB backend for a shared leaderboard, telemetry ingest, and a Bedrock-backed Guru
-  Megh. The public demo runs **without** it (static-only), so it has no server cost.
+  timing) + sampled FPS → **Grafana Cloud** via Faro, **plus** backend request metrics
+  (Prometheus), structured logs (Loki), and traces (Tempo) from the Worker, and D1-derived
+  gameplay analytics — all in one live dashboard.
 
 ## Responsive & mobile
 
@@ -59,7 +62,7 @@ game/
 │   │                     #   collectibles (RhododendronBloom, PrayerBell), Checkpoint, …
 │   ├── ui/               # Hud, GuruMegh dialogue, TouchControls
 │   ├── audio/            # NepaliAudio — original procedural music + SFX
-│   └── telemetry/        # event schema, service, sinks, leaderboard & oracle clients
+│   └── telemetry/        # event schema, service, sinks (console/Faro/HTTP), leaderboard & backend client
 ```
 
 ## Run it locally
@@ -87,7 +90,7 @@ the client. Copy `game/.env.example` to `game/.env` to connect a backend:
 
 | Variable | Purpose |
 |----------|---------|
-| `VITE_API_BASE_URL` | Deployed HTTP API: backend telemetry, Guru Megh (`/oracle`), shared leaderboard. |
+| `VITE_API_BASE_URL` | Deployed Cloudflare Worker (`backend/`): telemetry ingest + shared D1 leaderboard. Empty = offline (local board). |
 | `VITE_FARO_URL` / `VITE_FARO_APP_KEY` | Grafana Faro RUM collector (optional). |
 
 With none set, the game still plays fully: telemetry logs to the console (dev only), the
