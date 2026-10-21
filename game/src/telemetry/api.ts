@@ -14,11 +14,26 @@ import {
   type RankedEntry,
 } from './localLeaderboard';
 
-/** The configured backend base URL (no trailing slash), or null when unconfigured. */
-export function apiBase(): string | null {
+/**
+ * Reads the raw VITE_API_BASE_URL from the build-time env. Extracted as its own function
+ * so tests can override it (import.meta.env is populated from a developer's local .env and
+ * can't be reliably stubbed in Vitest, which would otherwise make this module's tests
+ * depend on whether a .env happens to exist). Production behavior is unchanged.
+ */
+let readApiBaseEnv = (): string | undefined => {
   const env =
     (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
-  const raw = env.VITE_API_BASE_URL;
+  return env.VITE_API_BASE_URL;
+};
+
+/** Test-only hook to override how the backend URL is read. */
+export function __setApiBaseEnvReader(fn: () => string | undefined): void {
+  readApiBaseEnv = fn;
+}
+
+/** The configured backend base URL (no trailing slash), or null when unconfigured. */
+export function apiBase(): string | null {
+  const raw = readApiBaseEnv();
   if (!raw || typeof raw !== 'string') return null;
   const trimmed = raw.trim().replace(/\/$/, '');
   return trimmed.length > 0 ? trimmed : null;

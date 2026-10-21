@@ -6,12 +6,13 @@
  *      returns a usable local board and nothing throws into gameplay.
  *   2. Batching: HttpBatchSink coalesces events and POSTs them to /events.
  *
- * import.meta.env is not set in vitest, so apiBase() returns null here — exactly the
- * "no backend configured" path we want to prove is safe. The sink is tested directly with
- * an explicit base URL and a mocked fetch.
+ * These tests force the "no backend configured" path by overriding the module's env
+ * reader via __setApiBaseEnvReader — so they pass whether or not a developer has a local
+ * game/.env pointing at a real Worker. The sink is tested directly with an explicit base
+ * URL and a mocked fetch.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { apiBase, hasBackend, fetchLeaderboard } from './api';
+import { apiBase, hasBackend, fetchLeaderboard, __setApiBaseEnvReader } from './api';
 import { HttpBatchSink } from './sinks';
 import type { TelemetryEvent } from './events';
 
@@ -30,6 +31,9 @@ function evt(type: string): TelemetryEvent {
 }
 
 describe('apiBase / hasBackend', () => {
+  beforeEach(() => __setApiBaseEnvReader(() => undefined));
+  afterEach(() => __setApiBaseEnvReader(() => undefined));
+
   it('returns null when VITE_API_BASE_URL is unset (offline build)', () => {
     expect(apiBase()).toBeNull();
     expect(hasBackend()).toBe(false);
@@ -37,11 +41,30 @@ describe('apiBase / hasBackend', () => {
 });
 
 describe('fetchLeaderboard', () => {
+  beforeEach(() => __setApiBaseEnvReader(() => undefined));
+  afterEach(() => __setApiBaseEnvReader(() => undefined));
+
   it('falls back to the local board when no backend is configured', async () => {
     const board = await fetchLeaderboard(10);
     // Local board always has the seeded legends, so it is never empty.
     expect(Array.isArray(board)).toBe(true);
     expect(board.length).toBeGreaterThan(0);
+  });
+});
+
+describe('apiBase (configured)', () => {
+  afterEach(() => __setApiBaseEnvReader(() => undefined));
+
+  it('trims a trailing slash and reports hasBackend', () => {
+    __setApiBaseEnvReader(() => 'https://api.example.com/');
+    expect(apiBase()).toBe('https://api.example.com');
+    expect(hasBackend()).toBe(true);
+  });
+
+  it('treats a blank/whitespace value as unconfigured', () => {
+    __setApiBaseEnvReader(() => '   ');
+    expect(apiBase()).toBeNull();
+    expect(hasBackend()).toBe(false);
   });
 });
 
