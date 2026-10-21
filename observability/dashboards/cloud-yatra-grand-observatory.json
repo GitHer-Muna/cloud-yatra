@@ -507,7 +507,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | domain=\"gameplay\" [1m])) * 60"
+          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} |~ `(game_started|game_over|level_started|player_jump|collectible_collected|player_damaged|player_died|flag_planted|level_completed|game_restarted|obstacle_cut|player_stomp|journey_progress|guru_guidance|session_heartbeat|client_perf)` [1m])) * 60"
         }
       ],
       "links": [
