@@ -1034,12 +1034,12 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "quantile_over_time(0.95, {kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"web-vitals\" | unwrap lcp [$__interval])",
+          "expr": "quantile_over_time(0.95, {kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"web-vitals\" | unwrap value_lcp [$__interval])",
           "legendFormat": "LCP p95"
         },
         {
           "refId": "B",
-          "expr": "quantile_over_time(0.95, {kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"web-vitals\" | unwrap inp [$__interval])",
+          "expr": "quantile_over_time(0.95, {kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"web-vitals\" | unwrap value_inp [$__interval])",
           "legendFormat": "INP p95"
         }
       ],
@@ -1111,17 +1111,17 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"web-vitals\" | unwrap cls [$__interval])",
+          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"web-vitals\" | unwrap value_cls [$__interval])",
           "legendFormat": "CLS"
         },
         {
           "refId": "B",
-          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"web-vitals\" | unwrap ttfb [$__interval])",
+          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"web-vitals\" | unwrap value_ttfb [$__interval])",
           "legendFormat": "TTFB"
         },
         {
           "refId": "C",
-          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"web-vitals\" | unwrap fcp [$__interval])",
+          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"web-vitals\" | unwrap value_fcp [$__interval])",
           "legendFormat": "FCP"
         }
       ]
@@ -1255,7 +1255,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_client_perf\" | unwrap fps [$__interval])",
+          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_client_perf\" | unwrap value_fps [$__interval])",
           "legendFormat": "FPS · {{level}}"
         }
       ],
@@ -1305,7 +1305,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_client_perf\" | unwrap fps [$__interval])",
+          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_client_perf\" | unwrap value_fps [$__interval])",
           "format": "heatmap",
           "range": true
         }
@@ -1371,17 +1371,17 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_state\" | unwrap progressPct [$__interval])",
+          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_state\" | unwrap value_progressPct [$__interval])",
           "legendFormat": "progress % · {{level}}"
         },
         {
           "refId": "B",
-          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_state\" | unwrap lives [$__interval])",
+          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_state\" | unwrap value_lives [$__interval])",
           "legendFormat": "lives · {{level}}"
         },
         {
           "refId": "C",
-          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_state\" | unwrap combo [$__interval])",
+          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_state\" | unwrap value_combo [$__interval])",
           "legendFormat": "combo · {{level}}"
         }
       ],
@@ -1466,27 +1466,27 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | name=\"player_jump\" [5m])) * 60",
+          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_name=\"player_jump\" [5m])) * 60",
           "legendFormat": "jumps"
         },
         {
           "refId": "B",
-          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | name=\"obstacle_cut\" [5m])) * 60",
+          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_name=\"obstacle_cut\" [5m])) * 60",
           "legendFormat": "khukuri cuts"
         },
         {
           "refId": "C",
-          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | name=\"collectible_collected\" [5m])) * 60",
+          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_name=\"collectible_collected\" [5m])) * 60",
           "legendFormat": "collectibles"
         },
         {
           "refId": "D",
-          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | name=\"flag_planted\" [5m])) * 60",
+          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_name=\"flag_planted\" [5m])) * 60",
           "legendFormat": "pennants"
         },
         {
           "refId": "E",
-          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | name=\"player_stomp\" [5m])) * 60",
+          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_name=\"player_stomp\" [5m])) * 60",
           "legendFormat": "stomps"
         }
       ],
@@ -1688,13 +1688,13 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (attributes_cause) (rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | name=\"player_damaged\" [5m])) * 60",
-          "legendFormat": "damage · {{attributes_cause}}"
+          "expr": "sum by (event_data_cause) (rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_name=\"player_damaged\" [5m])) * 60",
+          "legendFormat": "damage · {{event_data_cause}}"
         },
         {
           "refId": "B",
-          "expr": "sum by (attributes_cause) (rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | name=\"player_died\" [5m])) * 60",
-          "legendFormat": "death · {{attributes_cause}}"
+          "expr": "sum by (event_data_cause) (rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_name=\"player_died\" [5m])) * 60",
+          "legendFormat": "death · {{event_data_cause}}"
         }
       ]
     },
@@ -2023,8 +2023,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (attributes_inputMode) (count_over_time({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | name=\"game_started\" [$__interval]))",
-          "legendFormat": "{{attributes_inputMode}}"
+          "expr": "sum by (event_data_inputMode) (count_over_time({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_name=\"game_started\" [$__interval]))",
+          "legendFormat": "{{event_data_inputMode}}"
         }
       ]
     },
@@ -2085,12 +2085,12 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | name=\"guru_guidance\" [5m])) * 60",
+          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_name=\"guru_guidance\" [5m])) * 60",
           "legendFormat": "Guru moments"
         },
         {
           "refId": "B",
-          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | name=\"game_restarted\" [5m])) * 60",
+          "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_name=\"game_restarted\" [5m])) * 60",
           "legendFormat": "restarts"
         }
       ]
