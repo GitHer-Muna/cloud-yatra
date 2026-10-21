@@ -174,19 +174,19 @@
         "label": "Faro app_id",
         "name": "faro_app_id",
         "options": [],
-        "query": "cloud-yatra",
+        "query": "2383",
         "type": "textbox"
       },
       {
         "current": {
-          "text": "https://cloud-yatra-api.workers.dev",
-          "value": "https://cloud-yatra-api.workers.dev"
+          "text": "https://cloud-yatra-api.im-shree03.workers.dev",
+          "value": "https://cloud-yatra-api.im-shree03.workers.dev"
         },
         "description": "Base URL of your deployed Cloud Yatra Worker (for the D1 Infinity panels).",
         "label": "API base URL",
         "name": "api_base_url",
         "options": [],
-        "query": "https://cloud-yatra-api.workers.dev",
+        "query": "https://cloud-yatra-api.im-shree03.workers.dev",
         "type": "textbox"
       }
     ]
