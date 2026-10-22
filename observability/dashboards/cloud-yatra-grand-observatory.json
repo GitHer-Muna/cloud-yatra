@@ -1119,7 +1119,7 @@
    "targets": [
     {
      "refId": "A",
-     "expr": "sum by (route) (rate(cy_api_requests_total[1m]))",
+     "expr": "sum by (route) (rate(cy_api_requests_total[5m]))",
      "legendFormat": "{{route}}",
      "range": true
     }
@@ -1346,7 +1346,7 @@
    "targets": [
     {
      "refId": "A",
-     "expr": "sum by (status_class) (rate(cy_api_requests_total[1m]))",
+     "expr": "sum by (status_class) (rate(cy_api_requests_total[5m]))",
      "legendFormat": "{{status_class}}",
      "range": true
     }
@@ -3544,7 +3544,7 @@
    "type": "gauge",
    "id": 56,
    "transparent": true,
-   "title": "Availability SLI (30d)",
+   "title": "Availability SLI",
    "description": "Percentage of non-5xx responses over 30 days. SLO target: 99%.",
    "datasource": {
     "type": "prometheus",
@@ -3560,7 +3560,7 @@
     "defaults": {
      "unit": "percent",
      "decimals": 3,
-     "min": 95,
+     "min": 0,
      "color": {
       "mode": "thresholds"
      },
@@ -3599,7 +3599,7 @@
    "targets": [
     {
      "refId": "A",
-     "expr": "100 * sum(rate(cy_api_requests_total{status_class!=\"5xx\"}[30d])) / clamp_min(sum(rate(cy_api_requests_total[30d])), 0.0001)",
+     "expr": "100 * sum(rate(cy_api_requests_total{status_class!=\"5xx\"}[$__range])) / clamp_min(sum(rate(cy_api_requests_total[$__range])), 0.0001)",
      "legendFormat": "Availability SLI (30d)",
      "editorMode": "code"
     }
@@ -3664,7 +3664,7 @@
    "targets": [
     {
      "refId": "A",
-     "expr": "100 * (0.01 - (1 - (sum(rate(cy_api_requests_total{status_class!=\"5xx\"}[30d])) / clamp_min(sum(rate(cy_api_requests_total[30d])),0.0001)))) / 0.01",
+     "expr": "clamp(100 * (0.01 - (1 - (sum(rate(cy_api_requests_total{status_class!=\"5xx\"}[$__range])) / clamp_min(sum(rate(cy_api_requests_total[$__range])),0.0001)))) / 0.01, 0, 100)",
      "legendFormat": "Error budget remaining",
      "editorMode": "code"
     }
@@ -3674,7 +3674,7 @@
    "type": "gauge",
    "id": 58,
    "transparent": true,
-   "title": "Latency SLO \u00b7 <500ms (30d)",
+   "title": "Latency SLO \u00b7 <500ms",
    "description": "Share of requests served under 500ms. SLO target: 95%.",
    "datasource": {
     "type": "prometheus",
@@ -3690,7 +3690,7 @@
     "defaults": {
      "unit": "percent",
      "decimals": 2,
-     "min": 80,
+     "min": 0,
      "color": {
       "mode": "thresholds"
      },
@@ -3729,7 +3729,7 @@
    "targets": [
     {
      "refId": "A",
-     "expr": "100 * sum(rate(cy_api_request_duration_ms_bucket{le=\"500\"}[30d])) / clamp_min(sum(rate(cy_api_request_duration_ms_count[30d])),0.0001)",
+     "expr": "100 * sum(rate(cy_api_request_duration_ms_bucket{le=\"500\"}[$__range])) / clamp_min(sum(rate(cy_api_request_duration_ms_count[$__range])),0.0001)",
      "legendFormat": "Latency SLO \u00b7 <500ms (30d)",
      "editorMode": "code"
     }
