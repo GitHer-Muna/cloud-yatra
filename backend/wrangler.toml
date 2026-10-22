@@ -34,7 +34,7 @@ migrations_dir = "migrations"
 # Public, non-secret runtime configuration. The browser's Pages origin is allowed by CORS.
 # Override ALLOWED_ORIGINS for your real domains; "*" is fine while developing.
 [vars]
-ALLOWED_ORIGINS = "https://cloud-yatra.pages.dev,http://localhost:5173"
+ALLOWED_ORIGINS = "https://cloud-yatra.pages.dev,http://localhost:5173,https://curioushalibut2108.grafana.net"
 ENVIRONMENT = "production"
 SERVICE_NAME = "cloud-yatra-api"
 # Grafana Cloud push endpoints are OPTIONAL. Leave empty to disable the push (the Worker
