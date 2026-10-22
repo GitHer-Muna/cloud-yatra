@@ -158,6 +158,17 @@ async function handle(req: Request, env: Env, c: Ctx): Promise<Response> {
   }
 
   if (pathname === '/metrics' && method === 'GET') {
+    // Optional auth: Grafana Cloud's "Metrics Endpoint" integration REQUIRES the scraped
+    // URL to be authenticated (it refuses unauthenticated public URLs). When METRICS_TOKEN
+    // is set, require `Authorization: Bearer <token>`. When unset, /metrics stays public
+    // (e.g. for a self-hosted Prometheus or Alloy scrape).
+    if (env.METRICS_TOKEN) {
+      const auth = req.headers.get('Authorization') ?? '';
+      const provided = auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : '';
+      if (!provided || !timingSafeEqual(provided, env.METRICS_TOKEN)) {
+        return new Response('unauthorized', { status: 401, headers: corsHeaders(req, env) });
+      }
+    }
     return new Response(renderMetrics(), {
       status: 200,
       headers: { 'Content-Type': 'text/plain; version=0.0.4', ...corsHeaders(req, env) },

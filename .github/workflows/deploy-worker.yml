@@ -72,6 +72,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CHAOS_ADMIN_TOKEN: ${{ secrets.CHAOS_ADMIN_TOKEN }}
+          METRICS_TOKEN: ${{ secrets.METRICS_TOKEN }}
           GRAFANA_LOKI_URL: ${{ secrets.GRAFANA_LOKI_URL }}
           GRAFANA_LOKI_USER: ${{ secrets.GRAFANA_LOKI_USER }}
           GRAFANA_LOKI_TOKEN: ${{ secrets.GRAFANA_LOKI_TOKEN }}
@@ -91,7 +92,7 @@ jobs:
             fi
           }
           for s in \
-            CHAOS_ADMIN_TOKEN \
+            CHAOS_ADMIN_TOKEN METRICS_TOKEN \
             GRAFANA_LOKI_URL GRAFANA_LOKI_USER GRAFANA_LOKI_TOKEN \
             GRAFANA_OTLP_URL GRAFANA_OTLP_USER GRAFANA_OTLP_TOKEN; do
             put_if_set "$s"

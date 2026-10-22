@@ -24,4 +24,8 @@ export interface Env {
   // Chaos Mode admin gate. When unset, the /chaos control plane refuses to start chaos
   // (read-only /chaos/status + /chaos/events still work). Set as a Wrangler SECRET.
   CHAOS_ADMIN_TOKEN?: string;
+
+  // Optional bearer token that protects GET /metrics. Required by Grafana Cloud's
+  // "Metrics Endpoint" integration (which rejects unauthenticated URLs). Unset = public.
+  METRICS_TOKEN?: string;
 }
