@@ -1,0 +1,197 @@
+# Cloud Yatra — Grafana-managed alert rules (alerting as code)
+#
+# Importable provisioning file (apiVersion 1). These rules run against the Worker's
+# Prometheus metrics (DS_PROM, scrape of /metrics) — the series that are LIVE today, so the
+# alerts fire on real data with no Faro/Loki/Tempo dependency.
+#
+# HOW TO USE (pick one):
+#   • Grafana Cloud UI: Alerting → Alert rules → "Import to Grafana-managed rules" → upload
+#     this file (or paste it). Set the Prometheus datasource when prompted.
+#   • Terraform / grafanactl: provision this file directly.
+#   • Local Grafana: drop in provisioning/alerting/ and restart.
+#
+# BEFORE IMPORT: replace PROM_DATASOURCE_UID with your Prometheus datasource UID
+#   (Connections → Data sources → your "…-prom" → copy the uid from the URL), and set a
+#   contact point under Alerting → Contact points so notifications have somewhere to go.
+#
+# These encode the RED method + SRE multi-window burn alerting, which is the industry
+# standard (Google SRE workbook). Thresholds are demo-tuned; raise the `for:` durations in
+# production so a single blip doesn't page.
+
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: cloud-yatra-reliability
+    folder: Cloud Yatra
+    interval: 1m
+    rules:
+      # 1) High 5xx error rate (RED: Errors). Pages when >5% of requests fail for 5m.
+      - uid: cy-high-error-rate
+        title: Cloud Yatra · high backend error rate (>5%)
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        labels:
+          severity: critical
+          service: cloud-yatra-api
+        annotations:
+          summary: "Backend 5xx error rate is {{ printf \"%.1f\" $values.B.Value }}% (SLO budget burning)."
+          description: "More than 5% of requests to the Cloud Yatra Worker are returning 5xx over the last 5 minutes. Check the Grand Observatory 'Backend error rate' panel and recent Loki logs by correlationId."
+          runbook_url: "https://github.com/GitHer-Muna/cloud-yatra#observability"
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: PROM_DATASOURCE_UID
+            model:
+              refId: A
+              editorMode: code
+              expr: 'sum(rate(cy_api_requests_total{status_class="5xx"}[5m])) / clamp_min(sum(rate(cy_api_requests_total[5m])), 0.0001)'
+              instant: true
+              range: false
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: math
+              expression: '$A * 100'
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator: { type: gt, params: [5] }
+
+      # 2) High p99 latency (RED: Duration). Warns when p99 > 1000ms for 10m.
+      - uid: cy-high-latency-p99
+        title: Cloud Yatra · high p99 API latency (>1s)
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Alerting
+        labels:
+          severity: warning
+          service: cloud-yatra-api
+        annotations:
+          summary: "p99 API latency is {{ printf \"%.0f\" $values.A.Value }}ms (target <1000ms)."
+          description: "The 99th-percentile request duration on the Cloud Yatra Worker exceeded 1s for 10 minutes. Open the latency percentiles panel and follow an exemplar into the Tempo trace."
+        data:
+          - refId: A
+            relativeTimeRange: { from: 600, to: 0 }
+            datasourceUid: PROM_DATASOURCE_UID
+            model:
+              refId: A
+              editorMode: code
+              expr: 'histogram_quantile(0.99, sum(rate(cy_api_request_duration_ms_bucket[5m])) by (le))'
+              instant: true
+              range: false
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [1000] }
+
+      # 3) Fast error-budget burn (SRE multi-window). Pages when burning the 1% monthly
+      #    availability budget >14x in 1h — the classic "fast burn" page threshold.
+      - uid: cy-error-budget-fast-burn
+        title: Cloud Yatra · fast error-budget burn (14x, 1h)
+        condition: C
+        for: 2m
+        noDataState: OK
+        execErrState: Alerting
+        labels:
+          severity: critical
+          service: cloud-yatra-api
+          slo: availability-99
+        annotations:
+          summary: "Error budget burning at {{ printf \"%.1f\" $values.A.Value }}x the sustainable rate."
+          description: "At this 1h burn rate the entire 30-day error budget for the 99% availability SLO would be spent quickly. Treat as a page."
+        data:
+          - refId: A
+            relativeTimeRange: { from: 3600, to: 0 }
+            datasourceUid: PROM_DATASOURCE_UID
+            model:
+              refId: A
+              editorMode: code
+              expr: '( sum(rate(cy_api_requests_total{status_class="5xx"}[1h])) / clamp_min(sum(rate(cy_api_requests_total[1h])), 0.0001) ) / 0.01'
+              instant: true
+              range: false
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [14] }
+
+      # 4) Worker down / scrape stale. Alerts when the liveness gauge is not 1.
+      - uid: cy-worker-down
+        title: Cloud Yatra · Worker not reporting healthy
+        condition: C
+        for: 3m
+        noDataState: Alerting
+        execErrState: Alerting
+        labels:
+          severity: critical
+          service: cloud-yatra-api
+        annotations:
+          summary: "cy_api_up is {{ $values.A.Value }} (expected 1)."
+          description: "The Cloud Yatra Worker's liveness gauge is not 1, or Prometheus hasn't scraped /metrics recently. Check the Worker deploy and the Prometheus scrape job."
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: PROM_DATASOURCE_UID
+            model:
+              refId: A
+              editorMode: code
+              expr: 'max(cy_api_up)'
+              instant: true
+              range: false
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: lt, params: [1] }
+
+      # 5) Chaos Mode active (informational). Confirms the demo fault-injection is live so
+      #    reviewers see the alert fire and resolve during the "watch it react" demo.
+      - uid: cy-chaos-active
+        title: Cloud Yatra · Chaos Mode active (demo)
+        condition: C
+        for: 0m
+        noDataState: OK
+        execErrState: OK
+        labels:
+          severity: info
+          service: cloud-yatra-api
+        annotations:
+          summary: "Chaos Mode is active — synthetic latency/errors are being injected into gameplay routes."
+          description: "This is the admin-triggered resilience demo. The alert resolves automatically when the ~60s window ends."
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: PROM_DATASOURCE_UID
+            model:
+              refId: A
+              editorMode: code
+              expr: 'max(cy_chaos_active)'
+              instant: true
+              range: false
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [0] }

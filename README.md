@@ -122,7 +122,45 @@ D1 binding and the optional Grafana push / Chaos Mode secrets (all set via
 Import `observability/dashboards/cloud-yatra-grand-observatory.json` and map its five data
 sources — Faro Loki (RUM), backend Loki (logs), Prometheus (Worker `/metrics`), Tempo
 (traces), and the Infinity plugin (D1 analytics via the Worker's JSON endpoints).
-`grafana-alerts.json` holds recommended alert rules — set your Faro `app_id` first.
+`observability/grafana-alerts.yaml` holds real, importable Grafana-managed alert rules.
+
+### Observability architecture (the full-stack story)
+
+Cloud Yatra implements the **LGTM stack + Real User Monitoring** — the same architecture
+Grafana markets for production — across all four telemetry signals, with correlation and
+reliability engineering on top:
+
+```
+  Browser (Phaser game)                         Cloudflare Worker  (cloud-yatra-api)
+  ─────────────────────                         ───────────────────────────────────
+  Grafana Faro Web SDK                           per request:
+   • Core Web Vitals (LCP/INP/CLS)                 • Prometheus /metrics  (RED: rate,
+   • JS errors, sessions                             errors, duration histogram)
+   • custom gameplay events  ──► Faro receiver     • structured JSON log + correlationId ──► Loki
+                                   │                • OTLP trace span ──────────────────► Tempo
+                                   ▼                • D1 (SQLite) upserts ──► /stats,/leaderboard,/session
+                             Grafana Cloud  ◄──────────────────────── Infinity (JSON API datasource)
+                                   │
+                 one dashboard-as-code (versioned JSON)  +  SLOs  +  alerting-as-code
+```
+
+**What each signal demonstrates (industry terms you can defend in an interview):**
+
+| Signal | Implementation | Concept shown |
+|--------|----------------|---------------|
+| **Metrics** | Prometheus `/metrics`: `cy_api_requests_total{route,status_class}`, `cy_api_request_duration_ms` histogram | **Prometheus**, **RED method**, **`histogram_quantile`** for p50/p90/p99 |
+| **Logs** | One structured JSON log per request with `correlationId` → Loki | **Loki**, **structured logging**, **log↔trace correlation** |
+| **Traces** | Per-request **OTLP** span → Tempo; latency-panel **exemplars** jump to the trace | **OpenTelemetry**, **Tempo**, **exemplars** |
+| **RUM** | Faro Web SDK: web vitals, errors, custom events, sampled FPS | **Grafana Faro**, **Core Web Vitals**, front-end observability |
+| **Analytics** | D1 → JSON → Infinity datasource (leaderboard, funnel, per-player, geomap) | **Infinity**, **JSON-API-as-datasource** |
+| **Reliability** | SLO row (availability + latency SLI, **error-budget burn**) + 5 alert rules | **SLO/SLI**, **error budgets**, **multi-window burn-rate alerting** |
+| **As code** | Dashboard JSON + `grafana-alerts.yaml` in Git | **observability-as-code**, **GitOps** |
+| **Resilience** | Chaos Mode injects faults; alerts fire + annotations mark start/stop | **chaos engineering**, **fault injection**, **MTTR demo** |
+
+**Low-cardinality & privacy by design:** only bounded labels (`route`, `status_class`,
+`type`, `cause`, region); `session_id` is a log/trace field, never a metric label; no PII,
+no IPs — only a coarse edge country. This is the labeling discipline that keeps Prometheus
+cardinality (and cost) under control in production.
 
 ### Chaos Mode (the "watch it react" demo)
 
@@ -130,8 +168,9 @@ Chaos Mode is an admin-gated, self-only fault injector in the Worker. Set the
 `CHAOS_ADMIN_TOKEN` secret (`cd backend && npx wrangler secret put CHAOS_ADMIN_TOKEN`), then
 in the running game press **Shift+C**, enter the token, and start a ~60s window. The Worker
 adds latency + synthetic `503`s to the gameplay routes only (never health/metrics/control or
-any external service), the dashboard's CHAOS row + a red annotation react, and Guru Megh
-narrates the "storm" and its clearing. With no token set, the control plane is disabled.
+any external service), the dashboard's CHAOS row + a red annotation react, the "Chaos Mode
+active" alert fires and then resolves, and Guru Megh narrates the "storm" and its clearing.
+With no token set, the control plane is disabled.
 
 ## Configuration
 

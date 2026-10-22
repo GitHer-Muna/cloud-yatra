@@ -1025,7 +1025,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 17
+    "y": 25
    },
    "id": 8,
    "panels": []
@@ -1042,7 +1042,7 @@
     "h": 7,
     "w": 12,
     "x": 0,
-    "y": 18
+    "y": 26
    },
    "id": 9,
    "transparent": true,
@@ -1107,7 +1107,7 @@
   {
    "type": "timeseries",
    "title": "Latency percentiles (p50/p90/p99)",
-   "description": "Backend request duration percentiles from the Prometheus histogram.",
+   "description": "Backend request duration percentiles from the Prometheus histogram. Exemplars link latency spikes to the exact Tempo trace (via OTLP).",
    "datasource": {
     "type": "prometheus",
     "uid": "${DS_PROM}"
@@ -1116,7 +1116,7 @@
     "h": 7,
     "w": 12,
     "x": 12,
-    "y": 18
+    "y": 26
    },
    "id": 10,
    "transparent": true,
@@ -1174,19 +1174,25 @@
      "refId": "A",
      "expr": "histogram_quantile(0.50, sum(rate(cy_api_request_duration_ms_bucket[5m])) by (le))",
      "legendFormat": "p50",
-     "range": true
+     "range": true,
+     "exemplar": true,
+     "editorMode": "code"
     },
     {
      "refId": "B",
      "expr": "histogram_quantile(0.90, sum(rate(cy_api_request_duration_ms_bucket[5m])) by (le))",
      "legendFormat": "p90",
-     "range": true
+     "range": true,
+     "exemplar": true,
+     "editorMode": "code"
     },
     {
      "refId": "C",
      "expr": "histogram_quantile(0.99, sum(rate(cy_api_request_duration_ms_bucket[5m])) by (le))",
      "legendFormat": "p99",
-     "range": true
+     "range": true,
+     "exemplar": true,
+     "editorMode": "code"
     }
    ]
   },
@@ -1202,7 +1208,7 @@
     "h": 7,
     "w": 8,
     "x": 0,
-    "y": 25
+    "y": 33
    },
    "id": 11,
    "transparent": true,
@@ -1337,7 +1343,7 @@
     "h": 7,
     "w": 8,
     "x": 8,
-    "y": 25
+    "y": 33
    },
    "id": 12,
    "transparent": true,
@@ -1448,7 +1454,7 @@
     "h": 7,
     "w": 8,
     "x": 16,
-    "y": 25
+    "y": 33
    },
    "id": 13,
    "transparent": true,
@@ -1481,7 +1487,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 32
+    "y": 40
    },
    "id": 14,
    "panels": []
@@ -1498,7 +1504,7 @@
     "h": 8,
     "w": 16,
     "x": 0,
-    "y": 33
+    "y": 41
    },
    "id": 15,
    "transparent": true,
@@ -1531,7 +1537,7 @@
     "h": 8,
     "w": 8,
     "x": 16,
-    "y": 33
+    "y": 41
    },
    "id": 16,
    "transparent": true,
@@ -1600,7 +1606,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 41
+    "y": 49
    },
    "id": 17,
    "panels": []
@@ -1617,7 +1623,7 @@
     "h": 7,
     "w": 12,
     "x": 0,
-    "y": 42
+    "y": 50
    },
    "id": 18,
    "transparent": true,
@@ -1702,7 +1708,7 @@
     "h": 7,
     "w": 8,
     "x": 12,
-    "y": 42
+    "y": 50
    },
    "id": 19,
    "transparent": true,
@@ -1785,7 +1791,7 @@
     "h": 7,
     "w": 4,
     "x": 20,
-    "y": 42
+    "y": 50
    },
    "id": 20,
    "transparent": true,
@@ -1864,7 +1870,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 49
+    "y": 57
    },
    "id": 21,
    "panels": []
@@ -1881,7 +1887,7 @@
     "h": 7,
     "w": 12,
     "x": 0,
-    "y": 50
+    "y": 58
    },
    "id": 22,
    "transparent": true,
@@ -1967,7 +1973,7 @@
     "h": 7,
     "w": 12,
     "x": 12,
-    "y": 50
+    "y": 58
    },
    "id": 23,
    "transparent": true,
@@ -2011,7 +2017,7 @@
     "h": 6,
     "w": 24,
     "x": 0,
-    "y": 57
+    "y": 65
    },
    "id": 24,
    "transparent": true,
@@ -2097,7 +2103,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 69
+    "y": 77
    },
    "id": 25,
    "panels": []
@@ -2114,7 +2120,7 @@
     "h": 7,
     "w": 12,
     "x": 0,
-    "y": 70
+    "y": 78
    },
    "id": 26,
    "transparent": true,
@@ -2188,7 +2194,7 @@
     "h": 7,
     "w": 6,
     "x": 12,
-    "y": 70
+    "y": 78
    },
    "id": 27,
    "transparent": true,
@@ -2255,7 +2261,7 @@
     "h": 7,
     "w": 6,
     "x": 18,
-    "y": 70
+    "y": 78
    },
    "id": 28,
    "transparent": true,
@@ -2333,7 +2339,7 @@
     "h": 7,
     "w": 16,
     "x": 0,
-    "y": 77
+    "y": 85
    },
    "id": 29,
    "transparent": true,
@@ -2411,7 +2417,7 @@
     "h": 7,
     "w": 8,
     "x": 16,
-    "y": 77
+    "y": 85
    },
    "id": 30,
    "transparent": true,
@@ -2477,7 +2483,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 84
+    "y": 92
    },
    "id": 31,
    "panels": []
@@ -2494,7 +2500,7 @@
     "h": 8,
     "w": 12,
     "x": 0,
-    "y": 85
+    "y": 93
    },
    "id": 32,
    "transparent": true,
@@ -2624,7 +2630,7 @@
     "h": 4,
     "w": 4,
     "x": 12,
-    "y": 85
+    "y": 93
    },
    "id": 33,
    "transparent": true,
@@ -2686,7 +2692,7 @@
     "h": 4,
     "w": 4,
     "x": 16,
-    "y": 85
+    "y": 93
    },
    "id": 34,
    "transparent": true,
@@ -2748,7 +2754,7 @@
     "h": 8,
     "w": 4,
     "x": 20,
-    "y": 85
+    "y": 93
    },
    "id": 35,
    "transparent": true,
@@ -2824,7 +2830,7 @@
     "h": 4,
     "w": 8,
     "x": 12,
-    "y": 89
+    "y": 97
    },
    "id": 36,
    "transparent": true,
@@ -2896,7 +2902,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 93
+    "y": 101
    },
    "id": 37,
    "panels": []
@@ -2913,7 +2919,7 @@
     "h": 9,
     "w": 6,
     "x": 12,
-    "y": 94
+    "y": 102
    },
    "id": 38,
    "transparent": true,
@@ -2973,7 +2979,7 @@
     "h": 9,
     "w": 6,
     "x": 18,
-    "y": 94
+    "y": 102
    },
    "id": 39,
    "transparent": true,
@@ -3028,7 +3034,7 @@
     "h": 4,
     "w": 24,
     "x": 0,
-    "y": 103
+    "y": 111
    },
    "id": 40,
    "transparent": true,
@@ -3050,7 +3056,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 107
+    "y": 115
    },
    "id": 41,
    "panels": []
@@ -3068,7 +3074,7 @@
     "h": 6,
     "w": 4,
     "x": 0,
-    "y": 108
+    "y": 116
    },
    "transparent": true,
    "fieldConfig": {
@@ -3143,7 +3149,7 @@
     "h": 6,
     "w": 20,
     "x": 4,
-    "y": 108
+    "y": 116
    },
    "fieldConfig": {
     "defaults": {
@@ -3217,7 +3223,7 @@
     "h": 7,
     "w": 24,
     "x": 0,
-    "y": 114
+    "y": 122
    },
    "fieldConfig": {
     "defaults": {
@@ -3278,7 +3284,7 @@
     "h": 6,
     "w": 24,
     "x": 0,
-    "y": 63
+    "y": 71
    },
    "fieldConfig": {
     "defaults": {
@@ -3351,7 +3357,7 @@
     "h": 9,
     "w": 12,
     "x": 0,
-    "y": 94
+    "y": 102
    },
    "fieldConfig": {
     "defaults": {
@@ -3450,6 +3456,279 @@
        "type": "number"
       }
      ]
+    }
+   ]
+  },
+  {
+   "type": "row",
+   "id": 55,
+   "collapsed": false,
+   "title": "SLOs & ERROR BUDGET \u00b7 service reliability (RED \u2192 SLI/SLO, industry-standard)",
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 17
+   },
+   "panels": []
+  },
+  {
+   "type": "gauge",
+   "id": 56,
+   "transparent": true,
+   "title": "Availability SLI (30d)",
+   "description": "Percentage of non-5xx responses over 30 days. SLO target: 99%.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "${DS_PROM}"
+   },
+   "gridPos": {
+    "h": 7,
+    "w": 6,
+    "x": 0,
+    "y": 18
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percent",
+     "decimals": 3,
+     "min": 95,
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#e0294a",
+        "value": null
+       },
+       {
+        "color": "#ffb454",
+        "value": 99
+       },
+       {
+        "color": "#73d13d",
+        "value": 99.9
+       }
+      ]
+     },
+     "max": 100
+    },
+    "overrides": []
+   },
+   "options": {
+    "showThresholdLabels": false,
+    "showThresholdMarkers": true,
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "100 * sum(rate(cy_api_requests_total{status_class!=\"5xx\"}[30d])) / clamp_min(sum(rate(cy_api_requests_total[30d])), 0.0001)",
+     "legendFormat": "Availability SLI (30d)",
+     "editorMode": "code"
+    }
+   ]
+  },
+  {
+   "type": "gauge",
+   "id": 57,
+   "transparent": true,
+   "title": "Error budget remaining",
+   "description": "Share of the 1% monthly error budget still unspent (99% availability SLO).",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "${DS_PROM}"
+   },
+   "gridPos": {
+    "h": 7,
+    "w": 6,
+    "x": 6,
+    "y": 18
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percent",
+     "decimals": 1,
+     "min": 0,
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#e0294a",
+        "value": null
+       },
+       {
+        "color": "#ffb454",
+        "value": 25
+       },
+       {
+        "color": "#73d13d",
+        "value": 60
+       }
+      ]
+     },
+     "max": 100
+    },
+    "overrides": []
+   },
+   "options": {
+    "showThresholdLabels": false,
+    "showThresholdMarkers": true,
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "100 * (0.01 - (1 - (sum(rate(cy_api_requests_total{status_class!=\"5xx\"}[30d])) / clamp_min(sum(rate(cy_api_requests_total[30d])),0.0001)))) / 0.01",
+     "legendFormat": "Error budget remaining",
+     "editorMode": "code"
+    }
+   ]
+  },
+  {
+   "type": "gauge",
+   "id": 58,
+   "transparent": true,
+   "title": "Latency SLO \u00b7 <500ms (30d)",
+   "description": "Share of requests served under 500ms. SLO target: 95%.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "${DS_PROM}"
+   },
+   "gridPos": {
+    "h": 7,
+    "w": 6,
+    "x": 12,
+    "y": 18
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percent",
+     "decimals": 2,
+     "min": 80,
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#e0294a",
+        "value": null
+       },
+       {
+        "color": "#ffb454",
+        "value": 95
+       },
+       {
+        "color": "#73d13d",
+        "value": 99
+       }
+      ]
+     },
+     "max": 100
+    },
+    "overrides": []
+   },
+   "options": {
+    "showThresholdLabels": false,
+    "showThresholdMarkers": true,
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "100 * sum(rate(cy_api_request_duration_ms_bucket{le=\"500\"}[30d])) / clamp_min(sum(rate(cy_api_request_duration_ms_count[30d])),0.0001)",
+     "legendFormat": "Latency SLO \u00b7 <500ms (30d)",
+     "editorMode": "code"
+    }
+   ]
+  },
+  {
+   "type": "stat",
+   "id": 59,
+   "transparent": true,
+   "title": "Error-budget burn (1h)",
+   "description": "How fast the budget is being spent right now vs. sustainable (1.0 = on-pace). >14 = page.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "${DS_PROM}"
+   },
+   "gridPos": {
+    "h": 7,
+    "w": 6,
+    "x": 18,
+    "y": 18
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "decimals": 2,
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#73d13d",
+        "value": null
+       },
+       {
+        "color": "#ffb454",
+        "value": 1
+       },
+       {
+        "color": "#e0294a",
+        "value": 14
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "background",
+    "graphMode": "area",
+    "textMode": "value_and_name",
+    "justifyMode": "center",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "( sum(rate(cy_api_requests_total{status_class=\"5xx\"}[1h])) / clamp_min(sum(rate(cy_api_requests_total[1h])),0.0001) ) / 0.01",
+     "legendFormat": "Error-budget burn (1h)",
+     "editorMode": "code"
     }
    ]
   }
