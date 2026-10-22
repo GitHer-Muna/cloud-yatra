@@ -325,7 +325,6 @@
      "source": "url",
      "format": "table",
      "url": "${api_base_url}/session?id=${session}",
-     "method": "GET",
      "root_selector": "session",
      "parser": "backend",
      "columns": [
@@ -334,7 +333,11 @@
        "text": "bestScore",
        "type": "number"
       }
-     ]
+     ],
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
     }
    ]
   },
@@ -388,7 +391,6 @@
      "source": "url",
      "format": "table",
      "url": "${api_base_url}/session?id=${session}",
-     "method": "GET",
      "root_selector": "session",
      "parser": "backend",
      "columns": [
@@ -397,7 +399,11 @@
        "text": "maxProgress",
        "type": "number"
       }
-     ]
+     ],
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
     }
    ]
   },
@@ -451,7 +457,6 @@
      "source": "url",
      "format": "table",
      "url": "${api_base_url}/session?id=${session}",
-     "method": "GET",
      "root_selector": "session",
      "parser": "backend",
      "columns": [
@@ -460,7 +465,11 @@
        "text": "completed",
        "type": "number"
       }
-     ]
+     ],
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
     }
    ]
   },
@@ -514,7 +523,6 @@
      "source": "url",
      "format": "table",
      "url": "${api_base_url}/session?id=${session}",
-     "method": "GET",
      "root_selector": "session",
      "parser": "backend",
      "columns": [
@@ -523,7 +531,11 @@
        "text": "deaths",
        "type": "number"
       }
-     ]
+     ],
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
     }
    ]
   },
@@ -577,7 +589,6 @@
      "source": "url",
      "format": "table",
      "url": "${api_base_url}/session?id=${session}",
-     "method": "GET",
      "root_selector": "session",
      "parser": "backend",
      "columns": [
@@ -586,7 +597,11 @@
        "text": "jumps",
        "type": "number"
       }
-     ]
+     ],
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
     }
    ]
   },
@@ -640,7 +655,6 @@
      "source": "url",
      "format": "table",
      "url": "${api_base_url}/session?id=${session}",
-     "method": "GET",
      "root_selector": "session",
      "parser": "backend",
      "columns": [
@@ -649,7 +663,11 @@
        "text": "collects",
        "type": "number"
       }
-     ]
+     ],
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
     }
    ]
   },
@@ -997,7 +1015,6 @@
      "source": "url",
      "format": "table",
      "url": "${api_base_url}/stats",
-     "method": "GET",
      "root_selector": "totals",
      "parser": "backend",
      "columns": [
@@ -1006,7 +1023,11 @@
        "text": "events",
        "type": "number"
       }
-     ]
+     ],
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
     }
    ],
    "links": [
@@ -2060,7 +2081,6 @@
      "source": "url",
      "format": "table",
      "url": "${api_base_url}/stats",
-     "method": "GET",
      "root_selector": "funnel",
      "parser": "backend",
      "columns": [
@@ -2084,7 +2104,11 @@
        "text": "Completed",
        "type": "number"
       }
-     ]
+     ],
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
     }
    ],
    "links": [
@@ -2157,7 +2181,6 @@
      "source": "url",
      "format": "table",
      "url": "${api_base_url}/stats",
-     "method": "GET",
      "root_selector": "eventsByType",
      "parser": "backend",
      "columns": [
@@ -2171,7 +2194,11 @@
        "text": "count",
        "type": "number"
       }
-     ]
+     ],
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
     }
    ],
    "links": [
@@ -2231,7 +2258,6 @@
      "source": "url",
      "format": "table",
      "url": "${api_base_url}/stats",
-     "method": "GET",
      "root_selector": "deathsByCause",
      "parser": "backend",
      "columns": [
@@ -2245,7 +2271,11 @@
        "text": "count",
        "type": "number"
       }
-     ]
+     ],
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
     }
    ]
   },
@@ -2309,7 +2339,6 @@
      "source": "url",
      "format": "table",
      "url": "${api_base_url}/stats",
-     "method": "GET",
      "root_selector": "collectsByKind",
      "parser": "backend",
      "columns": [
@@ -2323,7 +2352,11 @@
        "text": "count",
        "type": "number"
       }
-     ]
+     ],
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
     }
    ]
   },
@@ -2377,7 +2410,6 @@
      "source": "url",
      "format": "table",
      "url": "${api_base_url}/stats",
-     "method": "GET",
      "root_selector": "byLevel",
      "parser": "backend",
      "columns": [
@@ -2401,7 +2433,11 @@
        "text": "completions",
        "type": "number"
       }
-     ]
+     ],
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
     }
    ]
   },
@@ -2447,7 +2483,6 @@
      "source": "url",
      "format": "table",
      "url": "${api_base_url}/stats",
-     "method": "GET",
      "root_selector": "funnel",
      "columns": [
       {
@@ -2471,7 +2506,11 @@
        "type": "number"
       }
      ],
-     "parser": "backend"
+     "parser": "backend",
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
     }
    ]
   },
@@ -2590,7 +2629,6 @@
      "source": "url",
      "format": "table",
      "url": "${api_base_url}/leaderboard?limit=15",
-     "method": "GET",
      "root_selector": "entries",
      "columns": [
       {
@@ -2614,7 +2652,11 @@
        "type": "string"
       }
      ],
-     "parser": "backend"
+     "parser": "backend",
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
     }
    ]
   },
@@ -2667,7 +2709,6 @@
      "source": "url",
      "format": "table",
      "url": "${api_base_url}/stats",
-     "method": "GET",
      "root_selector": "totals",
      "parser": "backend",
      "columns": [
@@ -2676,7 +2717,11 @@
        "text": "completions",
        "type": "number"
       }
-     ]
+     ],
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
     }
    ]
   },
@@ -2729,7 +2774,6 @@
      "source": "url",
      "format": "table",
      "url": "${api_base_url}/stats",
-     "method": "GET",
      "root_selector": "totals",
      "parser": "backend",
      "columns": [
@@ -2738,7 +2782,11 @@
        "text": "events",
        "type": "number"
       }
-     ]
+     ],
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
     }
    ]
   },
@@ -2800,7 +2848,6 @@
      "source": "url",
      "format": "table",
      "url": "${api_base_url}/stats",
-     "method": "GET",
      "root_selector": "collectsByKind",
      "parser": "backend",
      "columns": [
@@ -2814,7 +2861,11 @@
        "text": "count",
        "type": "number"
       }
-     ]
+     ],
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
     }
    ]
   },
@@ -2881,7 +2932,6 @@
      "source": "url",
      "format": "table",
      "url": "${api_base_url}/stats",
-     "method": "GET",
      "root_selector": "",
      "parser": "backend",
      "columns": [
@@ -2890,7 +2940,11 @@
        "text": "avgFps",
        "type": "number"
       }
-     ]
+     ],
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
     }
    ]
   },
@@ -2949,7 +3003,6 @@
      "source": "url",
      "format": "table",
      "url": "${api_base_url}/stats",
-     "method": "GET",
      "root_selector": "topCountries",
      "columns": [
       {
@@ -2963,7 +3016,11 @@
        "type": "number"
       }
      ],
-     "parser": "backend"
+     "parser": "backend",
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
     }
    ]
   },
@@ -3009,7 +3066,6 @@
      "source": "url",
      "format": "table",
      "url": "${api_base_url}/stats",
-     "method": "GET",
      "root_selector": "eventsByType",
      "columns": [
       {
@@ -3023,7 +3079,11 @@
        "type": "number"
       }
      ],
-     "parser": "backend"
+     "parser": "backend",
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
     }
    ]
   },
@@ -3242,7 +3302,8 @@
      "format": "table",
      "url": "${api_base_url}/chaos/events",
      "url_options": {
-      "method": "GET"
+      "method": "GET",
+      "data": ""
      },
      "root_selector": "events",
      "columns": [
@@ -3266,7 +3327,8 @@
        "text": "errorRate",
        "type": "number"
       }
-     ]
+     ],
+     "parser": "backend"
     }
    ]
   },
@@ -3325,7 +3387,6 @@
      "source": "url",
      "format": "table",
      "url": "${api_base_url}/stats",
-     "method": "GET",
      "root_selector": "byLevel",
      "parser": "backend",
      "columns": [
@@ -3339,7 +3400,11 @@
        "text": "events",
        "type": "number"
       }
-     ]
+     ],
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
     }
    ]
   },
@@ -3441,7 +3506,6 @@
      "source": "url",
      "format": "table",
      "url": "${api_base_url}/stats",
-     "method": "GET",
      "root_selector": "topCountries",
      "parser": "backend",
      "columns": [
@@ -3455,7 +3519,11 @@
        "text": "Sessions",
        "type": "number"
       }
-     ]
+     ],
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
     }
    ]
   },
