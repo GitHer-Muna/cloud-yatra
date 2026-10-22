@@ -25,7 +25,7 @@ export interface ChaosProfile {
   errorRate: number;
 }
 
-export interface ChaosState {
+interface ChaosState {
   active: boolean;
   /** epoch ms when the current window expires (0 when inactive). */
   until: number;
@@ -36,21 +36,20 @@ export interface ChaosState {
   injected: number;
 }
 
-export interface ChaosEvent {
+interface ChaosEvent {
   kind: 'chaos_start' | 'chaos_stop' | 'chaos_expire';
   ts: number; // epoch ms
   profile?: ChaosProfile;
-  reason?: string;
 }
 
 /** Hard ceilings so a typo can't turn a demo into a real outage. */
-export const MAX_DURATION_MS = 120_000; // never longer than 2 minutes
-export const DEFAULT_DURATION_MS = 60_000; // ~60s per the product brief
-export const MAX_LATENCY_MS = 3_000;
-export const DEFAULT_LATENCY_MS = 600;
-export const DEFAULT_ERROR_RATE = 0.25;
+const MAX_DURATION_MS = 120_000; // never longer than 2 minutes
+const DEFAULT_DURATION_MS = 60_000; // ~60s per the product brief
+const MAX_LATENCY_MS = 3_000;
+const DEFAULT_LATENCY_MS = 600;
+const DEFAULT_ERROR_RATE = 0.25;
 /** Routes chaos is allowed to perturb. The control/observability plane is never touched. */
-export const CHAOS_TARGET_ROUTES = new Set(['/event', '/events', '/score']);
+const CHAOS_TARGET_ROUTES = new Set(['/event', '/events', '/score']);
 const MAX_RING = 20; // keep only the most recent N chaos events for annotations
 
 const state: ChaosState = {

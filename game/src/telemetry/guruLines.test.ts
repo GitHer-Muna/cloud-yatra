@@ -6,9 +6,12 @@ import { describe, expect, it } from 'vitest';
 import { guruLine, askGuru } from './guruLines';
 
 describe('guruLine incident narration', () => {
-  it('returns a storm line when chaos begins', () => {
+  it('returns a storm (not recovery) line when chaos begins', () => {
+    // Two storm variants exist; assert it reads as trouble, not "all clear".
     const text = guruLine({ useCase: 'incident', recentEvent: 'storm' });
-    expect(text.toLowerCase()).toContain('storm');
+    expect(text.length).toBeGreaterThan(0);
+    expect(/storm|wild|falter|slow/i.test(text)).toBe(true);
+    expect(/passed|clear/i.test(text)).toBe(false);
   });
 
   it('returns a recovery line when chaos clears', () => {

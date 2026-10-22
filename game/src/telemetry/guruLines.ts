@@ -78,8 +78,8 @@ const GENERAL_CHEERS = [
 // 'recovered' when the skies clear.
 const INCIDENTS: Record<string, string[]> = {
   storm: [
-    'A storm gathers over the cloud-kingdom, Yatri—the messengers run slow. Walk on; the skies will clear.',
-    'The mountain winds are wild just now; our cloud-paths falter. Keep your rhythm—this will pass.',
+    'A storm gathers over the cloud-kingdom, Yatri—the messengers run slow. Walk on; it will pass.',
+    'The mountain winds are wild just now; our cloud-paths falter. Keep your rhythm—hold steady.',
   ],
   recovered: [
     'The storm has passed, traveller. The cloud-paths run clear again, and the messengers fly swift.',
