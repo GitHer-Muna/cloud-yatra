@@ -244,7 +244,7 @@
  },
  "timezone": "",
  "title": "Cloud Yatra \u00b7 Grand Observatory",
- "uid": "cloud-yatra-grand-observatory",
+ "uid": "cloud-yatra-np",
  "version": 3,
  "panels": [
   {
@@ -1613,7 +1613,7 @@
   },
   {
    "type": "timeseries",
-   "title": "Web Vitals \u00b7 LCP / INP (p95) \u00b7 (needs Faro)",
+   "title": "Web Vitals \u00b7 LCP / INP (p95)",
    "description": "Real-user loading and interaction latency from Faro web-vitals.",
    "datasource": {
     "type": "loki",
@@ -1698,7 +1698,7 @@
   },
   {
    "type": "timeseries",
-   "title": "Web Vitals \u00b7 CLS / TTFB / FCP \u00b7 (needs Faro)",
+   "title": "Web Vitals \u00b7 CLS / TTFB / FCP",
    "description": "Layout stability and first-byte/paint timing.",
    "datasource": {
     "type": "loki",
@@ -1781,7 +1781,7 @@
   },
   {
    "type": "stat",
-   "title": "Browser exceptions \u00b7 (needs Faro)",
+   "title": "Browser exceptions",
    "description": "JS errors + unhandled rejections (Faro). Drill into Frontend Observability for stacks.",
    "datasource": {
     "type": "loki",
@@ -1877,7 +1877,7 @@
   },
   {
    "type": "timeseries",
-   "title": "Sampled FPS by region \u00b7 (needs Faro)",
+   "title": "Sampled FPS by region",
    "description": "Average FPS sampled ~every 2s (never per-frame), split by Nepal region.",
    "datasource": {
     "type": "loki",
@@ -1963,7 +1963,7 @@
   },
   {
    "type": "heatmap",
-   "title": "FPS distribution (heatmap) \u00b7 (needs Faro)",
+   "title": "FPS distribution (heatmap)",
    "description": "How smooth play actually feels across all players and devices.",
    "datasource": {
     "type": "loki",
