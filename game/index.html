@@ -119,6 +119,97 @@
       #cy-observatory code {
         color: #f3c623;
       }
+      /* Native live "mini-observatory" tiles — real D1 data fetched on the same page
+         (Grafana Cloud blocks iframe embedding, so we render our own live tiles). */
+      #cy-obs-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+        margin-top: 8px;
+      }
+      .cy-tile {
+        background: linear-gradient(145deg, rgba(23, 46, 77, 0.9), rgba(12, 24, 41, 0.9));
+        border: 1px solid rgba(142, 203, 255, 0.18);
+        border-radius: 12px;
+        padding: 14px 16px;
+        min-height: 78px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .cy-tile .cy-tile-label {
+        color: #9ec7e8;
+        font-size: 11px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+      .cy-tile .cy-tile-value {
+        color: #f6b73c;
+        font-size: clamp(22px, 4vw, 34px);
+        font-weight: 800;
+        line-height: 1;
+      }
+      .cy-tile .cy-tile-sub {
+        color: #7fa8c7;
+        font-size: 11px;
+        margin-top: 4px;
+      }
+      .cy-tile.cy-span2 {
+        grid-column: span 2;
+      }
+      .cy-lb {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      .cy-lb th,
+      .cy-lb td {
+        text-align: left;
+        padding: 5px 8px;
+        border-bottom: 1px solid rgba(142, 203, 255, 0.1);
+        color: #d7e9f7;
+      }
+      .cy-lb th {
+        color: #9ec7e8;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .cy-lb td.cy-rank {
+        color: #f6b73c;
+        font-weight: 800;
+      }
+      .cy-bar-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 5px 0;
+      }
+      .cy-bar-label {
+        flex: 0 0 96px;
+        color: #cfe3f5;
+        font-size: 12px;
+      }
+      .cy-bar-track {
+        flex: 1;
+        height: 12px;
+        background: rgba(142, 203, 255, 0.12);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .cy-bar-fill {
+        height: 100%;
+        border-radius: 6px;
+        background: linear-gradient(90deg, #2e8b57, #d9a441, #8ecbff);
+      }
+      .cy-bar-val {
+        flex: 0 0 auto;
+        color: #9ec7e8;
+        font-size: 12px;
+        min-width: 42px;
+        text-align: right;
+      }
       /* Phones / small or coarse-pointer devices: the game still occupies the viewport,
          then the observatory follows below it and can be scrolled to. */
       @media (max-width: 820px), (pointer: coarse) {
@@ -215,21 +306,19 @@
       <div class="cy-observatory-heading">
         <div>
           <h2 id="cy-observatory-title">Cloud Yatra · Live Observatory</h2>
-          <p>Real browser experience, gameplay rhythm, and Yatri’s journey — powered by Grafana Faro.</p>
+          <p>Live data from the backend as you and other pilgrims play — read straight from Cloudflare D1 via the Worker's public API, refreshed every few seconds.</p>
         </div>
-        <span class="cy-observatory-status" id="cy-observatory-status">waiting for dashboard</span>
+        <span class="cy-observatory-status" id="cy-observatory-status">connecting…</span>
       </div>
-      <div class="cy-observatory-empty" id="cy-observatory-empty">
-        Add <code>VITE_GRAFANA_DASHBOARD_URL</code> to the public build to show the shared Grafana Cloud
-        dashboard here. The game and Faro telemetry remain fully functional without it.
+      <div class="cy-observatory-empty" id="cy-observatory-empty" hidden>
+        Backend not configured — the game still plays fully; live stats appear when a backend is connected.
       </div>
-      <iframe
-        id="cy-observatory-frame"
-        title="Cloud Yatra Live Observatory Grafana dashboard"
-        loading="lazy"
-        allow="fullscreen"
-        hidden
-      ></iframe>
+      <div id="cy-obs-grid" aria-live="polite"></div>
+      <p style="margin-top:14px;font-size:12px;color:#7fa8c7">
+        Want the full-stack Grafana view (metrics, logs, traces, SLOs)?
+        <a id="cy-obs-grafana-link" href="#" target="_blank" rel="noopener"
+           style="color:#8ecbff;display:none">Open the Grand Observatory →</a>
+      </p>
     </section>
     <div id="cy-rotate" role="alert" aria-label="Please rotate your device to landscape to play Cloud Yatra">
       <div class="cy-phone" aria-hidden="true"></div>
@@ -240,50 +329,91 @@
       <p style="text-align: center">Cloud Yatra needs JavaScript enabled to play.</p>
     </noscript>
     <script type="module">
-      const dashboardUrl = import.meta.env.VITE_GRAFANA_DASHBOARD_URL;
-      const frame = document.getElementById('cy-observatory-frame');
+      // Native live "mini-observatory" — Grafana Cloud blocks iframe embedding
+      // (frame-ancestors 'none'), so instead of embedding the Grafana UI we fetch the SAME
+      // real data (Cloudflare D1 via the Worker's public /stats + /leaderboard) and render
+      // live tiles on this page. Refreshes every 5s. The full Grafana dashboard (metrics,
+      // logs, traces, SLOs) is shown side-by-side in Grafana for the deep story.
+      const apiBase = (import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/$/, '');
+      const grafanaUrl = import.meta.env.VITE_GRAFANA_DASHBOARD_URL;
+      const grid = document.getElementById('cy-obs-grid');
       const empty = document.getElementById('cy-observatory-empty');
       const status = document.getElementById('cy-observatory-status');
+      const gLink = document.getElementById('cy-obs-grafana-link');
 
-      // The anonymous per-tab session id, SHARED with the telemetry pipeline (which reads
-      // the same sessionStorage key — see src/telemetry/ids.ts getSessionId). Passing it to
-      // the dashboard as `var-session` lets the "Your Run" panels show THIS player's live
-      // metrics, while all other panels keep showing the shared, already-populated data.
-      function sharedSessionId() {
-        const KEY = 'cloud-yatra.sessionId';
-        try {
-          const existing = sessionStorage.getItem(KEY);
-          if (existing && existing.length >= 8) return existing;
-          const fresh =
-            (crypto && crypto.randomUUID && crypto.randomUUID()) ||
-            'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (ch) => {
-              const r = (Math.random() * 16) | 0;
-              return (ch === 'x' ? r : (r & 0x3) | 0x8).toString(16);
-            });
-          sessionStorage.setItem(KEY, fresh);
-          return fresh;
-        } catch {
-          return '';
-        }
+      if (grafanaUrl && gLink) {
+        gLink.href = grafanaUrl;
+        gLink.style.display = 'inline';
       }
 
-      if (dashboardUrl && frame && empty && status) {
+      const esc = (s) =>
+        String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+      const num = (n) => (typeof n === 'number' ? n.toLocaleString() : '—');
+
+      function tile(label, value, sub) {
+        return `<div class="cy-tile"><div class="cy-tile-label">${esc(label)}</div>` +
+          `<div class="cy-tile-value">${esc(value)}</div>` +
+          (sub ? `<div class="cy-tile-sub">${esc(sub)}</div>` : '') + `</div>`;
+      }
+
+      function regionBars(byLevel) {
+        const order = { terai: 0, hills: 1, himal: 2, himal_rajya: 3 };
+        const names = { terai: 'Terai', hills: 'Hills', himal: 'Himal', himal_rajya: 'Summit' };
+        const rows = (byLevel || []).slice().sort((a, b) => (order[a.level] ?? 9) - (order[b.level] ?? 9));
+        const max = Math.max(1, ...rows.map((r) => r.events || 0));
+        return `<div class="cy-tile cy-span2"><div class="cy-tile-label">Climb intensity by region</div>` +
+          rows.map((r) =>
+            `<div class="cy-bar-row"><span class="cy-bar-label">${esc(names[r.level] || r.level)}</span>` +
+            `<span class="cy-bar-track"><span class="cy-bar-fill" style="width:${Math.round((r.events / max) * 100)}%"></span></span>` +
+            `<span class="cy-bar-val">${num(r.events)}</span></div>`).join('') + `</div>`;
+      }
+
+      function leaderboardTile(entries) {
+        const rows = (entries || []).slice(0, 5).map((e, i) =>
+          `<tr><td class="cy-rank">${i + 1}</td><td>${esc(e.name ?? '—')}</td>` +
+          `<td>${num(e.score)}</td><td>${esc(e.country ?? '')}</td></tr>`).join('');
+        return `<div class="cy-tile cy-span2"><div class="cy-tile-label">🏔️ Shared leaderboard — top pilgrims</div>` +
+          (rows
+            ? `<table class="cy-lb"><thead><tr><th>#</th><th>Pilgrim</th><th>Score</th><th>From</th></tr></thead><tbody>${rows}</tbody></table>`
+            : `<div class="cy-tile-sub">No summit finishes yet — be the first to plant the pennant!</div>`) +
+          `</div>`;
+      }
+
+      async function refresh() {
+        if (!apiBase) {
+          grid.hidden = true;
+          empty.hidden = false;
+          status.textContent = 'offline';
+          return;
+        }
         try {
-          const url = new URL(dashboardUrl, window.location.href);
-          url.searchParams.set('theme', 'dark');
-          url.searchParams.set('kiosk', 'tv');
-          if (!url.searchParams.has('refresh')) url.searchParams.set('refresh', '5s');
-          // Tell the dashboard which run is "yours" so the per-player panels light up live.
-          const sid = sharedSessionId();
-          if (sid) url.searchParams.set('var-session', sid);
-          frame.src = url.toString();
-          frame.hidden = false;
+          const [statsRes, lbRes] = await Promise.all([
+            fetch(`${apiBase}/stats`, { headers: { Accept: 'application/json' } }),
+            fetch(`${apiBase}/leaderboard?limit=5`, { headers: { Accept: 'application/json' } }),
+          ]);
+          const s = await statsRes.json();
+          const lb = await lbRes.json();
+          const countries = (s.topCountries || []).map((c) => `${c.country} ${c.sessions}`).join(' · ');
+          grid.innerHTML =
+            tile('Total events (D1)', num(s.totals?.events)) +
+            tile('Summit completions', num(s.totals?.completions)) +
+            tile('Pilgrims (sessions)', num(s.sessions?.total), `${num(s.sessions?.active5m)} active now`) +
+            tile('Avg FPS (1h)', s.avgFps != null ? s.avgFps.toFixed(1) : '—') +
+            regionBars(s.byLevel) +
+            leaderboardTile(lb.entries) +
+            tile('Blooms gathered', num((s.collectsByKind || []).find((k) => k.kind === 'rhododendron')?.count), 'rhododendron') +
+            tile('Prayer bells', num((s.collectsByKind || []).find((k) => k.kind === 'prayer_bell')?.count)) +
+            tile('Top countries', countries || '—');
+          grid.hidden = false;
           empty.hidden = true;
-          status.textContent = 'live dashboard configured';
+          status.textContent = 'live · updates every 5s';
         } catch {
-          status.textContent = 'dashboard URL needs attention';
+          status.textContent = 'reconnecting…';
         }
       }
+
+      refresh();
+      setInterval(refresh, 5000);
     </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
