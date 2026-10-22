@@ -119,10 +119,17 @@ D1 binding and the optional Grafana push / Chaos Mode secrets (all set via
 
 ## Observability (Grafana Cloud)
 
-Import `observability/dashboards/cloud-yatra-grand-observatory.json` and map its five data
-sources — Faro Loki (RUM), backend Loki (logs), Prometheus (Worker `/metrics`), Tempo
-(traces), and the Infinity plugin (D1 analytics via the Worker's JSON endpoints).
-`observability/grafana-alerts.yaml` holds real, importable Grafana-managed alert rules.
+Import `observability/dashboards/cloud-yatra-grand-observatory.json` and map its three
+live data sources — Faro Loki (RUM), Prometheus (Worker `/metrics`), and the Infinity
+plugin (D1 analytics via the Worker's JSON endpoints). A trimmed, variable-free
+`cloud-yatra-live-observatory-public.json` is also included for public sharing / the live
+tiles embedded in the game page. `observability/grafana-alerts.yaml` holds real,
+importable Grafana-managed alert rules.
+
+> **Logs (Loki) and traces (Tempo) are instrumented in the Worker and ship on demand:** set
+> the `GRAFANA_LOKI_*` / `GRAFANA_OTLP_*` secrets (see Configuration) and they push to Grafana
+> Cloud. The dashboards ship with the three always-on sources wired; add dedicated
+> logs/traces panels once those signals are enabled, so no panel is ever empty by default.
 
 ### Observability architecture (the full-stack story)
 

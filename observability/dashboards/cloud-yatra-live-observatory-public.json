@@ -152,849 +152,6 @@
    }
   },
   {
-   "type": "stat",
-   "title": "Active pilgrims (5m)",
-   "description": "Anonymous game sessions seen by the backend in the last 5 minutes (from D1 via the Worker).",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "${DS_PROM}"
-   },
-   "gridPos": {
-    "h": 6,
-    "w": 4,
-    "x": 0,
-    "y": 4
-   },
-   "id": 2,
-   "transparent": true,
-   "fieldConfig": {
-    "defaults": {
-     "unit": "short",
-     "decimals": 0,
-     "color": {
-      "mode": "fixed",
-      "fixedColor": "#f6b73c"
-     },
-     "custom": {}
-    },
-    "overrides": []
-   },
-   "options": {
-    "colorMode": "value",
-    "graphMode": "area",
-    "reduceOptions": {
-     "calcs": [
-      "lastNotNull"
-     ],
-     "fields": "",
-     "values": false
-    },
-    "textMode": "value_and_name",
-    "justifyMode": "center",
-    "wideLayout": true
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "cy_sessions_active",
-     "instant": true
-    }
-   ]
-  },
-  {
-   "type": "stat",
-   "title": "Requests / sec",
-   "description": "Backend Worker request rate across all routes (Prometheus).",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "${DS_PROM}"
-   },
-   "gridPos": {
-    "h": 6,
-    "w": 4,
-    "x": 4,
-    "y": 4
-   },
-   "id": 3,
-   "transparent": true,
-   "fieldConfig": {
-    "defaults": {
-     "unit": "reqps",
-     "decimals": 0,
-     "color": {
-      "mode": "fixed",
-      "fixedColor": "#3fb6ff"
-     },
-     "custom": {}
-    },
-    "overrides": []
-   },
-   "options": {
-    "colorMode": "value",
-    "graphMode": "area",
-    "reduceOptions": {
-     "calcs": [
-      "lastNotNull"
-     ],
-     "fields": "",
-     "values": false
-    },
-    "textMode": "value_and_name",
-    "justifyMode": "center",
-    "wideLayout": true
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "sum(rate(cy_api_requests_total[5m]))",
-     "instant": false
-    }
-   ]
-  },
-  {
-   "type": "stat",
-   "title": "Events ingested / min",
-   "description": "Gameplay telemetry events accepted into D1 per minute (Prometheus).",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "${DS_PROM}"
-   },
-   "gridPos": {
-    "h": 6,
-    "w": 4,
-    "x": 8,
-    "y": 4
-   },
-   "id": 4,
-   "transparent": true,
-   "fieldConfig": {
-    "defaults": {
-     "unit": "cpm",
-     "decimals": 0,
-     "color": {
-      "mode": "fixed",
-      "fixedColor": "#73d13d"
-     },
-     "custom": {}
-    },
-    "overrides": []
-   },
-   "options": {
-    "colorMode": "value",
-    "graphMode": "area",
-    "reduceOptions": {
-     "calcs": [
-      "lastNotNull"
-     ],
-     "fields": "",
-     "values": false
-    },
-    "textMode": "value_and_name",
-    "justifyMode": "center",
-    "wideLayout": true
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "sum(rate(cy_events_accepted_total[5m])) * 60",
-     "instant": false
-    }
-   ]
-  },
-  {
-   "type": "stat",
-   "title": "p95 API latency",
-   "description": "95th-percentile backend request duration (Prometheus histogram).",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "${DS_PROM}"
-   },
-   "gridPos": {
-    "h": 6,
-    "w": 4,
-    "x": 12,
-    "y": 4
-   },
-   "id": 5,
-   "transparent": true,
-   "fieldConfig": {
-    "defaults": {
-     "unit": "ms",
-     "decimals": 0,
-     "color": {
-      "mode": "thresholds"
-     },
-     "custom": {},
-     "thresholds": {
-      "mode": "absolute",
-      "steps": [
-       {
-        "color": "#73d13d",
-        "value": null
-       },
-       {
-        "color": "#ffb454",
-        "value": 150
-       },
-       {
-        "color": "#e0294a",
-        "value": 400
-       }
-      ]
-     }
-    },
-    "overrides": []
-   },
-   "options": {
-    "colorMode": "background",
-    "graphMode": "none",
-    "reduceOptions": {
-     "calcs": [
-      "lastNotNull"
-     ],
-     "fields": "",
-     "values": false
-    },
-    "textMode": "value_and_name",
-    "justifyMode": "center",
-    "wideLayout": true
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "histogram_quantile(0.95, sum(rate(cy_api_request_duration_ms_bucket[5m])) by (le))",
-     "instant": false
-    }
-   ]
-  },
-  {
-   "type": "stat",
-   "title": "Backend error rate",
-   "description": "Share of 5xx backend responses (Prometheus).",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "${DS_PROM}"
-   },
-   "gridPos": {
-    "h": 6,
-    "w": 4,
-    "x": 16,
-    "y": 4
-   },
-   "id": 6,
-   "transparent": true,
-   "fieldConfig": {
-    "defaults": {
-     "unit": "percentunit",
-     "decimals": 0,
-     "color": {
-      "mode": "thresholds"
-     },
-     "custom": {},
-     "thresholds": {
-      "mode": "absolute",
-      "steps": [
-       {
-        "color": "#73d13d",
-        "value": null
-       },
-       {
-        "color": "#ffb454",
-        "value": 0.01
-       },
-       {
-        "color": "#e0294a",
-        "value": 0.05
-       }
-      ]
-     }
-    },
-    "overrides": []
-   },
-   "options": {
-    "colorMode": "background",
-    "graphMode": "none",
-    "reduceOptions": {
-     "calcs": [
-      "lastNotNull"
-     ],
-     "fields": "",
-     "values": false
-    },
-    "textMode": "value_and_name",
-    "justifyMode": "center",
-    "wideLayout": true
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "sum(rate(cy_api_requests_total{status_class=\"5xx\"}[5m])) / clamp_min(sum(rate(cy_api_requests_total[5m])),0.0001)",
-     "instant": false
-    }
-   ]
-  },
-  {
-   "type": "gauge",
-   "id": 56,
-   "transparent": true,
-   "title": "Availability SLI",
-   "description": "Percentage of non-5xx responses over 30 days. SLO target: 99%.",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "${DS_PROM}"
-   },
-   "gridPos": {
-    "h": 7,
-    "w": 6,
-    "x": 0,
-    "y": 10
-   },
-   "fieldConfig": {
-    "defaults": {
-     "unit": "percent",
-     "decimals": 3,
-     "min": 0,
-     "color": {
-      "mode": "thresholds"
-     },
-     "thresholds": {
-      "mode": "absolute",
-      "steps": [
-       {
-        "color": "#e0294a",
-        "value": null
-       },
-       {
-        "color": "#ffb454",
-        "value": 99
-       },
-       {
-        "color": "#73d13d",
-        "value": 99.9
-       }
-      ]
-     },
-     "max": 100
-    },
-    "overrides": []
-   },
-   "options": {
-    "showThresholdLabels": false,
-    "showThresholdMarkers": true,
-    "reduceOptions": {
-     "calcs": [
-      "lastNotNull"
-     ],
-     "fields": "",
-     "values": false
-    }
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "100 * sum(rate(cy_api_requests_total{status_class!=\"5xx\"}[$__range])) / clamp_min(sum(rate(cy_api_requests_total[$__range])), 0.0001)",
-     "legendFormat": "Availability SLI (30d)",
-     "editorMode": "code"
-    }
-   ]
-  },
-  {
-   "type": "gauge",
-   "id": 57,
-   "transparent": true,
-   "title": "Error budget remaining",
-   "description": "Share of the 1% monthly error budget still unspent (99% availability SLO).",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "${DS_PROM}"
-   },
-   "gridPos": {
-    "h": 7,
-    "w": 6,
-    "x": 6,
-    "y": 10
-   },
-   "fieldConfig": {
-    "defaults": {
-     "unit": "percent",
-     "decimals": 1,
-     "min": 0,
-     "color": {
-      "mode": "thresholds"
-     },
-     "thresholds": {
-      "mode": "absolute",
-      "steps": [
-       {
-        "color": "#e0294a",
-        "value": null
-       },
-       {
-        "color": "#ffb454",
-        "value": 25
-       },
-       {
-        "color": "#73d13d",
-        "value": 60
-       }
-      ]
-     },
-     "max": 100
-    },
-    "overrides": []
-   },
-   "options": {
-    "showThresholdLabels": false,
-    "showThresholdMarkers": true,
-    "reduceOptions": {
-     "calcs": [
-      "lastNotNull"
-     ],
-     "fields": "",
-     "values": false
-    }
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "clamp(100 * (0.01 - (1 - (sum(rate(cy_api_requests_total{status_class!=\"5xx\"}[$__range])) / clamp_min(sum(rate(cy_api_requests_total[$__range])),0.0001)))) / 0.01, 0, 100)",
-     "legendFormat": "Error budget remaining",
-     "editorMode": "code"
-    }
-   ]
-  },
-  {
-   "type": "gauge",
-   "id": 58,
-   "transparent": true,
-   "title": "Latency SLO \u00b7 <500ms",
-   "description": "Share of requests served under 500ms. SLO target: 95%.",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "${DS_PROM}"
-   },
-   "gridPos": {
-    "h": 7,
-    "w": 6,
-    "x": 12,
-    "y": 10
-   },
-   "fieldConfig": {
-    "defaults": {
-     "unit": "percent",
-     "decimals": 2,
-     "min": 0,
-     "color": {
-      "mode": "thresholds"
-     },
-     "thresholds": {
-      "mode": "absolute",
-      "steps": [
-       {
-        "color": "#e0294a",
-        "value": null
-       },
-       {
-        "color": "#ffb454",
-        "value": 95
-       },
-       {
-        "color": "#73d13d",
-        "value": 99
-       }
-      ]
-     },
-     "max": 100
-    },
-    "overrides": []
-   },
-   "options": {
-    "showThresholdLabels": false,
-    "showThresholdMarkers": true,
-    "reduceOptions": {
-     "calcs": [
-      "lastNotNull"
-     ],
-     "fields": "",
-     "values": false
-    }
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "100 * sum(rate(cy_api_request_duration_ms_bucket{le=\"500\"}[$__range])) / clamp_min(sum(rate(cy_api_request_duration_ms_count[$__range])),0.0001)",
-     "legendFormat": "Latency SLO \u00b7 <500ms (30d)",
-     "editorMode": "code"
-    }
-   ]
-  },
-  {
-   "type": "stat",
-   "id": 59,
-   "transparent": true,
-   "title": "Error-budget burn (1h)",
-   "description": "How fast the budget is being spent right now vs. sustainable (1.0 = on-pace). >14 = page.",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "${DS_PROM}"
-   },
-   "gridPos": {
-    "h": 7,
-    "w": 6,
-    "x": 18,
-    "y": 10
-   },
-   "fieldConfig": {
-    "defaults": {
-     "unit": "none",
-     "decimals": 2,
-     "color": {
-      "mode": "thresholds"
-     },
-     "thresholds": {
-      "mode": "absolute",
-      "steps": [
-       {
-        "color": "#73d13d",
-        "value": null
-       },
-       {
-        "color": "#ffb454",
-        "value": 1
-       },
-       {
-        "color": "#e0294a",
-        "value": 14
-       }
-      ]
-     }
-    },
-    "overrides": []
-   },
-   "options": {
-    "colorMode": "background",
-    "graphMode": "area",
-    "textMode": "value_and_name",
-    "justifyMode": "center",
-    "reduceOptions": {
-     "calcs": [
-      "lastNotNull"
-     ],
-     "fields": "",
-     "values": false
-    }
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "( sum(rate(cy_api_requests_total{status_class=\"5xx\"}[1h])) / clamp_min(sum(rate(cy_api_requests_total[1h])),0.0001) ) / 0.01",
-     "legendFormat": "Error-budget burn (1h)",
-     "editorMode": "code"
-    }
-   ]
-  },
-  {
-   "type": "timeseries",
-   "title": "Request rate by route",
-   "description": "Per-route request throughput served by the Worker.",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "${DS_PROM}"
-   },
-   "gridPos": {
-    "h": 7,
-    "w": 12,
-    "x": 0,
-    "y": 17
-   },
-   "id": 9,
-   "transparent": true,
-   "fieldConfig": {
-    "defaults": {
-     "unit": "reqps",
-     "decimals": 0,
-     "custom": {
-      "drawStyle": "line",
-      "fillOpacity": 18,
-      "gradientMode": "opacity",
-      "lineInterpolation": "smooth",
-      "lineWidth": 2,
-      "showPoints": "never",
-      "spanNulls": true,
-      "pointSize": 5,
-      "axisBorderShow": false,
-      "axisGridShow": true,
-      "axisLabel": "",
-      "scaleDistribution": {
-       "type": "linear"
-      },
-      "stacking": {
-       "mode": "none",
-       "group": "A"
-      },
-      "axisCenteredZero": false,
-      "hideFrom": {
-       "tooltip": false,
-       "viz": false,
-       "legend": false
-      }
-     }
-    },
-    "overrides": []
-   },
-   "options": {
-    "legend": {
-     "displayMode": "table",
-     "placement": "bottom",
-     "calcs": [
-      "lastNotNull",
-      "max",
-      "mean"
-     ],
-     "showLegend": true
-    },
-    "tooltip": {
-     "mode": "multi",
-     "sort": "desc"
-    }
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "sum by (route) (rate(cy_api_requests_total[5m]))",
-     "legendFormat": "{{route}}",
-     "range": true
-    }
-   ]
-  },
-  {
-   "type": "timeseries",
-   "title": "Latency percentiles (p50/p90/p99)",
-   "description": "Backend request duration percentiles from the Prometheus histogram. Exemplars link latency spikes to the exact Tempo trace (via OTLP).",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "${DS_PROM}"
-   },
-   "gridPos": {
-    "h": 7,
-    "w": 12,
-    "x": 12,
-    "y": 17
-   },
-   "id": 10,
-   "transparent": true,
-   "fieldConfig": {
-    "defaults": {
-     "unit": "ms",
-     "decimals": 0,
-     "custom": {
-      "drawStyle": "line",
-      "fillOpacity": 18,
-      "gradientMode": "opacity",
-      "lineInterpolation": "smooth",
-      "lineWidth": 2,
-      "showPoints": "never",
-      "spanNulls": true,
-      "pointSize": 5,
-      "axisBorderShow": false,
-      "axisGridShow": true,
-      "axisLabel": "",
-      "scaleDistribution": {
-       "type": "linear"
-      },
-      "stacking": {
-       "mode": "none",
-       "group": "A"
-      },
-      "axisCenteredZero": false,
-      "hideFrom": {
-       "tooltip": false,
-       "viz": false,
-       "legend": false
-      }
-     }
-    },
-    "overrides": []
-   },
-   "options": {
-    "legend": {
-     "displayMode": "table",
-     "placement": "bottom",
-     "calcs": [
-      "lastNotNull",
-      "max",
-      "mean"
-     ],
-     "showLegend": true
-    },
-    "tooltip": {
-     "mode": "multi",
-     "sort": "desc"
-    }
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "histogram_quantile(0.50, sum(rate(cy_api_request_duration_ms_bucket[5m])) by (le))",
-     "legendFormat": "p50",
-     "range": true,
-     "exemplar": true,
-     "editorMode": "code"
-    },
-    {
-     "refId": "B",
-     "expr": "histogram_quantile(0.90, sum(rate(cy_api_request_duration_ms_bucket[5m])) by (le))",
-     "legendFormat": "p90",
-     "range": true,
-     "exemplar": true,
-     "editorMode": "code"
-    },
-    {
-     "refId": "C",
-     "expr": "histogram_quantile(0.99, sum(rate(cy_api_request_duration_ms_bucket[5m])) by (le))",
-     "legendFormat": "p99",
-     "range": true,
-     "exemplar": true,
-     "editorMode": "code"
-    }
-   ]
-  },
-  {
-   "type": "timeseries",
-   "title": "Responses by status class",
-   "description": "2xx / 4xx / 5xx response mix \u2014 the backend reliability signal.",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "${DS_PROM}"
-   },
-   "gridPos": {
-    "h": 7,
-    "w": 8,
-    "x": 0,
-    "y": 24
-   },
-   "id": 11,
-   "transparent": true,
-   "fieldConfig": {
-    "defaults": {
-     "unit": "reqps",
-     "decimals": 0,
-     "custom": {
-      "drawStyle": "line",
-      "fillOpacity": 18,
-      "gradientMode": "opacity",
-      "lineInterpolation": "smooth",
-      "lineWidth": 2,
-      "showPoints": "never",
-      "spanNulls": true,
-      "pointSize": 5,
-      "axisBorderShow": false,
-      "axisGridShow": true,
-      "axisLabel": "",
-      "scaleDistribution": {
-       "type": "linear"
-      },
-      "stacking": {
-       "mode": "none",
-       "group": "A"
-      },
-      "axisCenteredZero": false,
-      "hideFrom": {
-       "tooltip": false,
-       "viz": false,
-       "legend": false
-      }
-     }
-    },
-    "overrides": [
-     {
-      "matcher": {
-       "id": "byName",
-       "options": "2xx"
-      },
-      "properties": [
-       {
-        "id": "color",
-        "value": {
-         "mode": "fixed",
-         "fixedColor": "#73d13d"
-        }
-       }
-      ]
-     },
-     {
-      "matcher": {
-       "id": "byName",
-       "options": "3xx"
-      },
-      "properties": [
-       {
-        "id": "color",
-        "value": {
-         "mode": "fixed",
-         "fixedColor": "#8ecbff"
-        }
-       }
-      ]
-     },
-     {
-      "matcher": {
-       "id": "byName",
-       "options": "4xx"
-      },
-      "properties": [
-       {
-        "id": "color",
-        "value": {
-         "mode": "fixed",
-         "fixedColor": "#ffb454"
-        }
-       }
-      ]
-     },
-     {
-      "matcher": {
-       "id": "byName",
-       "options": "5xx"
-      },
-      "properties": [
-       {
-        "id": "color",
-        "value": {
-         "mode": "fixed",
-         "fixedColor": "#e0294a"
-        }
-       }
-      ]
-     }
-    ]
-   },
-   "options": {
-    "legend": {
-     "displayMode": "table",
-     "placement": "bottom",
-     "calcs": [
-      "lastNotNull",
-      "max",
-      "mean"
-     ],
-     "showLegend": true
-    },
-    "tooltip": {
-     "mode": "multi",
-     "sort": "desc"
-    }
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "sum by (status_class) (rate(cy_api_requests_total[5m]))",
-     "legendFormat": "{{status_class}}",
-     "range": true
-    }
-   ]
-  },
-  {
    "type": "timeseries",
    "title": "Web Vitals \u00b7 LCP / INP (p95)",
    "description": "Real-user loading and interaction latency from Faro web-vitals.",
@@ -1006,7 +163,7 @@
     "h": 7,
     "w": 12,
     "x": 0,
-    "y": 31
+    "y": 4
    },
    "id": 18,
    "transparent": true,
@@ -1091,7 +248,7 @@
     "h": 7,
     "w": 8,
     "x": 12,
-    "y": 31
+    "y": 4
    },
    "id": 19,
    "transparent": true,
@@ -1174,7 +331,7 @@
     "h": 7,
     "w": 12,
     "x": 0,
-    "y": 38
+    "y": 11
    },
    "id": 22,
    "transparent": true,
@@ -1260,7 +417,7 @@
     "h": 7,
     "w": 12,
     "x": 12,
-    "y": 38
+    "y": 11
    },
    "id": 23,
    "transparent": true,
@@ -1304,7 +461,7 @@
     "h": 6,
     "w": 24,
     "x": 0,
-    "y": 45
+    "y": 18
    },
    "id": 24,
    "transparent": true,
@@ -1399,7 +556,7 @@
     "h": 6,
     "w": 24,
     "x": 0,
-    "y": 51
+    "y": 24
    },
    "fieldConfig": {
     "defaults": {
@@ -1473,7 +630,7 @@
     "h": 7,
     "w": 12,
     "x": 0,
-    "y": 57
+    "y": 30
    },
    "id": 26,
    "transparent": true,
@@ -1550,7 +707,7 @@
     "h": 7,
     "w": 6,
     "x": 12,
-    "y": 57
+    "y": 30
    },
    "id": 27,
    "transparent": true,
@@ -1620,7 +777,7 @@
     "h": 7,
     "w": 6,
     "x": 18,
-    "y": 57
+    "y": 30
    },
    "id": 28,
    "transparent": true,
@@ -1701,7 +858,7 @@
     "h": 7,
     "w": 16,
     "x": 0,
-    "y": 64
+    "y": 37
    },
    "id": 29,
    "transparent": true,
@@ -1782,7 +939,7 @@
     "h": 8,
     "w": 12,
     "x": 0,
-    "y": 71
+    "y": 44
    },
    "id": 32,
    "transparent": true,
@@ -1915,7 +1072,7 @@
     "h": 4,
     "w": 4,
     "x": 12,
-    "y": 71
+    "y": 44
    },
    "id": 33,
    "transparent": true,
@@ -1980,7 +1137,7 @@
     "h": 4,
     "w": 4,
     "x": 16,
-    "y": 71
+    "y": 44
    },
    "id": 34,
    "transparent": true,
@@ -2045,7 +1202,7 @@
     "h": 8,
     "w": 4,
     "x": 20,
-    "y": 71
+    "y": 44
    },
    "id": 35,
    "transparent": true,
@@ -2124,7 +1281,7 @@
     "h": 4,
     "w": 8,
     "x": 12,
-    "y": 79
+    "y": 52
    },
    "id": 36,
    "transparent": true,
@@ -2205,7 +1362,7 @@
     "h": 9,
     "w": 12,
     "x": 0,
-    "y": 83
+    "y": 56
    },
    "fieldConfig": {
     "defaults": {
@@ -2322,7 +1479,7 @@
     "h": 9,
     "w": 6,
     "x": 12,
-    "y": 83
+    "y": 56
    },
    "id": 38,
    "transparent": true,
@@ -2385,7 +1542,7 @@
     "h": 9,
     "w": 6,
     "x": 18,
-    "y": 83
+    "y": 56
    },
    "id": 39,
    "transparent": true,

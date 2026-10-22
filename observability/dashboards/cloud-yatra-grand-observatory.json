@@ -86,34 +86,6 @@
     "iconColor": "rgba(0, 211, 255, 1)",
     "name": "Annotations & Alerts",
     "type": "dashboard"
-   },
-   {
-    "name": "Backend deploys",
-    "datasource": {
-     "type": "loki",
-     "uid": "${DS_BACKEND_LOGS}"
-    },
-    "enable": true,
-    "iconColor": "#f3c623",
-    "hide": false,
-    "target": {
-     "expr": "{service_name=\"cloud-yatra-api\"} | json | msg=\"startup\""
-    },
-    "titleFormat": "deploy"
-   },
-   {
-    "name": "Chaos Mode",
-    "datasource": {
-     "type": "loki",
-     "uid": "${DS_BACKEND_LOGS}"
-    },
-    "enable": true,
-    "iconColor": "#e74c3c",
-    "hide": false,
-    "target": {
-     "expr": "{service_name=\"cloud-yatra-api\"} | json | msg=~\"chaos_start|chaos_stop\""
-    },
-    "titleFormat": "{{msg}}"
    }
   ]
  },
@@ -149,27 +121,9 @@
    {
     "current": {},
     "hide": 0,
-    "label": "Backend Logs",
-    "name": "DS_BACKEND_LOGS",
-    "query": "loki",
-    "refresh": 1,
-    "type": "datasource"
-   },
-   {
-    "current": {},
-    "hide": 0,
     "label": "Backend Metrics",
     "name": "DS_PROM",
     "query": "prometheus",
-    "refresh": 1,
-    "type": "datasource"
-   },
-   {
-    "current": {},
-    "hide": 0,
-    "label": "Traces",
-    "name": "DS_TEMPO",
-    "query": "tempo",
     "refresh": 1,
     "type": "datasource"
    },
@@ -1040,6 +994,279 @@
   },
   {
    "type": "row",
+   "id": 55,
+   "collapsed": false,
+   "title": "SLOs & ERROR BUDGET \u00b7 service reliability (RED \u2192 SLI/SLO, industry-standard)",
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 17
+   },
+   "panels": []
+  },
+  {
+   "type": "gauge",
+   "id": 56,
+   "transparent": true,
+   "title": "Availability SLI",
+   "description": "Percentage of non-5xx responses over 30 days. SLO target: 99%.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "${DS_PROM}"
+   },
+   "gridPos": {
+    "h": 7,
+    "w": 6,
+    "x": 0,
+    "y": 18
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percent",
+     "decimals": 3,
+     "min": 0,
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#e0294a",
+        "value": null
+       },
+       {
+        "color": "#ffb454",
+        "value": 99
+       },
+       {
+        "color": "#73d13d",
+        "value": 99.9
+       }
+      ]
+     },
+     "max": 100
+    },
+    "overrides": []
+   },
+   "options": {
+    "showThresholdLabels": false,
+    "showThresholdMarkers": true,
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "100 * sum(rate(cy_api_requests_total{status_class!=\"5xx\"}[$__range])) / clamp_min(sum(rate(cy_api_requests_total[$__range])), 0.0001)",
+     "legendFormat": "Availability SLI (30d)",
+     "editorMode": "code"
+    }
+   ]
+  },
+  {
+   "type": "gauge",
+   "id": 57,
+   "transparent": true,
+   "title": "Error budget remaining",
+   "description": "Share of the 1% monthly error budget still unspent (99% availability SLO).",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "${DS_PROM}"
+   },
+   "gridPos": {
+    "h": 7,
+    "w": 6,
+    "x": 6,
+    "y": 18
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percent",
+     "decimals": 1,
+     "min": 0,
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#e0294a",
+        "value": null
+       },
+       {
+        "color": "#ffb454",
+        "value": 25
+       },
+       {
+        "color": "#73d13d",
+        "value": 60
+       }
+      ]
+     },
+     "max": 100
+    },
+    "overrides": []
+   },
+   "options": {
+    "showThresholdLabels": false,
+    "showThresholdMarkers": true,
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "clamp(100 * (0.01 - (1 - (sum(rate(cy_api_requests_total{status_class!=\"5xx\"}[$__range])) / clamp_min(sum(rate(cy_api_requests_total[$__range])),0.0001)))) / 0.01, 0, 100)",
+     "legendFormat": "Error budget remaining",
+     "editorMode": "code"
+    }
+   ]
+  },
+  {
+   "type": "gauge",
+   "id": 58,
+   "transparent": true,
+   "title": "Latency SLO \u00b7 <500ms",
+   "description": "Share of requests served under 500ms. SLO target: 95%.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "${DS_PROM}"
+   },
+   "gridPos": {
+    "h": 7,
+    "w": 6,
+    "x": 12,
+    "y": 18
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percent",
+     "decimals": 2,
+     "min": 0,
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#e0294a",
+        "value": null
+       },
+       {
+        "color": "#ffb454",
+        "value": 95
+       },
+       {
+        "color": "#73d13d",
+        "value": 99
+       }
+      ]
+     },
+     "max": 100
+    },
+    "overrides": []
+   },
+   "options": {
+    "showThresholdLabels": false,
+    "showThresholdMarkers": true,
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "100 * sum(rate(cy_api_request_duration_ms_bucket{le=\"500\"}[$__range])) / clamp_min(sum(rate(cy_api_request_duration_ms_count[$__range])),0.0001)",
+     "legendFormat": "Latency SLO \u00b7 <500ms (30d)",
+     "editorMode": "code"
+    }
+   ]
+  },
+  {
+   "type": "stat",
+   "id": 59,
+   "transparent": true,
+   "title": "Error-budget burn (1h)",
+   "description": "How fast the budget is being spent right now vs. sustainable (1.0 = on-pace). >14 = page.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "${DS_PROM}"
+   },
+   "gridPos": {
+    "h": 7,
+    "w": 6,
+    "x": 18,
+    "y": 18
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "decimals": 2,
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#73d13d",
+        "value": null
+       },
+       {
+        "color": "#ffb454",
+        "value": 1
+       },
+       {
+        "color": "#e0294a",
+        "value": 14
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "background",
+    "graphMode": "area",
+    "textMode": "value_and_name",
+    "justifyMode": "center",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "( sum(rate(cy_api_requests_total{status_class=\"5xx\"}[1h])) / clamp_min(sum(rate(cy_api_requests_total[1h])),0.0001) ) / 0.01",
+     "legendFormat": "Error-budget burn (1h)",
+     "editorMode": "code"
+    }
+   ]
+  },
+  {
+   "type": "row",
    "title": "BACKEND \u00b7 Cloudflare Worker + D1 health (metrics & traces)",
    "collapsed": false,
    "gridPos": {
@@ -1464,162 +1691,6 @@
    ]
   },
   {
-   "type": "table",
-   "title": "Recent backend traces (Tempo)",
-   "description": "Request spans emitted by the Worker (OTLP \u2192 Tempo). Click a trace to see the span.",
-   "datasource": {
-    "type": "tempo",
-    "uid": "${DS_TEMPO}"
-   },
-   "gridPos": {
-    "h": 7,
-    "w": 8,
-    "x": 16,
-    "y": 33
-   },
-   "id": 13,
-   "transparent": true,
-   "targets": [
-    {
-     "refId": "A",
-     "queryType": "traceqlSearch",
-     "limit": 20,
-     "tableType": "traces",
-     "filters": [
-      {
-       "id": "service",
-       "tag": "service.name",
-       "operator": "=",
-       "scope": "resource",
-       "value": [
-        "cloud-yatra-api"
-       ],
-       "valueType": "string"
-      }
-     ]
-    }
-   ]
-  },
-  {
-   "type": "row",
-   "title": "BACKEND LOGS \u00b7 structured request logs (Loki)",
-   "collapsed": false,
-   "gridPos": {
-    "h": 1,
-    "w": 24,
-    "x": 0,
-    "y": 40
-   },
-   "id": 14,
-   "panels": []
-  },
-  {
-   "type": "logs",
-   "title": "Live backend logs",
-   "description": "Structured JSON logs from the Worker: every request with correlationId, route, status, duration.",
-   "datasource": {
-    "type": "loki",
-    "uid": "${DS_BACKEND_LOGS}"
-   },
-   "gridPos": {
-    "h": 8,
-    "w": 16,
-    "x": 0,
-    "y": 41
-   },
-   "id": 15,
-   "transparent": true,
-   "options": {
-    "showTime": true,
-    "showLabels": false,
-    "wrapLogMessage": true,
-    "prettifyLogMessage": true,
-    "enableLogDetails": true,
-    "dedupStrategy": "none",
-    "sortOrder": "Descending"
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "{service_name=\"cloud-yatra-api\"} | json",
-     "queryType": "range"
-    }
-   ]
-  },
-  {
-   "type": "timeseries",
-   "title": "Log volume by level",
-   "description": "Info / warn / error log throughput from the backend.",
-   "datasource": {
-    "type": "loki",
-    "uid": "${DS_BACKEND_LOGS}"
-   },
-   "gridPos": {
-    "h": 8,
-    "w": 8,
-    "x": 16,
-    "y": 41
-   },
-   "id": 16,
-   "transparent": true,
-   "fieldConfig": {
-    "defaults": {
-     "unit": "cps",
-     "decimals": 0,
-     "custom": {
-      "drawStyle": "line",
-      "fillOpacity": 18,
-      "gradientMode": "opacity",
-      "lineInterpolation": "smooth",
-      "lineWidth": 2,
-      "showPoints": "never",
-      "spanNulls": true,
-      "pointSize": 5,
-      "axisBorderShow": false,
-      "axisGridShow": true,
-      "axisLabel": "",
-      "scaleDistribution": {
-       "type": "linear"
-      },
-      "stacking": {
-       "mode": "none",
-       "group": "A"
-      },
-      "axisCenteredZero": false,
-      "hideFrom": {
-       "tooltip": false,
-       "viz": false,
-       "legend": false
-      }
-     }
-    },
-    "overrides": []
-   },
-   "options": {
-    "legend": {
-     "displayMode": "table",
-     "placement": "bottom",
-     "calcs": [
-      "lastNotNull",
-      "max",
-      "mean"
-     ],
-     "showLegend": true
-    },
-    "tooltip": {
-     "mode": "multi",
-     "sort": "desc"
-    }
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "sum by (level) (rate({service_name=\"cloud-yatra-api\"} | json [1m]))",
-     "legendFormat": "{{level}}"
-    }
-   ]
-  },
-  {
    "type": "row",
    "title": "PLAYER EXPERIENCE \u00b7 browser health (Faro RUM)",
    "collapsed": false,
@@ -1627,7 +1698,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 49
+    "y": 40
    },
    "id": 17,
    "panels": []
@@ -1644,7 +1715,7 @@
     "h": 7,
     "w": 12,
     "x": 0,
-    "y": 50
+    "y": 41
    },
    "id": 18,
    "transparent": true,
@@ -1729,7 +1800,7 @@
     "h": 7,
     "w": 8,
     "x": 12,
-    "y": 50
+    "y": 41
    },
    "id": 19,
    "transparent": true,
@@ -1812,7 +1883,7 @@
     "h": 7,
     "w": 4,
     "x": 20,
-    "y": 50
+    "y": 41
    },
    "id": 20,
    "transparent": true,
@@ -1891,7 +1962,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 57
+    "y": 48
    },
    "id": 21,
    "panels": []
@@ -1908,7 +1979,7 @@
     "h": 7,
     "w": 12,
     "x": 0,
-    "y": 58
+    "y": 49
    },
    "id": 22,
    "transparent": true,
@@ -1994,7 +2065,7 @@
     "h": 7,
     "w": 12,
     "x": 12,
-    "y": 58
+    "y": 49
    },
    "id": 23,
    "transparent": true,
@@ -2038,7 +2109,7 @@
     "h": 6,
     "w": 24,
     "x": 0,
-    "y": 65
+    "y": 56
    },
    "id": 24,
    "transparent": true,
@@ -2120,6 +2191,82 @@
    ]
   },
   {
+   "type": "bargauge",
+   "id": 53,
+   "transparent": true,
+   "title": "\ud83e\uddd7 Climb intensity by region (D1)",
+   "description": "Where the action happens across Terai \u2192 Hills \u2192 Himal. Live from /stats \u2192 byLevel events.",
+   "datasource": {
+    "type": "yesoreyeram-infinity-datasource",
+    "uid": "${DS_INFINITY}"
+   },
+   "gridPos": {
+    "h": 6,
+    "w": 24,
+    "x": 0,
+    "y": 62
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "decimals": 0,
+     "color": {
+      "mode": "continuous-BlYlRd"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "orientation": "horizontal",
+    "displayMode": "gradient",
+    "showUnfilled": true,
+    "valueMode": "color",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": true
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "type": "json",
+     "source": "url",
+     "format": "table",
+     "url": "${api_base_url}/stats",
+     "root_selector": "byLevel",
+     "parser": "backend",
+     "columns": [
+      {
+       "selector": "level",
+       "text": "level",
+       "type": "string"
+      },
+      {
+       "selector": "events",
+       "text": "events",
+       "type": "number"
+      }
+     ],
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
+    }
+   ]
+  },
+  {
    "type": "row",
    "title": "YATRI'S JOURNEY \u00b7 deep gameplay analytics (D1 + Faro)",
    "collapsed": false,
@@ -2127,7 +2274,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 77
+    "y": 68
    },
    "id": 25,
    "panels": []
@@ -2144,7 +2291,7 @@
     "h": 7,
     "w": 12,
     "x": 0,
-    "y": 78
+    "y": 69
    },
    "id": 26,
    "transparent": true,
@@ -2221,7 +2368,7 @@
     "h": 7,
     "w": 6,
     "x": 12,
-    "y": 78
+    "y": 69
    },
    "id": 27,
    "transparent": true,
@@ -2291,7 +2438,7 @@
     "h": 7,
     "w": 6,
     "x": 18,
-    "y": 78
+    "y": 69
    },
    "id": 28,
    "transparent": true,
@@ -2372,7 +2519,7 @@
     "h": 7,
     "w": 16,
     "x": 0,
-    "y": 85
+    "y": 76
    },
    "id": 29,
    "transparent": true,
@@ -2453,7 +2600,7 @@
     "h": 7,
     "w": 8,
     "x": 16,
-    "y": 85
+    "y": 76
    },
    "id": 30,
    "transparent": true,
@@ -2522,7 +2669,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 92
+    "y": 83
    },
    "id": 31,
    "panels": []
@@ -2539,7 +2686,7 @@
     "h": 8,
     "w": 12,
     "x": 0,
-    "y": 93
+    "y": 84
    },
    "id": 32,
    "transparent": true,
@@ -2672,7 +2819,7 @@
     "h": 4,
     "w": 4,
     "x": 12,
-    "y": 93
+    "y": 84
    },
    "id": 33,
    "transparent": true,
@@ -2737,7 +2884,7 @@
     "h": 4,
     "w": 4,
     "x": 16,
-    "y": 93
+    "y": 84
    },
    "id": 34,
    "transparent": true,
@@ -2802,7 +2949,7 @@
     "h": 8,
     "w": 4,
     "x": 20,
-    "y": 93
+    "y": 84
    },
    "id": 35,
    "transparent": true,
@@ -2881,7 +3028,7 @@
     "h": 4,
     "w": 8,
     "x": 12,
-    "y": 97
+    "y": 92
    },
    "id": 36,
    "transparent": true,
@@ -2956,457 +3103,10 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 101
+    "y": 96
    },
    "id": 37,
    "panels": []
-  },
-  {
-   "type": "table",
-   "title": "Top countries (from D1)",
-   "description": "Coarse edge-country of sessions, from D1 (GET /stats \u2192 topCountries). No IPs stored.",
-   "datasource": {
-    "type": "yesoreyeram-infinity-datasource",
-    "uid": "${DS_INFINITY}"
-   },
-   "gridPos": {
-    "h": 9,
-    "w": 6,
-    "x": 12,
-    "y": 102
-   },
-   "id": 38,
-   "transparent": true,
-   "fieldConfig": {
-    "defaults": {
-     "custom": {
-      "align": "auto",
-      "cellOptions": {
-       "type": "auto"
-      },
-      "filterable": true
-     }
-    },
-    "overrides": []
-   },
-   "options": {
-    "showHeader": true,
-    "cellHeight": "sm",
-    "footer": {
-     "show": false
-    }
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "type": "json",
-     "source": "url",
-     "format": "table",
-     "url": "${api_base_url}/stats",
-     "root_selector": "topCountries",
-     "columns": [
-      {
-       "selector": "country",
-       "text": "Country",
-       "type": "string"
-      },
-      {
-       "selector": "sessions",
-       "text": "Sessions",
-       "type": "number"
-      }
-     ],
-     "parser": "backend",
-     "url_options": {
-      "method": "GET",
-      "data": ""
-     }
-    }
-   ]
-  },
-  {
-   "type": "table",
-   "title": "Events by type (from D1)",
-   "description": "Full breakdown of every persisted gameplay signal (GET /stats \u2192 eventsByType).",
-   "datasource": {
-    "type": "yesoreyeram-infinity-datasource",
-    "uid": "${DS_INFINITY}"
-   },
-   "gridPos": {
-    "h": 9,
-    "w": 6,
-    "x": 18,
-    "y": 102
-   },
-   "id": 39,
-   "transparent": true,
-   "fieldConfig": {
-    "defaults": {
-     "custom": {
-      "align": "auto",
-      "cellOptions": {
-       "type": "auto"
-      },
-      "filterable": true
-     }
-    },
-    "overrides": []
-   },
-   "options": {
-    "showHeader": true,
-    "cellHeight": "sm",
-    "footer": {
-     "show": false
-    }
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "type": "json",
-     "source": "url",
-     "format": "table",
-     "url": "${api_base_url}/stats",
-     "root_selector": "eventsByType",
-     "columns": [
-      {
-       "selector": "type",
-       "text": "Event type",
-       "type": "string"
-      },
-      {
-       "selector": "count",
-       "text": "Count",
-       "type": "number"
-      }
-     ],
-     "parser": "backend",
-     "url_options": {
-      "method": "GET",
-      "data": ""
-     }
-    }
-   ]
-  },
-  {
-   "type": "text",
-   "title": "Architecture \u2014 Cloudflare + Grafana Cloud",
-   "gridPos": {
-    "h": 4,
-    "w": 24,
-    "x": 0,
-    "y": 111
-   },
-   "id": 40,
-   "transparent": true,
-   "options": {
-    "mode": "markdown",
-    "content": "## Cloud Yatra \u2014 Grand Observatory\n\n**Browser (Phaser)** \u2192 **Cloudflare Pages** (static game)\n\n**Browser** \u2192 **Cloudflare Worker** `cloud-yatra-api` \u2192 **Cloudflare D1** (SQLite)\n\n**Signals into Grafana Cloud:**\n- Frontend RUM + gameplay \u2192 **Faro** (Loki)\n- Backend request metrics & histograms \u2192 **Prometheus** (`/metrics`)\n- Backend structured logs \u2192 **Loki**\n- Backend request traces \u2192 **Tempo**\n- D1-derived gameplay analytics \u2192 **Infinity** (`/stats`, `/leaderboard`)\n\nEverything is free-tier: Cloudflare Pages + Workers + D1, Grafana Cloud free."
-   },
-   "fieldConfig": {
-    "defaults": {
-     "custom": {}
-    }
-   }
-  },
-  {
-   "type": "row",
-   "collapsed": false,
-   "title": "CHAOS MODE \u00b7 demo the dashboard reacting (admin-triggered, self-only, ~60s)",
-   "gridPos": {
-    "h": 1,
-    "w": 24,
-    "x": 0,
-    "y": 115
-   },
-   "id": 41,
-   "panels": []
-  },
-  {
-   "type": "stat",
-   "title": "Chaos active",
-   "id": 42,
-   "description": "1 while an admin-triggered chaos window is injecting faults into the gameplay routes. Source: cy_chaos_active gauge.",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "${DS_PROM}"
-   },
-   "gridPos": {
-    "h": 6,
-    "w": 4,
-    "x": 0,
-    "y": 116
-   },
-   "transparent": true,
-   "fieldConfig": {
-    "defaults": {
-     "color": {
-      "mode": "thresholds"
-     },
-     "mappings": [
-      {
-       "type": "value",
-       "options": {
-        "0": {
-         "text": "All calm",
-         "color": "#73d13d"
-        },
-        "1": {
-         "text": "\u26a1 CHAOS",
-         "color": "#e0294a"
-        }
-       }
-      }
-     ],
-     "thresholds": {
-      "mode": "absolute",
-      "steps": [
-       {
-        "color": "#73d13d",
-        "value": null
-       },
-       {
-        "color": "#e0294a",
-        "value": 1
-       }
-      ]
-     },
-     "custom": {}
-    },
-    "overrides": []
-   },
-   "options": {
-    "colorMode": "background",
-    "graphMode": "none",
-    "reduceOptions": {
-     "calcs": [
-      "lastNotNull"
-     ],
-     "fields": "",
-     "values": false
-    },
-    "textMode": "value_and_name",
-    "justifyMode": "center",
-    "wideLayout": true
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "max(cy_chaos_active)",
-     "instant": false
-    }
-   ]
-  },
-  {
-   "type": "timeseries",
-   "title": "Chaos-injected requests / sec (by route)",
-   "id": 43,
-   "description": "Rate of gameplay requests perturbed by chaos (extra latency and/or synthetic 503). Source: cy_chaos_injected_total.",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "${DS_PROM}"
-   },
-   "gridPos": {
-    "h": 6,
-    "w": 20,
-    "x": 4,
-    "y": 116
-   },
-   "fieldConfig": {
-    "defaults": {
-     "unit": "reqps",
-     "color": {
-      "mode": "palette-classic"
-     },
-     "custom": {
-      "drawStyle": "line",
-      "fillOpacity": 18,
-      "lineWidth": 2,
-      "showPoints": "never",
-      "lineInterpolation": "smooth",
-      "gradientMode": "opacity",
-      "spanNulls": true,
-      "axisBorderShow": false,
-      "axisGridShow": true,
-      "pointSize": 5,
-      "scaleDistribution": {
-       "type": "linear"
-      },
-      "stacking": {
-       "mode": "none",
-       "group": "A"
-      },
-      "axisCenteredZero": false,
-      "hideFrom": {
-       "tooltip": false,
-       "viz": false,
-       "legend": false
-      }
-     }
-    },
-    "overrides": []
-   },
-   "options": {
-    "legend": {
-     "displayMode": "table",
-     "placement": "bottom",
-     "calcs": [
-      "lastNotNull",
-      "max",
-      "mean"
-     ],
-     "showLegend": true
-    },
-    "tooltip": {
-     "mode": "multi",
-     "sort": "desc"
-    }
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "sum(rate(cy_chaos_injected_total[1m])) by (route)",
-     "legendFormat": "{{route}}",
-     "instant": false
-    }
-   ]
-  },
-  {
-   "type": "table",
-   "title": "Recent chaos episodes",
-   "id": 45,
-   "description": "Start/stop/expire markers from the Worker's /chaos/events feed (Infinity datasource).",
-   "datasource": {
-    "type": "yesoreyeram-infinity-datasource",
-    "uid": "${DS_INFINITY}"
-   },
-   "gridPos": {
-    "h": 7,
-    "w": 24,
-    "x": 0,
-    "y": 122
-   },
-   "fieldConfig": {
-    "defaults": {
-     "custom": {}
-    },
-    "overrides": []
-   },
-   "options": {
-    "showHeader": true
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "type": "json",
-     "source": "url",
-     "format": "table",
-     "url": "${api_base_url}/chaos/events",
-     "url_options": {
-      "method": "GET",
-      "data": ""
-     },
-     "root_selector": "events",
-     "columns": [
-      {
-       "selector": "ts",
-       "text": "time",
-       "type": "timestamp_epoch_s"
-      },
-      {
-       "selector": "kind",
-       "text": "kind",
-       "type": "string"
-      },
-      {
-       "selector": "profile.latencyMs",
-       "text": "latencyMs",
-       "type": "number"
-      },
-      {
-       "selector": "profile.errorRate",
-       "text": "errorRate",
-       "type": "number"
-      }
-     ],
-     "parser": "backend"
-    }
-   ]
-  },
-  {
-   "type": "bargauge",
-   "id": 53,
-   "transparent": true,
-   "title": "\ud83e\uddd7 Climb intensity by region (D1)",
-   "description": "Where the action happens across Terai \u2192 Hills \u2192 Himal. Live from /stats \u2192 byLevel events.",
-   "datasource": {
-    "type": "yesoreyeram-infinity-datasource",
-    "uid": "${DS_INFINITY}"
-   },
-   "gridPos": {
-    "h": 6,
-    "w": 24,
-    "x": 0,
-    "y": 71
-   },
-   "fieldConfig": {
-    "defaults": {
-     "unit": "short",
-     "decimals": 0,
-     "color": {
-      "mode": "continuous-BlYlRd"
-     },
-     "thresholds": {
-      "mode": "absolute",
-      "steps": [
-       {
-        "color": "green",
-        "value": null
-       }
-      ]
-     }
-    },
-    "overrides": []
-   },
-   "options": {
-    "orientation": "horizontal",
-    "displayMode": "gradient",
-    "showUnfilled": true,
-    "valueMode": "color",
-    "reduceOptions": {
-     "calcs": [
-      "lastNotNull"
-     ],
-     "fields": "",
-     "values": true
-    }
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "type": "json",
-     "source": "url",
-     "format": "table",
-     "url": "${api_base_url}/stats",
-     "root_selector": "byLevel",
-     "parser": "backend",
-     "columns": [
-      {
-       "selector": "level",
-       "text": "level",
-       "type": "string"
-      },
-      {
-       "selector": "events",
-       "text": "events",
-       "type": "number"
-      }
-     ],
-     "url_options": {
-      "method": "GET",
-      "data": ""
-     }
-    }
-   ]
   },
   {
    "type": "geomap",
@@ -3422,7 +3122,7 @@
     "h": 9,
     "w": 12,
     "x": 0,
-    "y": 102
+    "y": 97
    },
    "fieldConfig": {
     "defaults": {
@@ -3528,275 +3228,373 @@
    ]
   },
   {
-   "type": "row",
-   "id": 55,
-   "collapsed": false,
-   "title": "SLOs & ERROR BUDGET \u00b7 service reliability (RED \u2192 SLI/SLO, industry-standard)",
-   "gridPos": {
-    "h": 1,
-    "w": 24,
-    "x": 0,
-    "y": 17
-   },
-   "panels": []
-  },
-  {
-   "type": "gauge",
-   "id": 56,
-   "transparent": true,
-   "title": "Availability SLI",
-   "description": "Percentage of non-5xx responses over 30 days. SLO target: 99%.",
+   "type": "table",
+   "title": "Top countries (from D1)",
+   "description": "Coarse edge-country of sessions, from D1 (GET /stats \u2192 topCountries). No IPs stored.",
    "datasource": {
-    "type": "prometheus",
-    "uid": "${DS_PROM}"
+    "type": "yesoreyeram-infinity-datasource",
+    "uid": "${DS_INFINITY}"
    },
    "gridPos": {
-    "h": 7,
-    "w": 6,
-    "x": 0,
-    "y": 18
-   },
-   "fieldConfig": {
-    "defaults": {
-     "unit": "percent",
-     "decimals": 3,
-     "min": 0,
-     "color": {
-      "mode": "thresholds"
-     },
-     "thresholds": {
-      "mode": "absolute",
-      "steps": [
-       {
-        "color": "#e0294a",
-        "value": null
-       },
-       {
-        "color": "#ffb454",
-        "value": 99
-       },
-       {
-        "color": "#73d13d",
-        "value": 99.9
-       }
-      ]
-     },
-     "max": 100
-    },
-    "overrides": []
-   },
-   "options": {
-    "showThresholdLabels": false,
-    "showThresholdMarkers": true,
-    "reduceOptions": {
-     "calcs": [
-      "lastNotNull"
-     ],
-     "fields": "",
-     "values": false
-    }
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "100 * sum(rate(cy_api_requests_total{status_class!=\"5xx\"}[$__range])) / clamp_min(sum(rate(cy_api_requests_total[$__range])), 0.0001)",
-     "legendFormat": "Availability SLI (30d)",
-     "editorMode": "code"
-    }
-   ]
-  },
-  {
-   "type": "gauge",
-   "id": 57,
-   "transparent": true,
-   "title": "Error budget remaining",
-   "description": "Share of the 1% monthly error budget still unspent (99% availability SLO).",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "${DS_PROM}"
-   },
-   "gridPos": {
-    "h": 7,
-    "w": 6,
-    "x": 6,
-    "y": 18
-   },
-   "fieldConfig": {
-    "defaults": {
-     "unit": "percent",
-     "decimals": 1,
-     "min": 0,
-     "color": {
-      "mode": "thresholds"
-     },
-     "thresholds": {
-      "mode": "absolute",
-      "steps": [
-       {
-        "color": "#e0294a",
-        "value": null
-       },
-       {
-        "color": "#ffb454",
-        "value": 25
-       },
-       {
-        "color": "#73d13d",
-        "value": 60
-       }
-      ]
-     },
-     "max": 100
-    },
-    "overrides": []
-   },
-   "options": {
-    "showThresholdLabels": false,
-    "showThresholdMarkers": true,
-    "reduceOptions": {
-     "calcs": [
-      "lastNotNull"
-     ],
-     "fields": "",
-     "values": false
-    }
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "clamp(100 * (0.01 - (1 - (sum(rate(cy_api_requests_total{status_class!=\"5xx\"}[$__range])) / clamp_min(sum(rate(cy_api_requests_total[$__range])),0.0001)))) / 0.01, 0, 100)",
-     "legendFormat": "Error budget remaining",
-     "editorMode": "code"
-    }
-   ]
-  },
-  {
-   "type": "gauge",
-   "id": 58,
-   "transparent": true,
-   "title": "Latency SLO \u00b7 <500ms",
-   "description": "Share of requests served under 500ms. SLO target: 95%.",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "${DS_PROM}"
-   },
-   "gridPos": {
-    "h": 7,
+    "h": 9,
     "w": 6,
     "x": 12,
-    "y": 18
+    "y": 97
    },
-   "fieldConfig": {
-    "defaults": {
-     "unit": "percent",
-     "decimals": 2,
-     "min": 0,
-     "color": {
-      "mode": "thresholds"
-     },
-     "thresholds": {
-      "mode": "absolute",
-      "steps": [
-       {
-        "color": "#e0294a",
-        "value": null
-       },
-       {
-        "color": "#ffb454",
-        "value": 95
-       },
-       {
-        "color": "#73d13d",
-        "value": 99
-       }
-      ]
-     },
-     "max": 100
-    },
-    "overrides": []
-   },
-   "options": {
-    "showThresholdLabels": false,
-    "showThresholdMarkers": true,
-    "reduceOptions": {
-     "calcs": [
-      "lastNotNull"
-     ],
-     "fields": "",
-     "values": false
-    }
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "100 * sum(rate(cy_api_request_duration_ms_bucket{le=\"500\"}[$__range])) / clamp_min(sum(rate(cy_api_request_duration_ms_count[$__range])),0.0001)",
-     "legendFormat": "Latency SLO \u00b7 <500ms (30d)",
-     "editorMode": "code"
-    }
-   ]
-  },
-  {
-   "type": "stat",
-   "id": 59,
+   "id": 38,
    "transparent": true,
-   "title": "Error-budget burn (1h)",
-   "description": "How fast the budget is being spent right now vs. sustainable (1.0 = on-pace). >14 = page.",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "${DS_PROM}"
-   },
-   "gridPos": {
-    "h": 7,
-    "w": 6,
-    "x": 18,
-    "y": 18
-   },
    "fieldConfig": {
     "defaults": {
-     "unit": "none",
-     "decimals": 2,
-     "color": {
-      "mode": "thresholds"
-     },
-     "thresholds": {
-      "mode": "absolute",
-      "steps": [
-       {
-        "color": "#73d13d",
-        "value": null
-       },
-       {
-        "color": "#ffb454",
-        "value": 1
-       },
-       {
-        "color": "#e0294a",
-        "value": 14
-       }
-      ]
+     "custom": {
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      },
+      "filterable": true
      }
     },
     "overrides": []
    },
    "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "type": "json",
+     "source": "url",
+     "format": "table",
+     "url": "${api_base_url}/stats",
+     "root_selector": "topCountries",
+     "columns": [
+      {
+       "selector": "country",
+       "text": "Country",
+       "type": "string"
+      },
+      {
+       "selector": "sessions",
+       "text": "Sessions",
+       "type": "number"
+      }
+     ],
+     "parser": "backend",
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
+    }
+   ]
+  },
+  {
+   "type": "table",
+   "title": "Events by type (from D1)",
+   "description": "Full breakdown of every persisted gameplay signal (GET /stats \u2192 eventsByType).",
+   "datasource": {
+    "type": "yesoreyeram-infinity-datasource",
+    "uid": "${DS_INFINITY}"
+   },
+   "gridPos": {
+    "h": 9,
+    "w": 6,
+    "x": 18,
+    "y": 97
+   },
+   "id": 39,
+   "transparent": true,
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      },
+      "filterable": true
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "type": "json",
+     "source": "url",
+     "format": "table",
+     "url": "${api_base_url}/stats",
+     "root_selector": "eventsByType",
+     "columns": [
+      {
+       "selector": "type",
+       "text": "Event type",
+       "type": "string"
+      },
+      {
+       "selector": "count",
+       "text": "Count",
+       "type": "number"
+      }
+     ],
+     "parser": "backend",
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     }
+    }
+   ]
+  },
+  {
+   "type": "text",
+   "title": "Architecture \u2014 Cloudflare + Grafana Cloud",
+   "gridPos": {
+    "h": 4,
+    "w": 24,
+    "x": 0,
+    "y": 106
+   },
+   "id": 40,
+   "transparent": true,
+   "options": {
+    "mode": "markdown",
+    "content": "## Cloud Yatra \u2014 Grand Observatory\n\n**Browser (Phaser)** \u2192 **Cloudflare Pages** (static game)\n\n**Browser** \u2192 **Cloudflare Worker** `cloud-yatra-api` \u2192 **Cloudflare D1** (SQLite)\n\n**Signals into Grafana Cloud:**\n- Frontend RUM + gameplay \u2192 **Faro** (Loki)\n- Backend request metrics & histograms \u2192 **Prometheus** (`/metrics`)\n- Backend structured logs \u2192 **Loki**\n- Backend request traces \u2192 **Tempo**\n- D1-derived gameplay analytics \u2192 **Infinity** (`/stats`, `/leaderboard`)\n\nEverything is free-tier: Cloudflare Pages + Workers + D1, Grafana Cloud free."
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {}
+    }
+   }
+  },
+  {
+   "type": "row",
+   "collapsed": false,
+   "title": "CHAOS MODE \u00b7 demo the dashboard reacting (admin-triggered, self-only, ~60s)",
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 110
+   },
+   "id": 41,
+   "panels": []
+  },
+  {
+   "type": "stat",
+   "title": "Chaos active",
+   "id": 42,
+   "description": "1 while an admin-triggered chaos window is injecting faults into the gameplay routes. Source: cy_chaos_active gauge.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "${DS_PROM}"
+   },
+   "gridPos": {
+    "h": 6,
+    "w": 4,
+    "x": 0,
+    "y": 111
+   },
+   "transparent": true,
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "mappings": [
+      {
+       "type": "value",
+       "options": {
+        "0": {
+         "text": "All calm",
+         "color": "#73d13d"
+        },
+        "1": {
+         "text": "\u26a1 CHAOS",
+         "color": "#e0294a"
+        }
+       }
+      }
+     ],
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#73d13d",
+        "value": null
+       },
+       {
+        "color": "#e0294a",
+        "value": 1
+       }
+      ]
+     },
+     "custom": {}
+    },
+    "overrides": []
+   },
+   "options": {
     "colorMode": "background",
-    "graphMode": "area",
-    "textMode": "value_and_name",
-    "justifyMode": "center",
+    "graphMode": "none",
     "reduceOptions": {
      "calcs": [
       "lastNotNull"
      ],
      "fields": "",
      "values": false
+    },
+    "textMode": "value_and_name",
+    "justifyMode": "center",
+    "wideLayout": true
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "max(cy_chaos_active)",
+     "instant": false
+    }
+   ]
+  },
+  {
+   "type": "timeseries",
+   "title": "Chaos-injected requests / sec (by route)",
+   "id": 43,
+   "description": "Rate of gameplay requests perturbed by chaos (extra latency and/or synthetic 503). Source: cy_chaos_injected_total.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "${DS_PROM}"
+   },
+   "gridPos": {
+    "h": 6,
+    "w": 20,
+    "x": 4,
+    "y": 111
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "reqps",
+     "color": {
+      "mode": "palette-classic"
+     },
+     "custom": {
+      "drawStyle": "line",
+      "fillOpacity": 18,
+      "lineWidth": 2,
+      "showPoints": "never",
+      "lineInterpolation": "smooth",
+      "gradientMode": "opacity",
+      "spanNulls": true,
+      "axisBorderShow": false,
+      "axisGridShow": true,
+      "pointSize": 5,
+      "scaleDistribution": {
+       "type": "linear"
+      },
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      },
+      "axisCenteredZero": false,
+      "hideFrom": {
+       "tooltip": false,
+       "viz": false,
+       "legend": false
+      }
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max",
+      "mean"
+     ],
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
     }
    },
    "targets": [
     {
      "refId": "A",
-     "expr": "( sum(rate(cy_api_requests_total{status_class=\"5xx\"}[1h])) / clamp_min(sum(rate(cy_api_requests_total[1h])),0.0001) ) / 0.01",
-     "legendFormat": "Error-budget burn (1h)",
-     "editorMode": "code"
+     "expr": "sum(rate(cy_chaos_injected_total[1m])) by (route)",
+     "legendFormat": "{{route}}",
+     "instant": false
+    }
+   ]
+  },
+  {
+   "type": "table",
+   "title": "Recent chaos episodes",
+   "id": 45,
+   "description": "Start/stop/expire markers from the Worker's /chaos/events feed (Infinity datasource).",
+   "datasource": {
+    "type": "yesoreyeram-infinity-datasource",
+    "uid": "${DS_INFINITY}"
+   },
+   "gridPos": {
+    "h": 7,
+    "w": 24,
+    "x": 0,
+    "y": 117
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {}
+    },
+    "overrides": []
+   },
+   "options": {
+    "showHeader": true
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "type": "json",
+     "source": "url",
+     "format": "table",
+     "url": "${api_base_url}/chaos/events",
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     },
+     "root_selector": "events",
+     "columns": [
+      {
+       "selector": "ts",
+       "text": "time",
+       "type": "timestamp_epoch_s"
+      },
+      {
+       "selector": "kind",
+       "text": "kind",
+       "type": "string"
+      },
+      {
+       "selector": "profile.latencyMs",
+       "text": "latencyMs",
+       "type": "number"
+      },
+      {
+       "selector": "profile.errorRate",
+       "text": "errorRate",
+       "type": "number"
+      }
+     ],
+     "parser": "backend"
     }
    ]
   }
