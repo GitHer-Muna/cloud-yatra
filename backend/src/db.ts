@@ -221,6 +221,76 @@ export async function leaderboard(env: Env, limit = 20): Promise<LeaderboardRow[
   return res.results ?? [];
 }
 
+/**
+ * Per-session rollup for the "Your Run" dashboard row. Returns the single session's row
+ * from the `sessions` table (the same anonymous per-tab rollup used for engagement),
+ * shaped as a one-element array so the Infinity datasource can read it as a table.
+ *
+ * Privacy: the session id is an anonymous per-tab UUID (no PII). We echo it back only so
+ * the dashboard can confirm which run is shown. An unknown/not-yet-seen session returns a
+ * single zeroed row (never an error) so the panels render "0 / just started" instead of
+ * going blank — exactly the always-present behavior the embed wants.
+ */
+export interface SessionRollup {
+  sessionId: string;
+  found: boolean;
+  firstSeen: number | null;
+  lastSeen: number | null;
+  country: string | null;
+  inputMode: string | null;
+  started: number;
+  completed: number;
+  deaths: number;
+  jumps: number;
+  cuts: number;
+  collects: number;
+  bells: number;
+  flags: number;
+  bestScore: number;
+  maxProgress: number;
+  eventCount: number;
+}
+
+export async function sessionRollup(env: Env, sessionId: string): Promise<SessionRollup> {
+  const row = await env.DB.prepare(
+    `SELECT session_id   AS sessionId,
+            first_seen   AS firstSeen,
+            last_seen    AS lastSeen,
+            country,
+            input_mode   AS inputMode,
+            started, completed, deaths, jumps, cuts, collects, bells, flags,
+            best_score   AS bestScore,
+            max_progress AS maxProgress,
+            event_count  AS eventCount
+       FROM sessions WHERE session_id = ?`,
+  )
+    .bind(sessionId)
+    .first<Omit<SessionRollup, 'found'>>();
+
+  if (!row) {
+    return {
+      sessionId,
+      found: false,
+      firstSeen: null,
+      lastSeen: null,
+      country: null,
+      inputMode: null,
+      started: 0,
+      completed: 0,
+      deaths: 0,
+      jumps: 0,
+      cuts: 0,
+      collects: 0,
+      bells: 0,
+      flags: 0,
+      bestScore: 0,
+      maxProgress: 0,
+      eventCount: 0,
+    };
+  }
+  return { ...row, found: true };
+}
+
 export interface Stats {
   generatedAt: number;
   sessions: { total: number; active5m: number };

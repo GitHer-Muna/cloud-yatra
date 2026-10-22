@@ -225,6 +225,46 @@ describe('/stats', () => {
   });
 });
 
+describe('/session (per-player rollup)', () => {
+  it('returns the live rollup for a known session', async () => {
+    const sid = 'sess-your-run-1';
+    await call('POST', '/events', [
+      makeEvent({ type: 'game_started', sessionId: sid, levelId: 'terai', tMs: 1, attrs: { inputMode: 'keyboard' } }),
+      makeEvent({ type: 'player_jump', sessionId: sid, levelId: 'terai', tMs: 2 }),
+      makeEvent({ type: 'player_jump', sessionId: sid, levelId: 'terai', tMs: 3 }),
+      makeEvent({ type: 'player_died', sessionId: sid, levelId: 'terai', tMs: 4, attrs: { cause: 'eagle' } }),
+      makeEvent({ type: 'level_completed', sessionId: sid, levelId: 'himal', tMs: 5, attrs: { score: 1234, timeMs: 1000 } }),
+    ]);
+    const res = await call('GET', `/session?id=${sid}`);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { session: Array<Record<string, unknown>> };
+    expect(body.session).toHaveLength(1);
+    const run = body.session[0];
+    expect(run.sessionId).toBe(sid);
+    expect(run.found).toBe(true);
+    expect(run.started).toBe(1);
+    expect(run.jumps).toBe(2);
+    expect(run.deaths).toBe(1);
+    expect(run.completed).toBe(1);
+    expect(run.eventCount).toBe(5);
+  });
+
+  it('returns a zeroed row (not an error) for an unknown session', async () => {
+    const res = await call('GET', '/session?id=never-seen-123');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { session: Array<Record<string, unknown>> };
+    expect(body.session).toHaveLength(1);
+    expect(body.session[0].found).toBe(false);
+    expect(body.session[0].started).toBe(0);
+    expect(body.session[0].eventCount).toBe(0);
+  });
+
+  it('rejects a missing or too-short session id', async () => {
+    expect((await call('GET', '/session')).status).toBe(400);
+    expect((await call('GET', '/session?id=abc')).status).toBe(400);
+  });
+});
+
 describe('/metrics', () => {
   it('exposes prometheus text with request counters', async () => {
     await call('GET', '/healthz');

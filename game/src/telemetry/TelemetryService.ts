@@ -10,7 +10,7 @@
  * is well-formed and privacy-safe the same way. No network, no Grafana credentials.
  */
 import { SCHEMA_VERSION, validateEvent, type EventAttrs, type TelemetryEvent } from './events';
-import { createUuid, getOptionalPlayerId } from './ids';
+import { getSessionId, getOptionalPlayerId } from './ids';
 import { ConsoleSink, type TelemetrySink } from './sinks';
 
 export class TelemetryService {
@@ -25,7 +25,7 @@ export class TelemetryService {
     private readonly sink: TelemetrySink = new ConsoleSink(),
     now: () => number = () => performance.now(),
   ) {
-    this.sessionId = createUuid();
+    this.sessionId = getSessionId();
     this.playerId = getOptionalPlayerId(); // null unless opted in
     this.now = now;
     this.startedAtMs = now();

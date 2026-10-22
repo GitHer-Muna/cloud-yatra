@@ -20,7 +20,7 @@
 import type { Env } from './env';
 import { corsHeaders, preflight } from './cors';
 import { validateEvent, MAX_BATCH, type EventEnvelope } from './events';
-import { ingest, leaderboard, stats, submitScore } from './db';
+import { ingest, leaderboard, sessionRollup, stats, submitScore } from './db';
 import { inc, observe, renderMetrics, setGauge } from './metrics';
 import { Logger, hexId, pushTrace } from './logger';
 import {
@@ -121,6 +121,7 @@ function routeLabel(pathname: string): string {
     '/healthz',
     '/metrics',
     '/stats',
+    '/session',
     '/leaderboard',
     '/score',
     '/event',
@@ -172,6 +173,19 @@ async function handle(req: Request, env: Env, c: Ctx): Promise<Response> {
       setGauge('cy_events_by_type', r.count, { type: r.type }, 'Event count by type (D1)');
     }
     return json(s, 200, req, env);
+  }
+
+  // Per-session "Your Run" rollup for the embedded dashboard. Read-only, public (the id is
+  // an anonymous per-tab UUID the caller already holds). Always returns a row so the
+  // "Your Run" panels render immediately instead of going blank for a new player.
+  if (pathname === '/session' && method === 'GET') {
+    const id = (new URL(req.url).searchParams.get('id') ?? '').trim();
+    if (id.length < 8 || id.length > 128) {
+      return json({ error: 'bad_session_id' }, 400, req, env);
+    }
+    const row = await sessionRollup(env, id);
+    // Shaped as a single-element array so the Infinity datasource reads it as a table.
+    return json({ session: [row] }, 200, req, env);
   }
 
   if (pathname === '/leaderboard' && method === 'GET') {

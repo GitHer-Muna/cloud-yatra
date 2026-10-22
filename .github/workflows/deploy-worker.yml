@@ -58,3 +58,41 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: backend
           command: deploy
+
+      # Optional Worker secrets. Each is pushed ONLY when the matching repository secret is
+      # non-empty, so the deploy stays green whether or not you've set them, and an unset
+      # value never wipes an existing Worker secret. To enable any of these, add the secret
+      # under Settings → Secrets and variables → Actions, then re-run this workflow
+      # (or push any change under backend/**).
+      #   CHAOS_ADMIN_TOKEN                          — arms Chaos Mode (Shift+C in-game)
+      #   GRAFANA_LOKI_URL / _USER / _TOKEN          — push backend logs to Grafana Loki
+      #   GRAFANA_OTLP_URL / _USER / _TOKEN          — push traces to Grafana Tempo
+      - name: Push optional Worker secrets (only those set)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CHAOS_ADMIN_TOKEN: ${{ secrets.CHAOS_ADMIN_TOKEN }}
+          GRAFANA_LOKI_URL: ${{ secrets.GRAFANA_LOKI_URL }}
+          GRAFANA_LOKI_USER: ${{ secrets.GRAFANA_LOKI_USER }}
+          GRAFANA_LOKI_TOKEN: ${{ secrets.GRAFANA_LOKI_TOKEN }}
+          GRAFANA_OTLP_URL: ${{ secrets.GRAFANA_OTLP_URL }}
+          GRAFANA_OTLP_USER: ${{ secrets.GRAFANA_OTLP_USER }}
+          GRAFANA_OTLP_TOKEN: ${{ secrets.GRAFANA_OTLP_TOKEN }}
+        run: |
+          set -euo pipefail
+          put_if_set() {
+            local name="$1"
+            local value="${!name:-}"
+            if [ -n "$value" ]; then
+              echo "Setting Worker secret: $name"
+              printf '%s' "$value" | npx wrangler secret put "$name"
+            else
+              echo "Skipping unset secret: $name"
+            fi
+          }
+          for s in \
+            CHAOS_ADMIN_TOKEN \
+            GRAFANA_LOKI_URL GRAFANA_LOKI_USER GRAFANA_LOKI_TOKEN \
+            GRAFANA_OTLP_URL GRAFANA_OTLP_USER GRAFANA_OTLP_TOKEN; do
+            put_if_set "$s"
+          done

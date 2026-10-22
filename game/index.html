@@ -244,12 +244,38 @@
       const frame = document.getElementById('cy-observatory-frame');
       const empty = document.getElementById('cy-observatory-empty');
       const status = document.getElementById('cy-observatory-status');
+
+      // The anonymous per-tab session id, SHARED with the telemetry pipeline (which reads
+      // the same sessionStorage key — see src/telemetry/ids.ts getSessionId). Passing it to
+      // the dashboard as `var-session` lets the "Your Run" panels show THIS player's live
+      // metrics, while all other panels keep showing the shared, already-populated data.
+      function sharedSessionId() {
+        const KEY = 'cloud-yatra.sessionId';
+        try {
+          const existing = sessionStorage.getItem(KEY);
+          if (existing && existing.length >= 8) return existing;
+          const fresh =
+            (crypto && crypto.randomUUID && crypto.randomUUID()) ||
+            'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (ch) => {
+              const r = (Math.random() * 16) | 0;
+              return (ch === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+            });
+          sessionStorage.setItem(KEY, fresh);
+          return fresh;
+        } catch {
+          return '';
+        }
+      }
+
       if (dashboardUrl && frame && empty && status) {
         try {
           const url = new URL(dashboardUrl, window.location.href);
           url.searchParams.set('theme', 'dark');
           url.searchParams.set('kiosk', 'tv');
           if (!url.searchParams.has('refresh')) url.searchParams.set('refresh', '5s');
+          // Tell the dashboard which run is "yours" so the per-player panels light up live.
+          const sid = sharedSessionId();
+          if (sid) url.searchParams.set('var-session', sid);
           frame.src = url.toString();
           frame.hidden = false;
           empty.hidden = true;
