@@ -950,11 +950,11 @@
   },
   {
    "type": "stat",
-   "title": "Gameplay events / min (Faro)",
-   "description": "Bounded gameplay signals arriving through Faro RUM per minute.",
+   "title": "Gameplay events (D1 total)",
+   "description": "Total gameplay signals persisted in D1. Live from /stats.",
    "datasource": {
-    "type": "loki",
-    "uid": "${DS_FARO}"
+    "type": "yesoreyeram-infinity-datasource",
+    "uid": "${DS_INFINITY}"
    },
    "gridPos": {
     "h": 6,
@@ -966,7 +966,7 @@
    "transparent": true,
    "fieldConfig": {
     "defaults": {
-     "unit": "cpm",
+     "unit": "short",
      "decimals": 0,
      "color": {
       "mode": "fixed",
@@ -993,7 +993,20 @@
    "targets": [
     {
      "refId": "A",
-     "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} |~ `(game_started|game_over|level_started|player_jump|collectible_collected|player_damaged|player_died|flag_planted|level_completed|game_restarted|obstacle_cut|player_stomp|journey_progress|guru_guidance|session_heartbeat|client_perf)` [1m])) * 60"
+     "type": "json",
+     "source": "url",
+     "format": "table",
+     "url": "${api_base_url}/stats",
+     "method": "GET",
+     "root_selector": "totals",
+     "parser": "backend",
+     "columns": [
+      {
+       "selector": "events",
+       "text": "events",
+       "type": "number"
+      }
+     ]
     }
    ],
    "links": [
@@ -1594,7 +1607,7 @@
   },
   {
    "type": "timeseries",
-   "title": "Web Vitals \u00b7 LCP / INP (p95)",
+   "title": "Web Vitals \u00b7 LCP / INP (p95) \u00b7 (needs Faro)",
    "description": "Real-user loading and interaction latency from Faro web-vitals.",
    "datasource": {
     "type": "loki",
@@ -1679,7 +1692,7 @@
   },
   {
    "type": "timeseries",
-   "title": "Web Vitals \u00b7 CLS / TTFB / FCP",
+   "title": "Web Vitals \u00b7 CLS / TTFB / FCP \u00b7 (needs Faro)",
    "description": "Layout stability and first-byte/paint timing.",
    "datasource": {
     "type": "loki",
@@ -1762,7 +1775,7 @@
   },
   {
    "type": "stat",
-   "title": "Browser exceptions",
+   "title": "Browser exceptions \u00b7 (needs Faro)",
    "description": "JS errors + unhandled rejections (Faro). Drill into Frontend Observability for stacks.",
    "datasource": {
     "type": "loki",
@@ -1858,7 +1871,7 @@
   },
   {
    "type": "timeseries",
-   "title": "Sampled FPS by region",
+   "title": "Sampled FPS by region \u00b7 (needs Faro)",
    "description": "Average FPS sampled ~every 2s (never per-frame), split by Nepal region.",
    "datasource": {
     "type": "loki",
@@ -1944,7 +1957,7 @@
   },
   {
    "type": "heatmap",
-   "title": "FPS distribution (heatmap)",
+   "title": "FPS distribution (heatmap) \u00b7 (needs Faro)",
    "description": "How smooth play actually feels across all players and devices.",
    "datasource": {
     "type": "loki",
@@ -1987,12 +2000,12 @@
    ]
   },
   {
-   "type": "timeseries",
-   "title": "Journey state \u00b7 progress / lives / combo",
-   "description": "Game-state measurement emitted each heartbeat \u2014 correlate experience with progress.",
+   "type": "bargauge",
+   "title": "\ud83e\udded Progression funnel \u00b7 how far pilgrims climb (D1)",
+   "description": "Distinct sessions reaching each stage. Live from /stats \u2192 funnel.",
    "datasource": {
-    "type": "loki",
-    "uid": "${DS_FARO}"
+    "type": "yesoreyeram-infinity-datasource",
+    "uid": "${DS_INFINITY}"
    },
    "gridPos": {
     "h": 6,
@@ -2006,66 +2019,66 @@
     "defaults": {
      "unit": "short",
      "decimals": 0,
-     "custom": {
-      "drawStyle": "line",
-      "fillOpacity": 18,
-      "gradientMode": "opacity",
-      "lineInterpolation": "smooth",
-      "lineWidth": 2,
-      "showPoints": "never",
-      "spanNulls": true,
-      "pointSize": 5,
-      "axisBorderShow": false,
-      "axisGridShow": true,
-      "axisLabel": "",
-      "scaleDistribution": {
-       "type": "linear"
-      },
-      "stacking": {
-       "mode": "none",
-       "group": "A"
-      },
-      "axisCenteredZero": false,
-      "hideFrom": {
-       "tooltip": false,
-       "viz": false,
-       "legend": false
-      }
+     "color": {
+      "mode": "continuous-GrYlRd"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       }
+      ]
      }
     },
     "overrides": []
    },
    "options": {
-    "legend": {
-     "displayMode": "table",
-     "placement": "bottom",
+    "orientation": "horizontal",
+    "displayMode": "gradient",
+    "showUnfilled": true,
+    "valueMode": "color",
+    "reduceOptions": {
      "calcs": [
-      "lastNotNull",
-      "max",
-      "mean"
+      "lastNotNull"
      ],
-     "showLegend": true
-    },
-    "tooltip": {
-     "mode": "multi",
-     "sort": "desc"
+     "fields": "",
+     "values": true
     }
    },
    "targets": [
     {
      "refId": "A",
-     "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_state\" | unwrap value_progressPct [$__interval])",
-     "legendFormat": "progress % \u00b7 {{level}}"
-    },
-    {
-     "refId": "B",
-     "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_state\" | unwrap value_lives [$__interval])",
-     "legendFormat": "lives \u00b7 {{level}}"
-    },
-    {
-     "refId": "C",
-     "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_state\" | unwrap value_combo [$__interval])",
-     "legendFormat": "combo \u00b7 {{level}}"
+     "type": "json",
+     "source": "url",
+     "format": "table",
+     "url": "${api_base_url}/stats",
+     "method": "GET",
+     "root_selector": "funnel",
+     "parser": "backend",
+     "columns": [
+      {
+       "selector": "started",
+       "text": "Started",
+       "type": "number"
+      },
+      {
+       "selector": "reachedHills",
+       "text": "Reached Hills",
+       "type": "number"
+      },
+      {
+       "selector": "reachedHimal",
+       "text": "Reached Himal",
+       "type": "number"
+      },
+      {
+       "selector": "completed",
+       "text": "Completed",
+       "type": "number"
+      }
+     ]
     }
    ],
    "links": [
@@ -2090,12 +2103,12 @@
    "panels": []
   },
   {
-   "type": "timeseries",
-   "title": "Actions per minute",
-   "description": "The rhythm of play: jumps, obstacle cuts, collectibles, pennants (Faro event stream).",
+   "type": "barchart",
+   "title": "\ud83c\udfae Gameplay actions by type (D1)",
+   "description": "Every signal Yatri generates, by type. Live from /stats \u2192 eventsByType.",
    "datasource": {
-    "type": "loki",
-    "uid": "${DS_FARO}"
+    "type": "yesoreyeram-infinity-datasource",
+    "uid": "${DS_INFINITY}"
    },
    "gridPos": {
     "h": 7,
@@ -2107,78 +2120,52 @@
    "transparent": true,
    "fieldConfig": {
     "defaults": {
-     "unit": "cpm",
+     "unit": "short",
      "decimals": 0,
+     "color": {
+      "mode": "palette-classic"
+     },
      "custom": {
-      "drawStyle": "line",
-      "fillOpacity": 18,
-      "gradientMode": "opacity",
-      "lineInterpolation": "smooth",
-      "lineWidth": 2,
-      "showPoints": "never",
-      "spanNulls": true,
-      "pointSize": 5,
-      "axisBorderShow": false,
-      "axisGridShow": true,
-      "axisLabel": "",
-      "scaleDistribution": {
-       "type": "linear"
-      },
-      "stacking": {
-       "mode": "none",
-       "group": "A"
-      },
-      "axisCenteredZero": false,
-      "hideFrom": {
-       "tooltip": false,
-       "viz": false,
-       "legend": false
-      }
+      "lineWidth": 1,
+      "fillOpacity": 80,
+      "gradientMode": "hue",
+      "axisBorderShow": false
      }
     },
     "overrides": []
    },
    "options": {
+    "orientation": "horizontal",
+    "showValue": "auto",
+    "xField": "type",
     "legend": {
-     "displayMode": "table",
+     "displayMode": "list",
      "placement": "bottom",
-     "calcs": [
-      "lastNotNull",
-      "max",
-      "mean"
-     ],
-     "showLegend": true
-    },
-    "tooltip": {
-     "mode": "multi",
-     "sort": "desc"
+     "showLegend": false
     }
    },
    "targets": [
     {
      "refId": "A",
-     "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_name=\"player_jump\" [5m])) * 60",
-     "legendFormat": "jumps"
-    },
-    {
-     "refId": "B",
-     "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_name=\"obstacle_cut\" [5m])) * 60",
-     "legendFormat": "khukuri cuts"
-    },
-    {
-     "refId": "C",
-     "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_name=\"collectible_collected\" [5m])) * 60",
-     "legendFormat": "collectibles"
-    },
-    {
-     "refId": "D",
-     "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_name=\"flag_planted\" [5m])) * 60",
-     "legendFormat": "pennants"
-    },
-    {
-     "refId": "E",
-     "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_name=\"player_stomp\" [5m])) * 60",
-     "legendFormat": "stomps"
+     "type": "json",
+     "source": "url",
+     "format": "table",
+     "url": "${api_base_url}/stats",
+     "method": "GET",
+     "root_selector": "eventsByType",
+     "parser": "backend",
+     "columns": [
+      {
+       "selector": "type",
+       "text": "type",
+       "type": "string"
+      },
+      {
+       "selector": "count",
+       "text": "count",
+       "type": "number"
+      }
+     ]
     }
    ],
    "links": [
@@ -2335,12 +2322,12 @@
    ]
   },
   {
-   "type": "timeseries",
-   "title": "Damage & deaths by cause (live, Faro)",
-   "description": "Live per-cause damage and death rate from the Faro event stream (bounded vocabulary).",
+   "type": "barchart",
+   "title": "\ud83c\udfd4\ufe0f Journey by region \u00b7 events / deaths / completions (D1)",
+   "description": "How each region of Himal Rajya plays out. Live from /stats \u2192 byLevel.",
    "datasource": {
-    "type": "loki",
-    "uid": "${DS_FARO}"
+    "type": "yesoreyeram-infinity-datasource",
+    "uid": "${DS_INFINITY}"
    },
    "gridPos": {
     "h": 7,
@@ -2352,63 +2339,63 @@
    "transparent": true,
    "fieldConfig": {
     "defaults": {
-     "unit": "cpm",
+     "unit": "short",
      "decimals": 0,
+     "color": {
+      "mode": "palette-classic"
+     },
      "custom": {
-      "drawStyle": "line",
-      "fillOpacity": 18,
-      "gradientMode": "opacity",
-      "lineInterpolation": "smooth",
-      "lineWidth": 2,
-      "showPoints": "never",
-      "spanNulls": true,
-      "pointSize": 5,
-      "axisBorderShow": false,
-      "axisGridShow": true,
-      "axisLabel": "",
-      "scaleDistribution": {
-       "type": "linear"
-      },
-      "stacking": {
-       "mode": "none",
-       "group": "A"
-      },
-      "axisCenteredZero": false,
-      "hideFrom": {
-       "tooltip": false,
-       "viz": false,
-       "legend": false
-      }
+      "lineWidth": 1,
+      "fillOpacity": 80,
+      "gradientMode": "none",
+      "axisBorderShow": false
      }
     },
     "overrides": []
    },
    "options": {
+    "orientation": "auto",
+    "showValue": "auto",
+    "xField": "level",
+    "stacking": "none",
     "legend": {
-     "displayMode": "table",
+     "displayMode": "list",
      "placement": "bottom",
-     "calcs": [
-      "lastNotNull",
-      "max",
-      "mean"
-     ],
      "showLegend": true
-    },
-    "tooltip": {
-     "mode": "multi",
-     "sort": "desc"
     }
    },
    "targets": [
     {
      "refId": "A",
-     "expr": "sum by (event_data_cause) (rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_name=\"player_damaged\" [5m])) * 60",
-     "legendFormat": "damage \u00b7 {{event_data_cause}}"
-    },
-    {
-     "refId": "B",
-     "expr": "sum by (event_data_cause) (rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_name=\"player_died\" [5m])) * 60",
-     "legendFormat": "death \u00b7 {{event_data_cause}}"
+     "type": "json",
+     "source": "url",
+     "format": "table",
+     "url": "${api_base_url}/stats",
+     "method": "GET",
+     "root_selector": "byLevel",
+     "parser": "backend",
+     "columns": [
+      {
+       "selector": "level",
+       "text": "level",
+       "type": "string"
+      },
+      {
+       "selector": "events",
+       "text": "events",
+       "type": "number"
+      },
+      {
+       "selector": "deaths",
+       "text": "deaths",
+       "type": "number"
+      },
+      {
+       "selector": "completions",
+       "text": "completions",
+       "type": "number"
+      }
+     ]
     }
    ]
   },
@@ -2751,11 +2738,11 @@
   },
   {
    "type": "piechart",
-   "title": "How players enter",
-   "description": "Keyboard vs touch, from the bounded game_started context (Faro).",
+   "title": "\ud83c\udf3c Blooms & bells gathered (D1)",
+   "description": "Rhododendron blooms vs prayer bells collected. Live from /stats \u2192 collectsByKind.",
    "datasource": {
-    "type": "loki",
-    "uid": "${DS_FARO}"
+    "type": "yesoreyeram-infinity-datasource",
+    "uid": "${DS_INFINITY}"
    },
    "gridPos": {
     "h": 8,
@@ -2768,14 +2755,6 @@
    "fieldConfig": {
     "defaults": {
      "unit": "short",
-     "decimals": 0,
-     "custom": {
-      "hideFrom": {
-       "tooltip": false,
-       "viz": false,
-       "legend": false
-      }
-     },
      "color": {
       "mode": "palette-classic"
      }
@@ -2784,12 +2763,10 @@
    },
    "options": {
     "pieType": "donut",
-    "reduceOptions": {
-     "calcs": [
-      "lastNotNull"
-     ],
-     "values": true
-    },
+    "displayLabels": [
+     "name",
+     "percent"
+    ],
     "legend": {
      "displayMode": "table",
      "placement": "right",
@@ -2799,30 +2776,49 @@
      ],
      "showLegend": true
     },
-    "displayLabels": [
-     "name",
-     "percent"
-    ],
     "tooltip": {
      "mode": "multi",
      "sort": "desc"
+    },
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "values": true
     }
    },
    "targets": [
     {
      "refId": "A",
-     "expr": "sum by (event_data_inputMode) (count_over_time({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_name=\"game_started\" [$__interval]))",
-     "legendFormat": "{{event_data_inputMode}}"
+     "type": "json",
+     "source": "url",
+     "format": "table",
+     "url": "${api_base_url}/stats",
+     "method": "GET",
+     "root_selector": "collectsByKind",
+     "parser": "backend",
+     "columns": [
+      {
+       "selector": "kind",
+       "text": "kind",
+       "type": "string"
+      },
+      {
+       "selector": "count",
+       "text": "count",
+       "type": "number"
+      }
+     ]
     }
    ]
   },
   {
-   "type": "timeseries",
-   "title": "Reward loop & friction",
-   "description": "Guru moments, garlands/bells collected, and restarts \u2014 the engagement rhythm (Faro).",
+   "type": "stat",
+   "title": "Avg FPS (last hour, D1)",
+   "description": "Average sampled client FPS recorded in D1. Live from /stats \u2192 avgFps.",
    "datasource": {
-    "type": "loki",
-    "uid": "${DS_FARO}"
+    "type": "yesoreyeram-infinity-datasource",
+    "uid": "${DS_INFINITY}"
    },
    "gridPos": {
     "h": 4,
@@ -2834,63 +2830,61 @@
    "transparent": true,
    "fieldConfig": {
     "defaults": {
-     "unit": "cpm",
-     "decimals": 0,
-     "custom": {
-      "drawStyle": "line",
-      "fillOpacity": 18,
-      "gradientMode": "opacity",
-      "lineInterpolation": "smooth",
-      "lineWidth": 2,
-      "showPoints": "never",
-      "spanNulls": true,
-      "pointSize": 5,
-      "axisBorderShow": false,
-      "axisGridShow": true,
-      "axisLabel": "",
-      "scaleDistribution": {
-       "type": "linear"
-      },
-      "stacking": {
-       "mode": "none",
-       "group": "A"
-      },
-      "axisCenteredZero": false,
-      "hideFrom": {
-       "tooltip": false,
-       "viz": false,
-       "legend": false
-      }
+     "unit": "none",
+     "decimals": 1,
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#e0294a",
+        "value": null
+       },
+       {
+        "color": "#ffb454",
+        "value": 30
+       },
+       {
+        "color": "#73d13d",
+        "value": 50
+       }
+      ]
      }
     },
     "overrides": []
    },
    "options": {
-    "legend": {
-     "displayMode": "table",
-     "placement": "bottom",
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value_and_name",
+    "justifyMode": "center",
+    "reduceOptions": {
      "calcs": [
-      "lastNotNull",
-      "max",
-      "mean"
+      "lastNotNull"
      ],
-     "showLegend": true
-    },
-    "tooltip": {
-     "mode": "multi",
-     "sort": "desc"
+     "fields": "",
+     "values": false
     }
    },
    "targets": [
     {
      "refId": "A",
-     "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_name=\"guru_guidance\" [5m])) * 60",
-     "legendFormat": "Guru moments"
-    },
-    {
-     "refId": "B",
-     "expr": "sum(rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_name=\"game_restarted\" [5m])) * 60",
-     "legendFormat": "restarts"
+     "type": "json",
+     "source": "url",
+     "format": "table",
+     "url": "${api_base_url}/stats",
+     "method": "GET",
+     "root_selector": "",
+     "parser": "backend",
+     "columns": [
+      {
+       "selector": "avgFps",
+       "text": "avgFps",
+       "type": "number"
+      }
+     ]
     }
    ]
   },
@@ -3271,14 +3265,14 @@
    ]
   },
   {
-   "type": "state-timeline",
+   "type": "bargauge",
    "id": 53,
    "transparent": true,
-   "title": "\ud83e\uddd7 Your climb through Himal Rajya \u00b7 region over time",
-   "description": "Yatri's journey band \u2014 Terai lowland jungle \u2192 middle Hills \u2192 the Himal summit \u2014 for your session. Live from Faro gameplay (journey_progress).",
+   "title": "\ud83e\uddd7 Climb intensity by region (D1)",
+   "description": "Where the action happens across Terai \u2192 Hills \u2192 Himal. Live from /stats \u2192 byLevel events.",
    "datasource": {
-    "type": "loki",
-    "uid": "${DS_FARO}"
+    "type": "yesoreyeram-infinity-datasource",
+    "uid": "${DS_INFINITY}"
    },
    "gridPos": {
     "h": 6,
@@ -3288,68 +3282,58 @@
    },
    "fieldConfig": {
     "defaults": {
-     "custom": {
-      "lineWidth": 0,
-      "fillOpacity": 90,
-      "hideFrom": {
-       "tooltip": false,
-       "viz": false,
-       "legend": false
-      }
-     },
+     "unit": "short",
+     "decimals": 0,
      "color": {
-      "mode": "palette-classic"
+      "mode": "continuous-BlYlRd"
      },
-     "mappings": [
-      {
-       "type": "value",
-       "options": {
-        "terai": {
-         "text": "Terai \u00b7 jungle",
-         "color": "#2e8b57",
-         "index": 0
-        },
-        "hills": {
-         "text": "Hills \u00b7 terraces",
-         "color": "#d9a441",
-         "index": 1
-        },
-        "himal": {
-         "text": "Himal \u00b7 summit",
-         "color": "#cfe8ff",
-         "index": 2
-        },
-        "himal_rajya": {
-         "text": "Himal \u00b7 summit",
-         "color": "#cfe8ff",
-         "index": 2
-        }
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
        }
-      }
-     ]
+      ]
+     }
     },
     "overrides": []
    },
    "options": {
-    "mergeValues": true,
-    "showValue": "auto",
-    "alignValue": "center",
-    "rowHeight": 0.9,
-    "legend": {
-     "displayMode": "list",
-     "placement": "bottom",
-     "showLegend": true
-    },
-    "tooltip": {
-     "mode": "single",
-     "sort": "none"
+    "orientation": "horizontal",
+    "displayMode": "gradient",
+    "showUnfilled": true,
+    "valueMode": "color",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": true
     }
    },
    "targets": [
     {
      "refId": "A",
-     "expr": "sum by (event_data_level) (count_over_time({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_data_session=\"$session\" | event_name=\"journey_progress\" [$__interval]))",
-     "legendFormat": "{{event_data_level}}"
+     "type": "json",
+     "source": "url",
+     "format": "table",
+     "url": "${api_base_url}/stats",
+     "method": "GET",
+     "root_selector": "byLevel",
+     "parser": "backend",
+     "columns": [
+      {
+       "selector": "level",
+       "text": "level",
+       "type": "string"
+      },
+      {
+       "selector": "events",
+       "text": "events",
+       "type": "number"
+      }
+     ]
     }
    ]
   },
