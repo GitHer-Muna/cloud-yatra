@@ -7,10 +7,6 @@
 export const VIEW_WIDTH = 960;
 export const VIEW_HEIGHT = 540;
 
-// The world is wider than the view so the camera scrolls across Himal Rajya.
-export const WORLD_WIDTH = 3600;
-export const WORLD_HEIGHT = 540;
-
 // Gravity for arcade physics (pixels/s²).
 export const GRAVITY_Y = 1000;
 

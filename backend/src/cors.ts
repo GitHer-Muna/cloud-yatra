@@ -7,7 +7,7 @@
  */
 import type { Env } from './env';
 
-export function allowedOrigin(req: Request, env: Env): string | null {
+function allowedOrigin(req: Request, env: Env): string | null {
   const origin = req.headers.get('Origin');
   const list = (env.ALLOWED_ORIGINS ?? '*').split(',').map((s) => s.trim()).filter(Boolean);
   if (list.includes('*')) return origin ?? '*';

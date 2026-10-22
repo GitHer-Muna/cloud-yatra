@@ -115,9 +115,3 @@ export function renderMetrics(): string {
   }
   return lines.join('\n') + '\n';
 }
-
-/** Test-only reset. */
-export function __resetMetrics(): void {
-  counters.clear();
-  histograms.clear();
-}
