@@ -1,6 +1,9 @@
 /**
  * main.ts — the entry point. Creates the Phaser Game with a config that defines the
  * canvas size, arcade physics/gravity, the container div, and the scene order.
+ *
+ * Public build-time config (VITE_API_BASE_URL, VITE_FARO_URL) is injected by Vite from
+ * GitHub repository Variables at deploy time — see .github/workflows/deploy-cloudflare.yml.
  */
 import Phaser from 'phaser';
 import { VIEW_WIDTH, VIEW_HEIGHT, GRAVITY_Y, PALETTE } from './config/constants';
