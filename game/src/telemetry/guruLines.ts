@@ -5,7 +5,7 @@
  * browser preserves the zero-per-play-cost deployment while still
  * making guidance moments feel contextual and original.
  */
-export type GuruUseCase = 'welcome' | 'hint' | 'death' | 'completed' | 'celebrate';
+export type GuruUseCase = 'welcome' | 'hint' | 'death' | 'completed' | 'celebrate' | 'incident';
 
 export interface GuruAsk {
   useCase: GuruUseCase;
@@ -73,6 +73,20 @@ const GENERAL_CHEERS = [
   'Beautifully done, traveller. Guru Megh rejoices with you—onward!',
 ];
 
+// Chaos Mode narration: a cloud-sage framing of a backend "storm" (injected latency and
+// errors) and its clearing. `recentEvent` selects the phase: 'storm' when it begins,
+// 'recovered' when the skies clear.
+const INCIDENTS: Record<string, string[]> = {
+  storm: [
+    'A storm gathers over the cloud-kingdom, Yatri—the messengers run slow. Walk on; the skies will clear.',
+    'The mountain winds are wild just now; our cloud-paths falter. Keep your rhythm—this will pass.',
+  ],
+  recovered: [
+    'The storm has passed, traveller. The cloud-paths run clear again, and the messengers fly swift.',
+    'Blue sky returns over Himal Rajya. All is well once more—onward with a calm heart, Yatri.',
+  ],
+};
+
 function pick(lines: string[]): string {
   return lines[Math.floor(Math.random() * lines.length)] ?? lines[0] ?? 'Keep going, Yatri.';
 }
@@ -90,6 +104,8 @@ export function guruLine(ask: GuruAsk): string {
       return pick(COMPLETIONS);
     case 'celebrate':
       return pick(CELEBRATIONS[ask.recentEvent ?? ''] ?? GENERAL_CHEERS);
+    case 'incident':
+      return pick(INCIDENTS[ask.recentEvent ?? 'recovered'] ?? INCIDENTS.recovered);
   }
 }
 

@@ -9,10 +9,14 @@ import { MenuScene } from './scenes/MenuScene';
 import { HimalRajyaScene } from './scenes/HimalRajyaScene';
 import { LeaderboardScene } from './scenes/LeaderboardScene';
 import { initFaro } from './telemetry/faro';
+import { initChaosPanel } from './telemetry/chaosPanel';
 
 // Initialize Grafana Faro RUM as early as possible so it can catch startup errors.
 // Inert (returns null) if no public VITE_FARO_URL is configured — see faro.ts.
 initFaro();
+
+// Admin-only Chaos Mode control (hidden; opens with Shift+C). Inert with no backend.
+initChaosPanel();
 
 // Respect the OS "reduce motion" setting (WCAG 2.3.3). Scenes read this from the registry
 // to soften parallax/particles for players with vestibular sensitivity.

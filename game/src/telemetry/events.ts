@@ -45,7 +45,7 @@ export type EventAttrs =
   | { type: 'obstacle_cut'; kind: string; total: number; points?: number }
   | { type: 'player_stomp'; total: number; points?: number }
   | { type: 'journey_progress'; progressPct: number; bucket: number; score: number }
-  | { type: 'guru_guidance'; useCase: 'welcome' | 'hint' | 'death' | 'completed' | 'celebrate'; trigger: string }
+  | { type: 'guru_guidance'; useCase: 'welcome' | 'hint' | 'death' | 'completed' | 'celebrate' | 'incident'; trigger: string }
   | {
       type: 'session_heartbeat';
       uptimeMs: number;

@@ -41,3 +41,5 @@ SERVICE_NAME = "cloud-yatra-api"
 # still logs to Cloudflare Workers Logs and exposes /metrics for a pull scrape). Set these
 # as Wrangler SECRETS, not here:  GRAFANA_LOKI_URL, GRAFANA_LOKI_USER, GRAFANA_LOKI_TOKEN,
 #                                  GRAFANA_OTLP_URL,  GRAFANA_OTLP_TOKEN
+# Chaos Mode admin gate (also a SECRET; unset = chaos control plane disabled):
+#                                  CHAOS_ADMIN_TOKEN

@@ -44,7 +44,7 @@ import { GuruMegh } from '../ui/GuruMegh';
 import { TouchControls, isTouchDevice } from '../ui/TouchControls';
 import { askGuru, type GuruResponse, type GuruUseCase } from '../telemetry/guruLines';
 import { submitScore as submitRemoteScore } from '../telemetry/api';
-import { apiBase } from '../telemetry/api';
+import { apiBase, getChaosStatus } from '../telemetry/api';
 import { TelemetryService } from '../telemetry/TelemetryService';
 import { ConsoleSink, FaroSink, HttpBatchSink, MultiSink, type TelemetrySink } from '../telemetry/sinks';
 import { getFaro } from '../telemetry/faro';
@@ -94,6 +94,7 @@ export class HimalRajyaScene extends Phaser.Scene {
   private playerName = '';
   private lastGuruAt = 0; // local throttle for spontaneous Guru Megh lines
   private nextGuruEncouragementAt = 0;
+  private chaosWasActive = false; // tracks chaos transitions for Guru Megh incident narration
   private saidFirstBell = false;
   private cuttableHintShown = false;
 
@@ -414,6 +415,31 @@ export class HimalRajyaScene extends Phaser.Scene {
     // Guru Megh is a built-in cloud-sage guide with no network dependency.
     this.guru = new GuruMegh(this);
     this.guru.sayAsync(this.guruLine('welcome', 'level_started'), 5000);
+
+    // Chaos Mode narration: when a backend is configured, poll chaos status and let Guru
+    // Megh frame the "storm" and its clearing in-character. Zero cost when no backend.
+    if (apiBase()) {
+      this.chaosWasActive = false;
+      const chaosPoll = this.time.addEvent({
+        delay: 3000,
+        loop: true,
+        callback: () => void this.pollChaos(),
+      });
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => chaosPoll.remove(false));
+    }
+  }
+
+  /** Poll backend chaos status; narrate the start and the recovery as a cloud-storm. */
+  private async pollChaos(): Promise<void> {
+    if (this.gameOver || this.levelComplete) return;
+    const status = await getChaosStatus();
+    if (status.active && !this.chaosWasActive) {
+      this.chaosWasActive = true;
+      this.guruMoment('incident', 'storm');
+    } else if (!status.active && this.chaosWasActive) {
+      this.chaosWasActive = false;
+      this.guruMoment('incident', 'recovered');
+    }
   }
 
   update(_time: number, deltaMs: number): void {
@@ -871,12 +897,15 @@ export class HimalRajyaScene extends Phaser.Scene {
    * cheers use a shorter throttle so the big joyful beats (garland, bell, pennant, combo,
    * eagle) are not swallowed by the general encouragement cadence. */
   private guruMoment(
-    useCase: 'hint' | 'death' | 'completed' | 'celebrate',
+    useCase: 'hint' | 'death' | 'completed' | 'celebrate' | 'incident',
     recentEvent: string,
   ): void {
     const now = this.time.now;
-    const throttle = useCase === 'celebrate' ? 3500 : 8000;
-    if (now - this.lastGuruAt < throttle) return;
+    // Incident (chaos) beats are rare and important — they bypass the chatter throttle.
+    if (useCase !== 'incident') {
+      const throttle = useCase === 'celebrate' ? 3500 : 8000;
+      if (now - this.lastGuruAt < throttle) return;
+    }
     this.lastGuruAt = now;
     this.telemetry.record({ type: 'guru_guidance', useCase, trigger: recentEvent });
     this.guru.sayAsync(this.guruLine(useCase, recentEvent), 4500);

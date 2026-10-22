@@ -6,6 +6,7 @@ import { env, createExecutionContext, waitOnExecutionContext } from 'cloudflare:
 import { beforeEach, describe, expect, it } from 'vitest';
 import worker from '../src/index';
 import { migrate } from './apply-migrations';
+import { __resetChaos } from '../src/chaos';
 
 const BASE = 'https://api.test';
 
@@ -232,5 +233,107 @@ describe('/metrics', () => {
     const text = await res.text();
     expect(text).toContain('cy_api_requests_total');
     expect(text).toContain('# TYPE cy_api_request_duration_ms histogram');
+  });
+});
+
+/** Like call() but with extra headers (used for the chaos admin token). */
+async function callH(method: string, path: string, headers: Record<string, string>, body?: unknown): Promise<Response> {
+  const req = new Request(BASE + path, {
+    method,
+    headers: { 'Content-Type': 'application/json', Origin: 'http://localhost:5173', ...headers },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  const ctx = createExecutionContext();
+  const res = await worker.fetch(req, env, ctx);
+  await waitOnExecutionContext(ctx);
+  return res;
+}
+
+const TOKEN = { 'X-Chaos-Token': 'test-admin-token' };
+
+describe('Chaos Mode', () => {
+  beforeEach(() => __resetChaos());
+
+  it('status is inactive by default and is unauthenticated', async () => {
+    const res = await call('GET', '/chaos/status');
+    expect(res.status).toBe(200);
+    const s = (await res.json()) as { active: boolean; remainingMs: number };
+    expect(s.active).toBe(false);
+    expect(s.remainingMs).toBe(0);
+  });
+
+  it('rejects start without a token (401)', async () => {
+    const res = await call('POST', '/chaos/start', {});
+    expect(res.status).toBe(401);
+    const after = (await (await call('GET', '/chaos/status')).json()) as { active: boolean };
+    expect(after.active).toBe(false);
+  });
+
+  it('rejects start with a wrong token (401)', async () => {
+    const res = await callH('POST', '/chaos/start', { 'X-Chaos-Token': 'nope' }, {});
+    expect(res.status).toBe(401);
+  });
+
+  it('starts chaos with the admin token and reports active status', async () => {
+    const res = await callH('POST', '/chaos/start', TOKEN, { durationMs: 60000, errorRate: 0 });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { ok: boolean; status: { active: boolean; remainingMs: number } };
+    expect(body.ok).toBe(true);
+    expect(body.status.active).toBe(true);
+    expect(body.status.remainingMs).toBeGreaterThan(0);
+  });
+
+  it('injects latency on gameplay routes but never on control/health routes', async () => {
+    // errorRate 0 → no synthetic failures, only latency, so we can assert timing + status.
+    await callH('POST', '/chaos/start', TOKEN, { durationMs: 60000, latencyMs: 300, errorRate: 0 });
+
+    const t0 = Date.now();
+    const ev = await call('POST', '/event', makeEvent({ type: 'player_jump', tMs: 1 }));
+    const gameplayMs = Date.now() - t0;
+    expect(ev.status).toBe(200); // still succeeds (only latency, no error)
+    expect(gameplayMs).toBeGreaterThanOrEqual(250); // the ~300ms injection landed
+
+    const t1 = Date.now();
+    const health = await call('GET', '/healthz');
+    const healthMs = Date.now() - t1;
+    expect(health.status).toBe(200);
+    expect(healthMs).toBeLessThan(200); // health is never perturbed
+  });
+
+  it('fails gameplay requests with 503 when errorRate is 1', async () => {
+    await callH('POST', '/chaos/start', TOKEN, { durationMs: 60000, latencyMs: 0, errorRate: 1 });
+    const res = await call('POST', '/event', makeEvent({ type: 'player_jump', tMs: 2 }));
+    expect(res.status).toBe(503);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe('chaos_injected');
+  });
+
+  it('stop ends the window immediately', async () => {
+    await callH('POST', '/chaos/start', TOKEN, { durationMs: 60000, errorRate: 1 });
+    const stop = await callH('POST', '/chaos/stop', TOKEN);
+    expect(stop.status).toBe(200);
+    const s = (await (await call('GET', '/chaos/status')).json()) as { active: boolean };
+    expect(s.active).toBe(false);
+    // gameplay works again (no injection)
+    const res = await call('POST', '/event', makeEvent({ type: 'player_jump', tMs: 3 }));
+    expect(res.status).toBe(200);
+  });
+
+  it('exposes recent chaos episodes for Grafana annotations', async () => {
+    await callH('POST', '/chaos/start', TOKEN, { durationMs: 60000, errorRate: 0 });
+    await callH('POST', '/chaos/stop', TOKEN);
+    const res = await call('GET', '/chaos/events');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { events: Array<{ kind: string; ts: number }> };
+    const kinds = body.events.map((e) => e.kind);
+    expect(kinds).toContain('chaos_start');
+    expect(kinds).toContain('chaos_stop');
+    expect(body.events.every((e) => typeof e.ts === 'number')).toBe(true);
+  });
+
+  it('surfaces cy_chaos_active in /metrics while active', async () => {
+    await callH('POST', '/chaos/start', TOKEN, { durationMs: 60000, errorRate: 0 });
+    const text = await (await call('GET', '/metrics')).text();
+    expect(text).toContain('cy_chaos_active');
   });
 });

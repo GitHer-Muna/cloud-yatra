@@ -21,6 +21,7 @@ export default defineWorkersConfig(async () => {
               ALLOWED_ORIGINS: '*',
               ENVIRONMENT: 'test',
               SERVICE_NAME: 'cloud-yatra-api',
+              CHAOS_ADMIN_TOKEN: 'test-admin-token',
             },
           },
           wrangler: { configPath: './wrangler.toml' },

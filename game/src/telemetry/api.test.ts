@@ -13,6 +13,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiBase, hasBackend, fetchLeaderboard, __setApiBaseEnvReader } from './api';
+import { getChaosStatus, startChaos, stopChaos } from './api';
 import { HttpBatchSink } from './sinks';
 import type { TelemetryEvent } from './events';
 
@@ -118,5 +119,72 @@ describe('HttpBatchSink', () => {
     const sink = new HttpBatchSink('https://api.test');
     await sink.flush();
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('Chaos client (offline-safe)', () => {
+  afterEach(() => {
+    __setApiBaseEnvReader(() => undefined);
+    vi.unstubAllGlobals();
+  });
+
+  it('getChaosStatus returns inactive with no backend (no fetch)', async () => {
+    __setApiBaseEnvReader(() => undefined);
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const s = await getChaosStatus();
+    expect(s.active).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('startChaos errors with no_backend when unconfigured', async () => {
+    __setApiBaseEnvReader(() => undefined);
+    const res = await startChaos('some-token');
+    expect(res.ok).toBe(false);
+    expect(res.error).toBe('no_backend');
+  });
+
+  it('startChaos errors with no_token when token is blank (configured backend)', async () => {
+    __setApiBaseEnvReader(() => 'https://api.test');
+    const res = await startChaos('');
+    expect(res.ok).toBe(false);
+    expect(res.error).toBe('no_token');
+  });
+
+  it('startChaos maps a 401 to unauthorized and sends the token header', async () => {
+    __setApiBaseEnvReader(() => 'https://api.test');
+    const fetchMock: ReturnType<typeof vi.fn> = vi.fn(async () => new Response('{"error":"unauthorized"}', { status: 401 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const res = await startChaos('wrong-token');
+    expect(res.ok).toBe(false);
+    expect(res.error).toBe('unauthorized');
+    const call = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(call[0]).toBe('https://api.test/chaos/start');
+    expect(call[1].headers).toMatchObject({ 'X-Chaos-Token': 'wrong-token' });
+  });
+
+  it('startChaos maps a 503 to disabled', async () => {
+    __setApiBaseEnvReader(() => 'https://api.test');
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{"error":"chaos_disabled"}', { status: 503 })));
+    const res = await startChaos('tok');
+    expect(res.error).toBe('disabled');
+  });
+
+  it('startChaos returns the status on success', async () => {
+    __setApiBaseEnvReader(() => 'https://api.test');
+    const status = { active: true, remainingMs: 59000, profile: { latencyMs: 600, errorRate: 0.25 }, startedBy: 'admin', injected: 0 };
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ ok: true, status }), { status: 200 })));
+    const res = await startChaos('tok');
+    expect(res.ok).toBe(true);
+    expect(res.status.active).toBe(true);
+    expect(res.status.remainingMs).toBe(59000);
+  });
+
+  it('stopChaos never throws on network failure', async () => {
+    __setApiBaseEnvReader(() => 'https://api.test');
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('down'); }));
+    const res = await stopChaos('tok');
+    expect(res.ok).toBe(false);
+    expect(res.error).toBe('network');
   });
 });

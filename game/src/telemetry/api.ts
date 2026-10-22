@@ -126,3 +126,102 @@ export function submitScore(
     keepalive: true,
   }).catch(() => undefined);
 }
+
+// --- Chaos Mode client -----------------------------------------------------------------
+// Chaos Mode is the admin-only "watch the dashboard react" demo control. These helpers
+// talk to the backend's /chaos/* endpoints. The start/stop calls require an admin token
+// (NOT a secret baked into the build — it's entered by the operator at demo time and held
+// only in memory / sessionStorage). Everything is offline-safe: with no backend configured
+// the helpers resolve to an inert, inactive status and never throw into the UI.
+
+export interface ChaosStatus {
+  active: boolean;
+  remainingMs: number;
+  profile: { latencyMs: number; errorRate: number };
+  startedBy: string | null;
+  injected: number;
+}
+
+const INACTIVE: ChaosStatus = {
+  active: false,
+  remainingMs: 0,
+  profile: { latencyMs: 0, errorRate: 0 },
+  startedBy: null,
+  injected: 0,
+};
+
+/** Read the current chaos status (unauthenticated, read-only). Never throws. */
+export async function getChaosStatus(timeoutMs = 2500): Promise<ChaosStatus> {
+  const base = apiBase();
+  if (!base) return INACTIVE;
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    const res = await fetch(`${base}/chaos/status`, {
+      signal: ctrl.signal,
+      headers: { Accept: 'application/json' },
+    });
+    clearTimeout(timer);
+    if (!res.ok) return INACTIVE;
+    return (await res.json()) as ChaosStatus;
+  } catch {
+    return INACTIVE;
+  }
+}
+
+export interface ChaosResult {
+  ok: boolean;
+  status: ChaosStatus;
+  error?: 'no_backend' | 'no_token' | 'unauthorized' | 'disabled' | 'network';
+}
+
+/**
+ * Start a chaos window (admin-gated). `token` is the CHAOS_ADMIN_TOKEN configured on the
+ * Worker. Optional profile overrides are clamped server-side. Returns a structured result
+ * so the UI can show "unauthorized" / "disabled" without exceptions.
+ */
+export async function startChaos(
+  token: string,
+  opts: { durationMs?: number; latencyMs?: number; errorRate?: number } = {},
+): Promise<ChaosResult> {
+  const base = apiBase();
+  if (!base) return { ok: false, status: INACTIVE, error: 'no_backend' };
+  if (!token) return { ok: false, status: INACTIVE, error: 'no_token' };
+  try {
+    const res = await fetch(`${base}/chaos/start`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Chaos-Token': token,
+      },
+      body: JSON.stringify({ ...opts, startedBy: 'admin' }),
+    });
+    if (res.status === 401) return { ok: false, status: INACTIVE, error: 'unauthorized' };
+    if (res.status === 503) return { ok: false, status: INACTIVE, error: 'disabled' };
+    if (!res.ok) return { ok: false, status: INACTIVE, error: 'network' };
+    const body = (await res.json()) as { status: ChaosStatus };
+    return { ok: true, status: body.status };
+  } catch {
+    return { ok: false, status: INACTIVE, error: 'network' };
+  }
+}
+
+/** Stop the chaos window immediately (admin-gated). */
+export async function stopChaos(token: string): Promise<ChaosResult> {
+  const base = apiBase();
+  if (!base) return { ok: false, status: INACTIVE, error: 'no_backend' };
+  if (!token) return { ok: false, status: INACTIVE, error: 'no_token' };
+  try {
+    const res = await fetch(`${base}/chaos/stop`, {
+      method: 'POST',
+      headers: { 'X-Chaos-Token': token },
+    });
+    if (res.status === 401) return { ok: false, status: INACTIVE, error: 'unauthorized' };
+    if (res.status === 503) return { ok: false, status: INACTIVE, error: 'disabled' };
+    if (!res.ok) return { ok: false, status: INACTIVE, error: 'network' };
+    const body = (await res.json()) as { status: ChaosStatus };
+    return { ok: true, status: body.status };
+  } catch {
+    return { ok: false, status: INACTIVE, error: 'network' };
+  }
+}

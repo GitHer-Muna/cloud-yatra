@@ -20,4 +20,8 @@ export interface Env {
   GRAFANA_OTLP_URL?: string; // e.g. https://otlp-gateway-xxx.grafana.net/otlp
   GRAFANA_OTLP_USER?: string; // OTLP instance id
   GRAFANA_OTLP_TOKEN?: string; // Grafana Cloud access policy token
+
+  // Chaos Mode admin gate. When unset, the /chaos control plane refuses to start chaos
+  // (read-only /chaos/status + /chaos/events still work). Set as a Wrangler SECRET.
+  CHAOS_ADMIN_TOKEN?: string;
 }

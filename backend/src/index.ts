@@ -9,6 +9,10 @@
  *   POST /score         → submit a completed run (best-per-name)
  *   POST /event         → ingest a single telemetry event
  *   POST /events        → ingest a batch of telemetry events
+ *   GET  /chaos/status  → current chaos state (read-only, unauthenticated)
+ *   GET  /chaos/events  → recent chaos start/stop markers (JSON, for Grafana annotations)
+ *   POST /chaos/start   → begin an admin-gated, self-only fault-injection window (~60s)
+ *   POST /chaos/stop    → end the chaos window immediately (admin-gated)
  *
  * Every request: correlationId, structured JSON log, Prometheus metrics, optional Grafana
  * Loki log push + Tempo trace span. The game degrades gracefully if this Worker is down.
@@ -19,6 +23,14 @@ import { validateEvent, MAX_BATCH, type EventEnvelope } from './events';
 import { ingest, leaderboard, stats, submitScore } from './db';
 import { inc, observe, renderMetrics, setGauge } from './metrics';
 import { Logger, hexId, pushTrace } from './logger';
+import {
+  decide,
+  getStatus,
+  isActive,
+  recentEvents,
+  startChaos,
+  stopChaos,
+} from './chaos';
 
 function json(data: unknown, status: number, req: Request, env: Env): Response {
   return new Response(JSON.stringify(data), {
@@ -48,9 +60,26 @@ export default {
 
     if (method === 'OPTIONS') return preflight(req, env);
 
+    // Chaos Mode: on gameplay routes only, inject bounded latency and/or a synthetic 503
+    // while an admin-triggered window is active. Control/observability routes are never
+    // perturbed. This is the "watch the dashboard react" demo signal.
+    let chaosInjected = false;
+    const chaos = decide(route);
+    if (chaos.active) {
+      chaosInjected = true;
+      if (chaos.delayMs > 0) await sleep(chaos.delayMs);
+      inc('cy_chaos_injected_total', { route }, 'Requests perturbed by chaos mode');
+    }
+
     let response: Response;
     try {
-      response = await handle(req, env, { pathname, method, log, correlationId, country });
+      if (chaos.active && chaos.fail) {
+        // Synthetic fault: short-circuit with a 503 so the dashboard shows real errors.
+        log.warn('chaos_injected_error', { route });
+        response = json({ error: 'chaos_injected', correlationId }, 503, req, env);
+      } else {
+        response = await handle(req, env, { pathname, method, log, correlationId, country });
+      }
     } catch (err) {
       log.error('unhandled_error', { error: err instanceof Error ? err.message : String(err) });
       inc('cy_api_errors_total', { route }, 'Unhandled errors by route');
@@ -61,8 +90,10 @@ export default {
     const sclass = statusClass(response.status);
     inc('cy_api_requests_total', { route, status_class: sclass }, 'HTTP requests by route/status');
     observe('cy_api_request_duration_ms', durationMs, { route }, 'Request duration (ms)');
+    // Surface chaos as a first-class gauge so the dashboard can show + annotate it.
+    setGauge('cy_chaos_active', isActive() ? 1 : 0, {}, 'Chaos mode active (1=on)');
 
-    log.info('request', { status: response.status, durationMs });
+    log.info('request', { status: response.status, durationMs, chaos: chaosInjected });
     log.flushLoki({ route, status_class: sclass });
     pushTrace(env, ctx, {
       traceId,
@@ -86,7 +117,19 @@ export default {
 
 function routeLabel(pathname: string): string {
   // Keep the route label low-cardinality (known routes only).
-  const known = ['/healthz', '/metrics', '/stats', '/leaderboard', '/score', '/event', '/events'];
+  const known = [
+    '/healthz',
+    '/metrics',
+    '/stats',
+    '/leaderboard',
+    '/score',
+    '/event',
+    '/events',
+    '/chaos/status',
+    '/chaos/events',
+    '/chaos/start',
+    '/chaos/stop',
+  ];
   return known.includes(pathname) ? pathname : 'other';
 }
 
@@ -136,6 +179,45 @@ async function handle(req: Request, env: Env, c: Ctx): Promise<Response> {
     const rows = await leaderboard(env, Number.isFinite(limit) ? limit : 20);
     return json({ entries: rows }, 200, req, env);
   }
+
+  // --- Chaos Mode control plane ------------------------------------------------------
+  // Read-only, unauthenticated: the dashboard + operator can always see state.
+  if (pathname === '/chaos/status' && method === 'GET') {
+    return json(getStatus(), 200, req, env);
+  }
+  // Annotation feed for Grafana: recent start/stop/expire markers as JSON.
+  if (pathname === '/chaos/events' && method === 'GET') {
+    return json({ events: recentEvents() }, 200, req, env);
+  }
+  // Mutating: require the admin token (constant-time-ish compare via equality on secrets
+  // that are never logged). With no token configured, chaos cannot be started.
+  if ((pathname === '/chaos/start' || pathname === '/chaos/stop') && method === 'POST') {
+    if (!env.CHAOS_ADMIN_TOKEN) {
+      return json({ error: 'chaos_disabled' }, 503, req, env);
+    }
+    if (!isAuthorized(req, env)) {
+      c.log.warn('chaos_unauthorized', { route: pathname });
+      return json({ error: 'unauthorized' }, 401, req, env);
+    }
+    if (pathname === '/chaos/stop') {
+      const status = stopChaos();
+      setGauge('cy_chaos_active', 0, {}, 'Chaos mode active (1=on)');
+      c.log.warn('chaos_stop', {});
+      return json({ ok: true, status }, 200, req, env);
+    }
+    const body = ((await safeJson(req)) as Record<string, unknown> | null) ?? {};
+    const status = startChaos({
+      durationMs: toNum(body.durationMs),
+      latencyMs: toNum(body.latencyMs),
+      errorRate: toNum(body.errorRate),
+      startedBy: typeof body.startedBy === 'string' ? body.startedBy : 'admin',
+    });
+    setGauge('cy_chaos_active', 1, {}, 'Chaos mode active (1=on)');
+    c.log.warn('chaos_start', { remainingMs: status.remainingMs, profile: status.profile });
+    return json({ ok: true, status }, 200, req, env);
+  }
+  // -----------------------------------------------------------------------------------
+
 
   if (pathname === '/score' && method === 'POST') {
     const body = (await safeJson(req)) as Record<string, unknown> | null;
@@ -199,6 +281,40 @@ async function safeJson(req: Request): Promise<unknown> {
   } catch {
     return null;
   }
+}
+
+/** Resolve after `ms` milliseconds (used by chaos latency injection). */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Coerce a JSON field to a finite number, or undefined (so clamps use defaults). */
+function toNum(v: unknown): number | undefined {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+/**
+ * Admin check for the chaos control plane. Accepts the token via the Authorization bearer
+ * header or an X-Chaos-Token header. The token itself is never logged. Uses a
+ * length-aware constant-time comparison to avoid trivial timing leaks.
+ */
+function isAuthorized(req: Request, env: Env): boolean {
+  const expected = env.CHAOS_ADMIN_TOKEN ?? '';
+  if (!expected) return false;
+  const auth = req.headers.get('Authorization') ?? '';
+  const bearer = auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : '';
+  const provided = req.headers.get('X-Chaos-Token')?.trim() || bearer;
+  if (!provided) return false;
+  return timingSafeEqual(provided, expected);
+}
+
+/** Constant-time string comparison (both inputs are already in memory). */
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
 }
 
 /** Stable idempotency key: prefer a client correlationId, else hash of identity fields. */

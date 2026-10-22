@@ -100,10 +100,24 @@
           "expr": "{service_name=\"cloud-yatra-api\"} | json | msg=\"startup\""
         },
         "titleFormat": "deploy"
+      },
+      {
+        "name": "Chaos Mode",
+        "datasource": {
+          "type": "loki",
+          "uid": "${DS_BACKEND_LOGS}"
+        },
+        "enable": true,
+        "iconColor": "#e74c3c",
+        "hide": false,
+        "target": {
+          "expr": "{service_name=\"cloud-yatra-api\"} | json | msg=~\"chaos_start|chaos_stop\""
+        },
+        "titleFormat": "{{msg}}"
       }
     ]
   },
-  "description": "Cloud Yatra — Grand Observatory. A dark, presentation-ready, full-stack story: live pulse → Cloudflare Worker + D1 backend health (metrics, logs, traces) → browser RUM → game performance → Yatri's deep gameplay analytics → the shared D1 leaderboard. Frontend (Faro) + backend (Prometheus/Loki/Tempo) + database (D1 via Infinity).",
+  "description": "Cloud Yatra \u2014 Grand Observatory. A dark, presentation-ready, full-stack story: live pulse \u2192 Cloudflare Worker + D1 backend health (metrics, logs, traces) \u2192 browser RUM \u2192 game performance \u2192 Yatri's deep gameplay analytics \u2192 the shared D1 leaderboard. Frontend (Faro) + backend (Prometheus/Loki/Tempo) + database (D1 via Infinity).",
   "editable": true,
   "graphTooltip": 2,
   "liveNow": true,
@@ -213,13 +227,13 @@
     ]
   },
   "timezone": "",
-  "title": "Cloud Yatra — Grand Observatory",
+  "title": "Cloud Yatra \u2014 Grand Observatory",
   "uid": "cloud-yatra-grand-observatory",
-  "version": 1,
+  "version": 2,
   "panels": [
     {
       "type": "row",
-      "title": "LIVE NOW · the pulse of the pilgrimage",
+      "title": "LIVE NOW \u00b7 the pulse of the pilgrimage",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -520,7 +534,7 @@
     },
     {
       "type": "row",
-      "title": "BACKEND · Cloudflare Worker + D1 health (metrics & traces)",
+      "title": "BACKEND \u00b7 Cloudflare Worker + D1 health (metrics & traces)",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -678,7 +692,7 @@
     {
       "type": "timeseries",
       "title": "Responses by status class",
-      "description": "2xx / 4xx / 5xx response mix — the backend reliability signal.",
+      "description": "2xx / 4xx / 5xx response mix \u2014 the backend reliability signal.",
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROM}"
@@ -808,7 +822,7 @@
         {
           "refId": "B",
           "expr": "sum by (reason) (rate(cy_events_rejected_total[5m])) * 60",
-          "legendFormat": "rejected · {{reason}}",
+          "legendFormat": "rejected \u00b7 {{reason}}",
           "range": true
         }
       ]
@@ -816,7 +830,7 @@
     {
       "type": "table",
       "title": "Recent backend traces (Tempo)",
-      "description": "Request spans emitted by the Worker (OTLP → Tempo). Click a trace to see the span.",
+      "description": "Request spans emitted by the Worker (OTLP \u2192 Tempo). Click a trace to see the span.",
       "datasource": {
         "type": "tempo",
         "uid": "${DS_TEMPO}"
@@ -852,7 +866,7 @@
     },
     {
       "type": "row",
-      "title": "BACKEND LOGS · structured request logs (Loki)",
+      "title": "BACKEND LOGS \u00b7 structured request logs (Loki)",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -963,7 +977,7 @@
     },
     {
       "type": "row",
-      "title": "PLAYER EXPERIENCE · browser health (Faro RUM)",
+      "title": "PLAYER EXPERIENCE \u00b7 browser health (Faro RUM)",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -976,7 +990,7 @@
     },
     {
       "type": "timeseries",
-      "title": "Web Vitals · LCP / INP (p95)",
+      "title": "Web Vitals \u00b7 LCP / INP (p95)",
       "description": "Real-user loading and interaction latency from Faro web-vitals.",
       "datasource": {
         "type": "loki",
@@ -1053,7 +1067,7 @@
     },
     {
       "type": "timeseries",
-      "title": "Web Vitals · CLS / TTFB / FCP",
+      "title": "Web Vitals \u00b7 CLS / TTFB / FCP",
       "description": "Layout stability and first-byte/paint timing.",
       "datasource": {
         "type": "loki",
@@ -1181,7 +1195,7 @@
     },
     {
       "type": "row",
-      "title": "LIVE GAME PERFORMANCE · can Yatri move smoothly?",
+      "title": "LIVE GAME PERFORMANCE \u00b7 can Yatri move smoothly?",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -1256,7 +1270,7 @@
         {
           "refId": "A",
           "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_client_perf\" | unwrap value_fps [$__interval])",
-          "legendFormat": "FPS · {{level}}"
+          "legendFormat": "FPS \u00b7 {{level}}"
         }
       ],
       "links": [
@@ -1313,8 +1327,8 @@
     },
     {
       "type": "timeseries",
-      "title": "Journey state · progress / lives / combo",
-      "description": "Game-state measurement emitted each heartbeat — correlate experience with progress.",
+      "title": "Journey state \u00b7 progress / lives / combo",
+      "description": "Game-state measurement emitted each heartbeat \u2014 correlate experience with progress.",
       "datasource": {
         "type": "loki",
         "uid": "${DS_FARO}"
@@ -1372,17 +1386,17 @@
         {
           "refId": "A",
           "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_state\" | unwrap value_progressPct [$__interval])",
-          "legendFormat": "progress % · {{level}}"
+          "legendFormat": "progress % \u00b7 {{level}}"
         },
         {
           "refId": "B",
           "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_state\" | unwrap value_lives [$__interval])",
-          "legendFormat": "lives · {{level}}"
+          "legendFormat": "lives \u00b7 {{level}}"
         },
         {
           "refId": "C",
           "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_state\" | unwrap value_combo [$__interval])",
-          "legendFormat": "combo · {{level}}"
+          "legendFormat": "combo \u00b7 {{level}}"
         }
       ],
       "links": [
@@ -1395,7 +1409,7 @@
     },
     {
       "type": "row",
-      "title": "YATRI'S JOURNEY · deep gameplay analytics (D1 + Faro)",
+      "title": "YATRI'S JOURNEY \u00b7 deep gameplay analytics (D1 + Faro)",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -1501,7 +1515,7 @@
     {
       "type": "barchart",
       "title": "Deaths by cause (from D1)",
-      "description": "Where the trail teaches players. Computed by the backend directly from D1 (GET /stats → deathsByCause).",
+      "description": "Where the trail teaches players. Computed by the backend directly from D1 (GET /stats \u2192 deathsByCause).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "${DS_INFINITY}"
@@ -1565,7 +1579,7 @@
     {
       "type": "piechart",
       "title": "Collectibles by kind (from D1)",
-      "description": "Marigold / rhododendron / blue-poppy / prayer-bell mix, from D1 (GET /stats → collectsByKind).",
+      "description": "Marigold / rhododendron / blue-poppy / prayer-bell mix, from D1 (GET /stats \u2192 collectsByKind).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "${DS_INFINITY}"
@@ -1689,19 +1703,19 @@
         {
           "refId": "A",
           "expr": "sum by (event_data_cause) (rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_name=\"player_damaged\" [5m])) * 60",
-          "legendFormat": "damage · {{event_data_cause}}"
+          "legendFormat": "damage \u00b7 {{event_data_cause}}"
         },
         {
           "refId": "B",
           "expr": "sum by (event_data_cause) (rate({kind=\"event\", app_id=\"$faro_app_id\"} | logfmt | event_name=\"player_died\" [5m])) * 60",
-          "legendFormat": "death · {{event_data_cause}}"
+          "legendFormat": "death \u00b7 {{event_data_cause}}"
         }
       ]
     },
     {
       "type": "table",
       "title": "Progression funnel (from D1)",
-      "description": "Distinct sessions reaching each stage, computed from D1 (GET /stats → funnel).",
+      "description": "Distinct sessions reaching each stage, computed from D1 (GET /stats \u2192 funnel).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "${DS_INFINITY}"
@@ -1770,7 +1784,7 @@
     },
     {
       "type": "row",
-      "title": "SCORES & ENGAGEMENT · the shared leaderboard (D1)",
+      "title": "SCORES & ENGAGEMENT \u00b7 the shared leaderboard (D1)",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -1783,7 +1797,7 @@
     },
     {
       "type": "table",
-      "title": "🏔️ Shared leaderboard — Top Pilgrims (live from D1)",
+      "title": "\ud83c\udfd4\ufe0f Shared leaderboard \u2014 Top Pilgrims (live from D1)",
       "description": "The real cross-player leaderboard, served by the Worker from D1 (GET /leaderboard).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
@@ -1854,7 +1868,7 @@
     {
       "type": "stat",
       "title": "Total completions (D1)",
-      "description": "Summit/level completions persisted in D1 (GET /stats → totals.completions).",
+      "description": "Summit/level completions persisted in D1 (GET /stats \u2192 totals.completions).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "${DS_INFINITY}"
@@ -1914,7 +1928,7 @@
     {
       "type": "stat",
       "title": "Total events (D1)",
-      "description": "All gameplay events persisted in D1 (GET /stats → totals.events).",
+      "description": "All gameplay events persisted in D1 (GET /stats \u2192 totals.events).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "${DS_INFINITY}"
@@ -2031,7 +2045,7 @@
     {
       "type": "timeseries",
       "title": "Reward loop & friction",
-      "description": "Guru moments, garlands/bells collected, and restarts — the engagement rhythm (Faro).",
+      "description": "Guru moments, garlands/bells collected, and restarts \u2014 the engagement rhythm (Faro).",
       "datasource": {
         "type": "loki",
         "uid": "${DS_FARO}"
@@ -2097,7 +2111,7 @@
     },
     {
       "type": "row",
-      "title": "WORLD & CONTEXT · where the pilgrims play",
+      "title": "WORLD & CONTEXT \u00b7 where the pilgrims play",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -2111,7 +2125,7 @@
     {
       "type": "table",
       "title": "Top countries (from D1)",
-      "description": "Coarse edge-country of sessions, from D1 (GET /stats → topCountries). No IPs stored.",
+      "description": "Coarse edge-country of sessions, from D1 (GET /stats \u2192 topCountries). No IPs stored.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "${DS_INFINITY}"
@@ -2171,7 +2185,7 @@
     {
       "type": "table",
       "title": "Events by type (from D1)",
-      "description": "Full breakdown of every persisted gameplay signal (GET /stats → eventsByType).",
+      "description": "Full breakdown of every persisted gameplay signal (GET /stats \u2192 eventsByType).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "${DS_INFINITY}"
@@ -2230,7 +2244,7 @@
     },
     {
       "type": "text",
-      "title": "Architecture — Cloudflare + Grafana Cloud",
+      "title": "Architecture \u2014 Cloudflare + Grafana Cloud",
       "gridPos": {
         "h": 7,
         "w": 8,
@@ -2241,13 +2255,257 @@
       "transparent": true,
       "options": {
         "mode": "markdown",
-        "content": "## Cloud Yatra — Grand Observatory\n\n**Browser (Phaser)** → **Cloudflare Pages** (static game)\n\n**Browser** → **Cloudflare Worker** `cloud-yatra-api` → **Cloudflare D1** (SQLite)\n\n**Signals into Grafana Cloud:**\n- Frontend RUM + gameplay → **Faro** (Loki)\n- Backend request metrics & histograms → **Prometheus** (`/metrics`)\n- Backend structured logs → **Loki**\n- Backend request traces → **Tempo**\n- D1-derived gameplay analytics → **Infinity** (`/stats`, `/leaderboard`)\n\nEverything is free-tier: Cloudflare Pages + Workers + D1, Grafana Cloud free."
+        "content": "## Cloud Yatra \u2014 Grand Observatory\n\n**Browser (Phaser)** \u2192 **Cloudflare Pages** (static game)\n\n**Browser** \u2192 **Cloudflare Worker** `cloud-yatra-api` \u2192 **Cloudflare D1** (SQLite)\n\n**Signals into Grafana Cloud:**\n- Frontend RUM + gameplay \u2192 **Faro** (Loki)\n- Backend request metrics & histograms \u2192 **Prometheus** (`/metrics`)\n- Backend structured logs \u2192 **Loki**\n- Backend request traces \u2192 **Tempo**\n- D1-derived gameplay analytics \u2192 **Infinity** (`/stats`, `/leaderboard`)\n\nEverything is free-tier: Cloudflare Pages + Workers + D1, Grafana Cloud free."
       },
       "fieldConfig": {
         "defaults": {
           "custom": {}
         }
       }
+    },
+    {
+      "type": "row",
+      "collapsed": false,
+      "title": "CHAOS MODE \u00b7 demo the dashboard reacting (admin-triggered, self-only, ~60s)",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 85
+      },
+      "id": 41,
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "title": "Chaos active",
+      "id": 42,
+      "description": "1 while an admin-triggered chaos window is injecting faults into the gameplay routes. Source: cy_chaos_active gauge.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 0,
+        "y": 86
+      },
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "calm",
+                  "color": "#2ecc71"
+                },
+                "1": {
+                  "text": "CHAOS",
+                  "color": "#e74c3c"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#2ecc71",
+                "value": null
+              },
+              {
+                "color": "#e74c3c",
+                "value": 1
+              }
+            ]
+          },
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto",
+        "justifyMode": "center"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(cy_chaos_active)",
+          "instant": false
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Chaos-injected requests / sec (by route)",
+      "id": 43,
+      "description": "Rate of gameplay requests perturbed by chaos (extra latency and/or synthetic 503). Source: cy_chaos_injected_total.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 10,
+        "x": 4,
+        "y": 86
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(cy_chaos_injected_total[1m])) by (route)",
+          "legendFormat": "{{route}}",
+          "instant": false
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Backend 5xx share (chaos impact)",
+      "id": 44,
+      "description": "Share of backend responses that are 5xx. Spikes while chaos injects synthetic 503s, then recovers \u2014 the live 'dashboard reacts' signal.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROM}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 10,
+        "x": 14,
+        "y": 86
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#e74c3c"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 25,
+            "lineWidth": 2,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(cy_api_requests_total{status_class=\"5xx\"}[1m])) / clamp_min(sum(rate(cy_api_requests_total[1m])), 1)",
+          "legendFormat": "5xx share",
+          "instant": false
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Recent chaos episodes",
+      "id": 45,
+      "description": "Start/stop/expire markers from the Worker's /chaos/events feed (Infinity datasource).",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 92
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "${api_base_url}/chaos/events",
+          "url_options": {
+            "method": "GET"
+          },
+          "root_selector": "events",
+          "columns": [
+            {
+              "selector": "ts",
+              "text": "time",
+              "type": "timestamp_epoch_s"
+            },
+            {
+              "selector": "kind",
+              "text": "kind",
+              "type": "string"
+            },
+            {
+              "selector": "profile.latencyMs",
+              "text": "latencyMs",
+              "type": "number"
+            },
+            {
+              "selector": "profile.errorRate",
+              "text": "errorRate",
+              "type": "number"
+            }
+          ]
+        }
+      ]
     }
   ],
   "links": [
