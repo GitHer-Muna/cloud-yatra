@@ -75,8 +75,9 @@ cloud-yatra/
 │                             #     logger (JSON + Loki/OTLP push), cors, chaos, env
 │
 ├── observability/            # Grafana Cloud assets
-│   └── dashboards/           #   cloud-yatra-grand-observatory.json (full-stack, import-ready)
-│   └── grafana-alerts.json   #   recommended alert rules (set your Faro app_id)
+│   ├── dashboards/           #   cloud-yatra-grand-observatory.json (full-stack, import-ready)
+│   │                         #   + cloud-yatra-live-observatory-public.json (trimmed, public)
+│   └── grafana-alerts.yaml   #   recommended alert rules (set your Faro app_id)
 │
 └── .github/workflows/        # CI/CD: deploy Pages (game/**) and Worker (backend/**) from main
 ```
