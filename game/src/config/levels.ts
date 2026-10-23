@@ -139,7 +139,7 @@ const TERAI: LevelConfig = {
     { x: 620, y: 430, range: 110, speed: 65, kind: 'mist' },
     { x: 1080, y: 300, range: 210, speed: 110, kind: 'eagle' },
     { x: 1180, y: 430, range: 130, speed: 70, kind: 'monkey' },
-    { x: 1420, y: 120, range: 0, speed: 190, kind: 'rockfall' },
+    { x: 1540, y: 120, range: 0, speed: 190, kind: 'rockfall' },
     { x: 1900, y: 430, range: 130, speed: 75, kind: 'mist' },
     { x: 2480, y: 300, range: 220, speed: 115, kind: 'eagle' },
     { x: 3040, y: 430, range: 120, speed: 80, kind: 'mist' },
@@ -253,7 +253,7 @@ const HIMAL: LevelConfig = {
   hazards: [
     { x: 620, y: 430, range: 100, speed: 60, kind: 'mist' },
     { x: 980, y: 150, range: 220, speed: 105, kind: 'eagle' },
-    { x: 1220, y: 120, range: 0, speed: 190, kind: 'rockfall' },
+    { x: 1120, y: 120, range: 0, speed: 190, kind: 'rockfall' },
     { x: 1660, y: 430, range: 110, speed: 70, kind: 'mist' },
     { x: 2120, y: 155, range: 240, speed: 120, kind: 'eagle' },
     { x: 2520, y: 430, range: 120, speed: 80, kind: 'mist' },

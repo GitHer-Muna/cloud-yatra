@@ -169,6 +169,12 @@ async function handle(req: Request, env: Env, c: Ctx): Promise<Response> {
         return new Response('unauthorized', { status: 401, headers: corsHeaders(req, env) });
       }
     }
+    // Always assert liveness on the scrape path itself. `cy_api_up` was previously set
+    // only inside /healthz, but on Workers each isolate has its own metric registry — a
+    // scrape can land on an isolate that never served /healthz, leaving the gauge absent
+    // and tripping the "worker down" alert (noData=Alerting) on a perfectly healthy API.
+    // Setting it here guarantees the liveness gauge is present on every scrape.
+    setGauge('cy_api_up', 1, {}, 'Worker liveness (1=up)');
     return new Response(renderMetrics(), {
       status: 200,
       headers: { 'Content-Type': 'text/plain; version=0.0.4', ...corsHeaders(req, env) },
@@ -345,7 +351,9 @@ function timingSafeEqual(a: string, b: string): boolean {
 /** Stable idempotency key: prefer a client correlationId, else hash of identity fields. */
 function deriveEventId(ev: EventEnvelope): string {
   if (ev.correlationId && ev.correlationId.length >= 8) {
-    return `${ev.correlationId}:${ev.type}:${ev.tMs}`;
+    // Include sessionId so two genuinely distinct sessions that happen to share a
+    // correlationId + type + tMs are not silently deduped against each other.
+    return `${ev.sessionId}:${ev.correlationId}:${ev.type}:${ev.tMs}`;
   }
   return `${ev.sessionId}:${ev.type}:${ev.ts}:${ev.tMs}`;
 }

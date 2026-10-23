@@ -41,7 +41,9 @@ export class Rockfall extends Phaser.Physics.Arcade.Sprite {
     }
     this.setVisible(true);
     this.y += (this.fallSpeed * deltaMs) / 1000;
-    this.setAngle(this.angle + 4);
+    // Spin at a fixed angular speed (deg/sec) so the rock tumbles the same in every
+    // browser rather than faster on high-refresh displays.
+    this.setAngle(this.angle + (240 * deltaMs) / 1000);
     if (this.y >= this.groundY) {
       // Little dust puff could go here; reset to top after a delay.
       this.y = this.topY;

@@ -56,4 +56,20 @@ describe('three-region route accessibility', () => {
       }
     }
   });
+
+  it('drops every rockfall onto the ground trail, not an elevated platform', () => {
+    // A rockfall over a platform only threatens the high route — the walking player on the
+    // ground never meets it, defeating the "run/jump past the falling rock" beat. Assert no
+    // platform sits in any rockfall's vertical column so each rock reaches the ground path.
+    for (const id of LEVEL_ORDER) {
+      const level = LEVELS[id];
+      const rockfalls = level.hazards.filter((h) => h.kind === 'rockfall');
+      for (const rock of rockfalls) {
+        const platformInColumn = level.platforms.some(
+          (p) => rock.x >= p.x - p.w / 2 && rock.x <= p.x + p.w / 2,
+        );
+        expect(platformInColumn).toBe(false);
+      }
+    }
+  });
 });
