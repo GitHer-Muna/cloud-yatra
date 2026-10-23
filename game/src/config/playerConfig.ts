@@ -7,7 +7,12 @@
 export const PLAYER = {
   // Movement feel.
   moveSpeed: 250, // horizontal px/s
-  jumpVelocity: 560, // upward impulse (bigger = higher)
+  // Jump impulse. Lowered from 560 → 480 so the jump is less floaty/high (height
+  // 157px→115px, air-time 1.12s→0.96s). 480 is still comfortably within the LEVEL
+  // DEMANDS — the widest platform gap is 225px needing flight ≥225 (480 gives 240) and
+  // the tallest rise is 80px needing height ≥80 (480 gives 115). The levels.test.ts
+  // accessibility checks guard this: anything lower than ~460 would make a gap unreachable.
+  jumpVelocity: 480, // upward impulse (bigger = higher)
   airControl: 0.9,
 
   // Forgiving-platformer feel.
