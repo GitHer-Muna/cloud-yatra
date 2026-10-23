@@ -35,6 +35,17 @@ const config: Phaser.Types.Core.GameConfig = {
   backgroundColor: PALETTE.skyLow,
   pixelArt: false,
   roundPixels: true, // draw sprites at integer positions → no sub-pixel shimmer
+  // ─── Smooth, CONSISTENT motion on every browser/refresh rate ───────────────────────
+  // The game loop smooths frame-delta jitter and clamps it to a sane floor. Combined with
+  // the VARIABLE physics step below, this removes the "sometimes fast, sometimes slow"
+  // judder that came from Phaser's default FIXED-step catch-up (which runs 0, 1, or 2
+  // physics steps per frame depending on frame timing — a lurch when it doubles, a freeze
+  // when it skips). See the arcade block for the full rationale.
+  fps: {
+    min: 30, // floor: delta is clamped to ≤33.3ms so a stall/GC pause can't teleport Yatri
+    target: 60, // the rate the game feel is tuned around
+    smoothStep: true, // average out frame-to-frame delta jitter → even motion
+  },
   render: {
     antialias: true,
     // 'default' (not 'high-performance') avoids forcing a discrete-GPU switch on some
@@ -54,6 +65,21 @@ const config: Phaser.Types.Core.GameConfig = {
     arcade: {
       gravity: { x: 0, y: GRAVITY_Y },
       debug: false,
+      // VARIABLE timestep (fixedStep:false) is the key to smooth, consistent motion.
+      //
+      // Phaser's DEFAULT (fixedStep:true) advances physics in fixed 1/60s chunks and runs
+      // as many as fit the elapsed time each frame — so depending on real frame timing it
+      // runs 0 steps (Yatri briefly freezes → "slow"), 1 step (normal), or 2 steps (Yatri
+      // lurches forward → "fast"). On any display that isn't a perfectly-even 60Hz (every
+      // real browser, and all 120/144Hz screens) that quantization is the exact "sometimes
+      // fast, sometimes slow, inconsistent" judder.
+      //
+      // With fixedStep:false, physics advances by the REAL elapsed delta exactly ONCE per
+      // frame (position += velocity × realSeconds), so movement/jump/fall are perfectly
+      // proportional to wall-clock time at ANY refresh rate — no lurches, no freezes, fully
+      // consistent. The only risk (tunneling through thin platforms on a giant delta) is
+      // handled by the fps.min:30 delta clamp above.
+      fixedStep: false,
     },
   },
   scale: {
