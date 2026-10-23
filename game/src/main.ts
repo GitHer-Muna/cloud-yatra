@@ -38,12 +38,16 @@ const config: Phaser.Types.Core.GameConfig = {
   render: {
     antialias: true,
     // 'default' (not 'high-performance') avoids forcing a discrete-GPU switch on some
-    // laptops — notably under Edge — which can cause periodic frame stalls. This does NOT
-    // change game speed or animation; it only affects which GPU the browser picks.
+    // laptops — notably under Edge — which can cause periodic frame stalls. Benign and
+    // consistent across browsers; only affects which GPU the browser picks.
     powerPreference: 'default',
-    // Lower-latency compositing path on Chromium/Edge; speed-neutral, reduces micro-jank
-    // for a canvas that fully repaints each frame.
-    desynchronized: true,
+    // NOTE: `desynchronized` was intentionally REMOVED. It's a low-latency hint designed
+    // for stylus/drawing apps that bypasses the normal compositor. On a WebGL canvas that
+    // Phaser clears every frame it can cause flicker/tearing (per Chrome's own docs, it
+    // needs preserveDrawingBuffer to avoid the display controller reading an empty buffer),
+    // and its behavior differs by browser/GPU/compositor — which made the experience
+    // inconsistent (smooth in Brave, worse in Edge/Firefox). Dropping it puts every browser
+    // on the standard, well-tested compositing path for the most CONSISTENT feel everywhere.
   },
   physics: {
     default: 'arcade',
