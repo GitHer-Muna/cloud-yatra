@@ -531,8 +531,11 @@ export class HimalRajyaScene extends Phaser.Scene {
       this.completeLevel();
     }
 
+    // Drift decorative clouds at a fixed world speed (0.15px/frame × 60fps = 9px/s) using
+    // deltaMs, so they move at the same real-world rate on any refresh rate.
+    const cloudStep = (9 * deltaMs) / 1000;
     for (const cloud of this.clouds) {
-      cloud.x += 0.15;
+      cloud.x += cloudStep;
       if (cloud.x > this.worldWidth + 120) cloud.x = -120;
     }
   }

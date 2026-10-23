@@ -11,6 +11,12 @@ import Phaser from 'phaser';
 
 const TEXTURE_KEY = 'monkey';
 
+// Hop speed in radians/second. The original advanced hopPhase by 0.18 PER FRAME, which at
+// 60fps is 0.18 × 60 = 10.8 rad/s. Driving the bob from the scene CLOCK (wall-clock ms)
+// instead of a per-frame increment makes it hop at this exact rate on ANY refresh rate —
+// identical to the original at 60fps, but no longer 2× too fast on a 120/144Hz display.
+const HOP_RATE_RAD_PER_SEC = 10.8;
+
 export class Monkey extends Phaser.Physics.Arcade.Sprite {
   private minX: number;
   private maxX: number;
@@ -44,8 +50,9 @@ export class Monkey extends Phaser.Physics.Arcade.Sprite {
       this.setVelocityX(-this.speed);
       this.setFlipX(true);
     }
-    // Little hopping bob so it reads as a lively animal, not a static sprite.
-    this.hopPhase += 0.18;
+    // Little hopping bob so it reads as a lively animal, not a static sprite. Driven by the
+    // scene clock so it bobs at the same real-world rate regardless of frame rate.
+    this.hopPhase = (this.scene.time.now / 1000) * HOP_RATE_RAD_PER_SEC;
     this.y = this.baseY - Math.abs(Math.sin(this.hopPhase)) * 8;
     (this.body as Phaser.Physics.Arcade.Body).updateFromGameObject?.();
   }
