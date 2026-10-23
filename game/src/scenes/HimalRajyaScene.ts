@@ -50,11 +50,19 @@ import { ConsoleSink, FaroSink, HttpBatchSink, MultiSink, type TelemetrySink } f
 import { getFaro } from '../telemetry/faro';
 import { FpsSampler } from '../telemetry/FpsSampler';
 import { NepaliAudio } from '../audio/NepaliAudio';
+import { frameRateIndependentLerp } from '../config/cameraLerp';
 
 const FPS_SAMPLE_MS = 2000;
 
 // The world height is fixed to the view height; only the world WIDTH varies per level.
 const WORLD_HEIGHT = VIEW_HEIGHT;
+
+// Base camera-follow smoothing, expressed as the per-frame lerp at 60fps (the value this
+// game was tuned with). Phaser applies camera lerp once PER FRAME with no delta scaling, so
+// on a high-refresh display (e.g. Edge at 120/144Hz) the camera would track ~2–2.4× tighter
+// and on a low-fps device it would lag. We recompute a delta-corrected lerp each frame (see
+// update) so the camera feels identical on every browser/refresh rate.
+const CAMERA_LERP_BASE = 0.15;
 
 export class HimalRajyaScene extends Phaser.Scene {
   private yatri!: Yatri;
@@ -253,7 +261,7 @@ export class HimalRajyaScene extends Phaser.Scene {
       this.physics.add.overlap(this.yatri, cp, () => this.reachCheckpoint(cp));
     }
 
-    this.cameras.main.startFollow(this.yatri, true, 0.15, 0.15);
+    this.cameras.main.startFollow(this.yatri, true, CAMERA_LERP_BASE, CAMERA_LERP_BASE);
     this.cameras.main.setDeadzone(60, 120);
     this.cameras.main.setRoundPixels(true);
     this.cursors = this.input.keyboard!.createCursorKeys();
@@ -446,6 +454,14 @@ export class HimalRajyaScene extends Phaser.Scene {
     if (!this.yatri) return;
 
     this.fpsSampler.tick(deltaMs, this.game.loop.actualFps);
+
+    // Frame-rate-independent camera follow. Phaser applies the lerp once per frame without
+    // delta scaling, so convert the 60fps-tuned base into the equivalent lerp for THIS
+    // frame's delta (see frameRateIndependentLerp). At 60fps this equals the base exactly;
+    // at any other refresh rate the camera reaches the same smoothing per unit of real time,
+    // so scrolling feels the same on every browser.
+    const camLerp = frameRateIndependentLerp(CAMERA_LERP_BASE, deltaMs);
+    this.cameras.main.setLerp(camLerp, camLerp);
 
     if (this.hud.isIntroVisible() && this.isAnyMoveKeyDown()) this.hud.hideIntro();
 
