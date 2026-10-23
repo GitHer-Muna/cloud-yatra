@@ -52,14 +52,17 @@ const config: Phaser.Types.Core.GameConfig = {
     arcade: {
       gravity: { x: 0, y: GRAVITY_Y },
       debug: false,
-      // Use Phaser's DEFAULT VARIABLE timestep (do NOT set fixedStep:true).
+      // Explicitly use a VARIABLE timestep. Phaser's arcade DEFAULT is fixedStep:true, so
+      // we MUST set this to false — not just omit it — to turn fixed-step off.
       // WHY: every moving thing here is velocity-based (setVelocityX/Y in px/second), which
-      // is inherently frame-rate-independent — position integrates velocity by the REAL
-      // elapsed delta, so run/jump speed is correct at any FPS. A FIXED step (my earlier
-      // attempt) advances physics a fixed amount PER STEP, but the number of steps is driven
-      // by the render loop: when a browser (e.g. Edge) runs below 60fps the physics can't
-      // complete 60 steps/second, so everything moved in SLOW MOTION. The variable step
-      // always advances by true wall-clock time and cannot slow-mo.
+      // is inherently frame-rate-independent under a variable step — position integrates
+      // velocity by the REAL elapsed delta, so run/jump speed is correct at any FPS. With
+      // the default FIXED step, physics advances a fixed amount PER STEP but the number of
+      // steps is driven by the render loop: a browser (e.g. Edge) running below 60fps can't
+      // complete 60 steps/second, so velocity movement integrated over less wall-clock time
+      // and everything moved in SLOW MOTION. A variable step always advances by true
+      // wall-clock time and cannot slow-mo.
+      fixedStep: false,
     },
   },
   scale: {
