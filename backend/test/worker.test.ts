@@ -117,6 +117,32 @@ describe('/event validation + ingest', () => {
     expect(row?.c).toBe(1);
   });
 
+  it('does not dedupe distinct sessions that share a correlationId + type + tMs', async () => {
+    // Regression guard: the idempotency key for correlationId-tagged events must include
+    // sessionId, so two genuinely different players' events can't collide into one.
+    const a = makeEvent({
+      type: 'player_jump',
+      sessionId: 'session-aaaaaaaa',
+      correlationId: 'corr-123456',
+      ts: 2000,
+      tMs: 5678,
+    });
+    const b = makeEvent({
+      type: 'player_jump',
+      sessionId: 'session-bbbbbbbb',
+      correlationId: 'corr-123456',
+      ts: 2000,
+      tMs: 5678,
+    });
+    await call('POST', '/event', a);
+    const res = await call('POST', '/event', b);
+    const body = (await res.json()) as { accepted: number; duplicate: number };
+    expect(body.accepted).toBe(1);
+    expect(body.duplicate).toBe(0);
+    const row = await env.DB.prepare('SELECT COUNT(*) c FROM events').first<{ c: number }>();
+    expect(row?.c).toBe(2);
+  });
+
   it('rejects bad json', async () => {
     const req = new Request(BASE + '/event', {
       method: 'POST',

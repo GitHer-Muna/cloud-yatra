@@ -34,8 +34,10 @@
         font-family: system-ui, sans-serif;
         color: #e9f6ff;
         /* Stop the browser from treating in-game touches as scroll/zoom gestures, which
-           otherwise "eat" the on-screen control presses on phones/tablets. */
-        touch-action: auto;
+           otherwise "eat" the on-screen control presses on phones/tablets. The page body
+           still allows normal scrolling (manipulation); only the game canvas below locks
+           all touch gestures. */
+        touch-action: manipulation;
         overscroll-behavior: none;
         -webkit-user-select: none;
         user-select: none;
@@ -45,20 +47,21 @@
       #game-root {
         width: min(960px, 100vw);
         aspect-ratio: 16 / 9;
+        max-height: 100vh; /* fallback for older webviews without dvh */
         max-height: 100dvh;
         margin: 16px auto;
         display: flex;
         align-items: center;
         justify-content: center;
+        /* Lock all touch gestures over the game itself so taps drive the controls, not
+           page scroll/zoom. (Merged from a former duplicate rule to avoid conflicts.) */
+        touch-action: none;
       }
       #game-root canvas {
         border-radius: 8px;
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         max-width: 100%;
         max-height: 100%;
-      }
-      #game-root {
-        touch-action: none;
       }
       #cy-observatory {
         width: min(960px, calc(100vw - 32px));
@@ -96,15 +99,6 @@
         font-weight: 700;
         letter-spacing: 0.04em;
         text-transform: uppercase;
-      }
-      #cy-observatory iframe {
-        display: block;
-        width: 100%;
-        height: min(760px, 78vh);
-        min-height: 520px;
-        border: 1px solid rgba(142, 203, 255, 0.2);
-        border-radius: 10px;
-        background: #0b1422;
       }
       #cy-observatory .cy-observatory-empty[hidden] {
         display: none !important;
@@ -218,10 +212,12 @@
       @media (max-width: 820px), (pointer: coarse) {
         body {
           display: block;
+          min-height: 100vh; /* fallback for older webviews without dvh */
           min-height: 100dvh;
         }
         #game-root {
           width: 100vw;
+          height: 100vh; /* fallback for older webviews without dvh */
           height: 100dvh;
           max-height: none;
           margin: 0;
@@ -234,9 +230,6 @@
       }
       /* Landscape nudge for small screens — platformers play best wide. Shown only in
          portrait on phones, hidden the moment the device is rotated. */
-      #cy-rotate {
-        display: none;
-      }
       /* Full-screen "please rotate" overlay. Hidden by default; shown ONLY on a
          portrait phone/coarse-pointer device, where a landscape platformer can't fill the
          screen. It covers the letterbox entirely so mobile users are never confused — the
@@ -298,6 +291,15 @@
         letter-spacing: 0.04em;
         opacity: 0.85;
       }
+      /* Visible keyboard focus ring for DOM-interactive elements (links, the game stage).
+         Keyboard users get a clear focus indicator; mouse users are unaffected. */
+      a:focus-visible,
+      #game-root:focus-visible,
+      [tabindex]:focus-visible {
+        outline: 3px solid #f3c623;
+        outline-offset: 2px;
+        border-radius: 4px;
+      }
     </style>
   </head>
   <body>
@@ -311,19 +313,19 @@
           <h2 id="cy-observatory-title">Cloud Yatra · Live Observatory</h2>
           <p>Live data from the backend as you and other pilgrims play — read straight from Cloudflare D1 via the Worker's public API, refreshed every few seconds.</p>
         </div>
-        <span class="cy-observatory-status" id="cy-observatory-status">connecting…</span>
+        <span class="cy-observatory-status" id="cy-observatory-status" aria-live="polite" role="status">connecting…</span>
       </div>
       <div class="cy-observatory-empty" id="cy-observatory-empty" hidden>
         Backend not configured — the game still plays fully; live stats appear when a backend is connected.
       </div>
-      <div id="cy-obs-grid" aria-live="polite"></div>
+      <div id="cy-obs-grid"></div>
       <p style="margin-top:14px;font-size:12px;color:#7fa8c7">
         Want the full-stack Grafana view (metrics, logs, traces, SLOs)?
         <a id="cy-obs-grafana-link" href="#" target="_blank" rel="noopener"
            style="color:#8ecbff;display:none">Open the Grand Observatory →</a>
       </p>
     </section>
-    <div id="cy-rotate" role="alert" aria-label="Please rotate your device to landscape to play Cloud Yatra">
+    <div id="cy-rotate" role="dialog" aria-modal="true" aria-label="Please rotate your device to landscape to play Cloud Yatra">
       <div class="cy-phone" aria-hidden="true"></div>
       <h2>Rotate your device</h2>
       <p>Cloud Yatra plays best in <strong>landscape</strong>. Turn your phone sideways to begin your climb up Himal Rajya.</p>

@@ -9,7 +9,9 @@
  *   • One obvious ▶ START GAME button. You must click START (or press Enter) to play.
  *   • A tiny controls line. Nothing text-heavy.
  *
- * The name is optional — blank starts as "Yatri" so Start always works.
+ * The name is REQUIRED: Start is disabled and the field nudges the player until a
+ * non-empty name is entered (see startGame/hasValidName). This keeps the shared
+ * leaderboard meaningful (no anonymous "Yatri" floods).
  */
 import Phaser from 'phaser';
 import { VIEW_WIDTH, VIEW_HEIGHT, PALETTE } from '../config/constants';
@@ -223,7 +225,7 @@ export class MenuScene extends Phaser.Scene {
     this.fieldRect = { x: cx - boxW / 2, y: fieldY - boxH / 2, w: boxW, h: boxH };
 
     this.add
-      .text(cx, labelY, 'YOUR NAME  (optional)', {
+      .text(cx, labelY, 'YOUR NAME', {
         fontFamily: 'system-ui, sans-serif',
         fontSize: '14px',
         color: '#ffe8b0',
@@ -468,8 +470,11 @@ export class MenuScene extends Phaser.Scene {
       this.tweens.add({ targets: this.startBg, alpha: { from: 1, to: 0.85 }, duration: 900, yoyo: true, repeat: -1 });
     } else {
       this.paintStart(0x45515f, 1); // greyed-out
-      this.startBg.setAlpha(0.7);
-      this.startLabel.setColor('#c3ccd6');
+      // Keep the disabled label legible: a near-white label on the grey fill clears WCAG AA
+      // (~4.5:1), where the previous #c3ccd6 sat around 2.8:1. Don't drop the fill to 0.7
+      // alpha either (that further reduced contrast against the panel behind it).
+      this.startBg.setAlpha(0.9);
+      this.startLabel.setColor('#eef2f6');
       this.startHint.setText('Enter your name first ↑');
     }
   }

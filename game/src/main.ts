@@ -28,27 +28,60 @@ const prefersReducedMotion =
   (window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false);
 
 const config: Phaser.Types.Core.GameConfig = {
-  type: Phaser.AUTO,
+  type: Phaser.AUTO, // WebGL when available, automatic Canvas fallback otherwise
   parent: 'game-root',
   width: VIEW_WIDTH,
   height: VIEW_HEIGHT,
   backgroundColor: PALETTE.skyLow,
   pixelArt: false,
   roundPixels: true, // draw sprites at integer positions → no sub-pixel shimmer
+  // Decouple the GAME LOOP from the monitor/browser refresh rate.
+  // WHY: Chromium browsers run requestAnimationFrame at the display's refresh rate, but
+  // Edge historically caps/schedules it differently (~70fps) than Chrome does on a
+  // 120/144Hz panel. With arcade physics advanced by the *variable* frame delta, that
+  // difference makes the SAME game feel smooth in one browser and stuttery in another. We
+  // fix the simulation to a steady 60Hz so movement is identical everywhere, independent
+  // of how fast (or unevenly) a given browser paints frames.
+  fps: {
+    target: 60,
+    min: 30, // floor the delta so a hitch can't make the fixed-step loop over-correct
+    forceSetTimeOut: false, // keep rAF (vsync); only the physics step is fixed, not paint
+    smoothStep: true, // smooth out delta jitter between frames (reduces micro-stutter)
+  },
   render: {
     antialias: true,
-    powerPreference: 'high-performance',
+    // Let the browser pick the GPU. 'high-performance' can force a discrete-GPU switch on
+    // some laptops (notably under Edge), causing periodic stalls when the OS toggles GPUs.
+    powerPreference: 'default',
+    // A separate compositor path that avoids a frame of latency and reduces jank on
+    // Chromium (Edge included). Safe for a game canvas that fully repaints each frame.
+    desynchronized: true,
+    // Do NOT refuse to start on machines where WebGL is only available via a slow software
+    // path. Letting it run (or fall back to Canvas) is better than a black screen on locked
+    // down/old devices. Smoothness there is covered by the fixed-step loop.
+    failIfMajorPerformanceCaveat: false,
   },
   physics: {
     default: 'arcade',
     arcade: {
       gravity: { x: 0, y: GRAVITY_Y },
       debug: false,
+      // Run physics on a FIXED timestep locked to `fps.target` (60Hz) instead of advancing
+      // by the raw render delta. This is THE core cross-browser fix: jump arcs, run speed,
+      // and hazard motion are now frame-rate-independent, so Edge and Chrome feel the same.
+      fps: 60,
+      fixedStep: true,
     },
   },
   scale: {
+    // FIT keeps the 16:9 backing store fixed at VIEW_WIDTH×VIEW_HEIGHT and lets the browser
+    // CSS-scale it to any screen. That means the GPU always shades the same, modest pixel
+    // count regardless of a phone's device-pixel-ratio — cheap and consistent everywhere.
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
+    // Round the computed display size to whole pixels so FIT scaling can't land on a
+    // fractional size that forces the browser into blurry, slower sub-pixel upscaling.
+    autoRound: true,
   },
   scene: [BootScene, MenuScene, HimalRajyaScene, LeaderboardScene],
 };
@@ -69,4 +102,30 @@ game.events.once(Phaser.Core.Events.READY, () => {
     canvas.focus();
   }
 });
+
+// Pause the whole game loop while the "rotate your device" overlay is covering the screen
+// on a portrait phone. Previously the overlay only hid the canvas with CSS, so Phaser kept
+// rendering and stepping physics behind it — wasted battery/CPU and a running game the
+// player can't see. We sleep the loop in portrait and wake it in landscape. The media
+// query mirrors the CSS that shows #cy-rotate so the two never disagree.
+if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+  const portraitBlock = window.matchMedia(
+    '(max-width: 900px) and (orientation: portrait), (pointer: coarse) and (orientation: portrait)',
+  );
+  const applyPortraitPause = (covered: boolean): void => {
+    // `loop.sleep()` halts requestAnimationFrame (no render, no scene update); `wake()`
+    // resumes it. Guard on readiness so we never poke the loop before it exists.
+    if (!game.loop) return;
+    if (covered) game.loop.sleep();
+    else game.loop.wake();
+  };
+  applyPortraitPause(portraitBlock.matches);
+  const onChange = (e: MediaQueryListEvent | MediaQueryList) => applyPortraitPause(e.matches);
+  // addEventListener is the modern API; fall back to addListener for older WebKit.
+  if (typeof portraitBlock.addEventListener === 'function') {
+    portraitBlock.addEventListener('change', onChange as (e: MediaQueryListEvent) => void);
+  } else if (typeof (portraitBlock as MediaQueryList).addListener === 'function') {
+    (portraitBlock as MediaQueryList).addListener(onChange as (e: MediaQueryListEvent) => void);
+  }
+}
 

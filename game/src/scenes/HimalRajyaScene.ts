@@ -449,10 +449,14 @@ export class HimalRajyaScene extends Phaser.Scene {
 
     if (this.hud.isIntroVisible() && this.isAnyMoveKeyDown()) this.hud.hideIntro();
 
-    for (const w of this.wisps) w.patrol();
-    for (const e of this.eagles) e.patrol();
-    for (const m of this.monkeys) m.patrol();
-    for (const r of this.rockfalls) r.fall(deltaMs);
+    // Freeze hazard motion once the run is over (win/game-over card showing). They are no
+    // longer a threat and animating them behind the end card just wastes work.
+    if (!this.gameOver && !this.levelComplete) {
+      for (const w of this.wisps) w.patrol();
+      for (const e of this.eagles) e.patrol();
+      for (const m of this.monkeys) m.patrol();
+      for (const r of this.rockfalls) r.fall(deltaMs);
+    }
 
     // Expire the combo if the player waited too long.
     if (this.combo > 0 && this.time.now > this.comboExpiresAt) {
@@ -531,8 +535,13 @@ export class HimalRajyaScene extends Phaser.Scene {
       this.completeLevel();
     }
 
+    // Drift decorative clouds at a FIXED world speed regardless of render rate. Scaling by
+    // deltaMs (not a per-frame constant) keeps them moving at the same real-world speed in
+    // every browser — otherwise they'd scud faster on a 144Hz Chrome than on Edge.
+    const cloudDriftPxPerSec = 9; // ~0.15px/frame at 60fps, now frame-rate independent
+    const cloudStep = (cloudDriftPxPerSec * deltaMs) / 1000;
     for (const cloud of this.clouds) {
-      cloud.x += 0.15;
+      cloud.x += cloudStep;
       if (cloud.x > this.worldWidth + 120) cloud.x = -120;
     }
   }

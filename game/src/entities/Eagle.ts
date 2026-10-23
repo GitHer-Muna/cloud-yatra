@@ -7,6 +7,10 @@ import Phaser from 'phaser';
 
 const TEXTURE_KEY = 'eagle';
 
+// Wing-flap angular speed (radians/second). ~0.12 rad/frame at 60fps = 7.2 rad/s, expressed
+// as a time-based rate so the flap looks identical on every browser/refresh rate.
+const WING_RATE_RAD_PER_SEC = 7.2;
+
 export class Eagle extends Phaser.Physics.Arcade.Sprite {
   private minX: number;
   private maxX: number;
@@ -89,7 +93,7 @@ export class Eagle extends Phaser.Physics.Arcade.Sprite {
       this.setVelocityX(-this.speed);
       this.setFlipX(true);
     }
-    this.wingPhase += 0.12;
+    this.wingPhase = (this.scene.time.now / 1000) * WING_RATE_RAD_PER_SEC;
     // Vertical swoop arc based on horizontal progress.
     const t = (this.x - this.minX) / Math.max(1, this.maxX - this.minX);
     this.y = this.baseY + Math.sin(t * Math.PI) * 46;

@@ -11,6 +11,10 @@ import Phaser from 'phaser';
 
 const TEXTURE_KEY = 'monkey';
 
+// Hop angular speed (radians/second). ~0.18 rad/frame at 60fps = 10.8 rad/s, now expressed
+// as a time-based rate so the bob is identical across browsers/refresh rates.
+const HOP_RATE_RAD_PER_SEC = 10.8;
+
 export class Monkey extends Phaser.Physics.Arcade.Sprite {
   private minX: number;
   private maxX: number;
@@ -44,8 +48,10 @@ export class Monkey extends Phaser.Physics.Arcade.Sprite {
       this.setVelocityX(-this.speed);
       this.setFlipX(true);
     }
-    // Little hopping bob so it reads as a lively animal, not a static sprite.
-    this.hopPhase += 0.18;
+    // Little hopping bob so it reads as a lively animal, not a static sprite. Drive the
+    // bob from the scene clock (ms) rather than a per-frame increment so it hops at the
+    // same rate in every browser, independent of the render frame rate.
+    this.hopPhase = (this.scene.time.now / 1000) * HOP_RATE_RAD_PER_SEC;
     this.y = this.baseY - Math.abs(Math.sin(this.hopPhase)) * 8;
     (this.body as Phaser.Physics.Arcade.Body).updateFromGameObject?.();
   }

@@ -62,19 +62,27 @@ export class Checkpoint extends Phaser.Physics.Arcade.Sprite {
 
     const x = this.worldX + 2;
     const top = this.groundTopY - 128;
-    this.redrawPennant(x, top, 1);
+    // Draw the pennant ONCE in LOCAL coordinates (hoist at local x=0) and position the
+    // graphics object at the pole. Previously a 60ms loop timer cleared and fully re-drew
+    // the double pennon ~16×/second forever (and was never removed on scene shutdown,
+    // stacking per checkpoint). Now we draw once and flutter via a cheap GPU-side scaleX
+    // yoyo pivoted at the pole — zero per-frame CPU redraw cost.
+    this.pennant.setPosition(x, top);
+    this.redrawPennant();
 
-    // Gentle wave animation on the planted pennant.
-    let t = 0;
-    this.scene.time.addEvent({
-      delay: 60,
-      loop: true,
-      callback: () => {
-        t += 0.2;
-        const wave = 1 + Math.sin(t) * 0.06;
-        this.redrawPennant(x, top, wave);
-      },
-    });
+    const reducedMotion = Boolean(this.scene.registry.get('reducedMotion'));
+    if (!reducedMotion) {
+      // The graphics object (and any tween of it) is auto-cleaned by Phaser on scene
+      // shutdown, so there is no manual timer teardown to leak.
+      this.scene.tweens.add({
+        targets: this.pennant,
+        scaleX: { from: 1, to: 1.06 },
+        duration: 900,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.inOut',
+      });
+    }
 
     // Glow flash on plant.
     const glow = this.scene.add
@@ -90,14 +98,17 @@ export class Checkpoint extends Phaser.Physics.Arcade.Sprite {
     return true;
   }
 
-  private redrawPennant(x: number, top: number, waveScale: number): void {
+  private redrawPennant(): void {
     const g = this.pennant;
     g.clear();
     // Nepal's flag carries TWO DISTINCT white emblems: a crescent MOON on the upper
     // pennon and a SUN on the lower, larger pennon. We draw them differently so the
     // national symbol reads correctly (drawing the same dot on both would misrepresent it).
+    // Coordinates are LOCAL to the graphics object (hoist at x=0, top at y=0); the object
+    // is positioned at the pole and fluttered via a scaleX tween.
     const drawPennant = (topY: number, height: number, emblem: 'moon' | 'sun') => {
-      const width = 46 * waveScale;
+      const x = 0;
+      const width = 46;
       g.fillStyle(PALETTE.flagBlue, 1);
       g.beginPath();
       g.moveTo(x, topY);
@@ -141,8 +152,8 @@ export class Checkpoint extends Phaser.Physics.Arcade.Sprite {
         g.fillCircle(ex, ey, R);
       }
     };
-    drawPennant(top, 36, 'moon'); // upper, smaller pennon → crescent moon
-    drawPennant(top + 34, 42, 'sun'); // lower, larger pennon → sun
+    drawPennant(0, 36, 'moon'); // upper, smaller pennon → crescent moon
+    drawPennant(34, 42, 'sun'); // lower, larger pennon → sun
   }
 
   /** Generate a 1x1 fully-transparent texture once, used for invisible sensors. */

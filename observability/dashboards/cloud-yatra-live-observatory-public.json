@@ -219,12 +219,12 @@
    "targets": [
     {
      "refId": "A",
-     "expr": "quantile_over_time(0.95, {kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"web-vitals\" | unwrap value_lcp [$__interval])",
+     "expr": "quantile_over_time(0.95, {kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"web-vitals\" | label_format vital=\"{{ or .value_lcp .lcp }}\" | unwrap vital [$__interval])",
      "legendFormat": "LCP p95"
     },
     {
      "refId": "B",
-     "expr": "quantile_over_time(0.95, {kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"web-vitals\" | unwrap value_inp [$__interval])",
+     "expr": "quantile_over_time(0.95, {kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"web-vitals\" | label_format vital=\"{{ or .value_inp .inp }}\" | unwrap vital [$__interval])",
      "legendFormat": "INP p95"
     }
    ],
@@ -304,17 +304,17 @@
    "targets": [
     {
      "refId": "A",
-     "expr": "avg_over_time({kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"web-vitals\" | unwrap value_cls [$__interval])",
+     "expr": "avg_over_time({kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"web-vitals\" | label_format vital=\"{{ or .value_cls .cls }}\" | unwrap vital [$__interval])",
      "legendFormat": "CLS"
     },
     {
      "refId": "B",
-     "expr": "avg_over_time({kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"web-vitals\" | unwrap value_ttfb [$__interval])",
+     "expr": "avg_over_time({kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"web-vitals\" | label_format vital=\"{{ or .value_ttfb .ttfb }}\" | unwrap vital [$__interval])",
      "legendFormat": "TTFB"
     },
     {
      "refId": "C",
-     "expr": "avg_over_time({kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"web-vitals\" | unwrap value_fcp [$__interval])",
+     "expr": "avg_over_time({kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"web-vitals\" | label_format vital=\"{{ or .value_fcp .fcp }}\" | unwrap vital [$__interval])",
      "legendFormat": "FCP"
     }
    ]
