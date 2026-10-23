@@ -1,6 +1,11 @@
 /**
  * index.ts — the Cloud Yatra backend Worker entrypoint.
  *
+ * Ops note: the deploy-worker CI (push to backend/**) re-applies D1 migrations to the
+ * remote database before deploying, so a redeploy heals a remote schema that has drifted
+ * out of sync with migrations/ (the cause of /stats & /leaderboard returning internal_error
+ * while /healthz stays ok). `wrangler d1 migrations apply` is idempotent — safe to re-run.
+ *
  * Routes:
  *   GET  /healthz       → liveness + D1 reachability probe
  *   GET  /metrics       → Prometheus text (isolate-lifetime counters/histograms)
