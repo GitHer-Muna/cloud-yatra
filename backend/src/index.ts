@@ -48,6 +48,26 @@ function statusClass(status: number): string {
   return `${Math.floor(status / 100)}xx`;
 }
 
+// Short-lived in-isolate cache for the expensive /stats aggregate. stats() runs ~12
+// full-table scans of the events table; the in-page mini-observatory (and dashboard) poll
+// it repeatedly from every open tab. Caching the computed result for a few seconds means
+// concurrent/rapid callers share ONE D1 computation instead of each re-scanning the table —
+// a large cut in D1 row-reads (which have a free-tier daily cap). A few seconds of
+// staleness is fine for these "live-ish" aggregate tiles. Per-isolate (no shared state),
+// which is exactly the right granularity: it throttles the hot path without any infra.
+const STATS_TTL_MS = 10_000;
+let statsCache: { at: number; value: Awaited<ReturnType<typeof stats>> } | null = null;
+
+async function cachedStats(env: Env): Promise<Awaited<ReturnType<typeof stats>>> {
+  const now = Date.now();
+  if (statsCache && now - statsCache.at < STATS_TTL_MS) {
+    return statsCache.value;
+  }
+  const value = await stats(env);
+  statsCache = { at: now, value };
+  return value;
+}
+
 export default {
   async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(req.url);
@@ -187,7 +207,7 @@ async function handle(req: Request, env: Env, c: Ctx): Promise<Response> {
   }
 
   if (pathname === '/stats' && method === 'GET') {
-    const s = await stats(env);
+    const s = await cachedStats(env);
     setGauge('cy_sessions_total', s.sessions.total, {}, 'Total sessions (from D1)');
     setGauge('cy_sessions_active', s.sessions.active5m, {}, 'Active sessions (5m, from D1)');
     for (const r of s.eventsByType) {
