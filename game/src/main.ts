@@ -35,19 +35,6 @@ const config: Phaser.Types.Core.GameConfig = {
   backgroundColor: PALETTE.skyLow,
   pixelArt: false,
   roundPixels: true, // draw sprites at integer positions → no sub-pixel shimmer
-  // Decouple the GAME LOOP from the monitor/browser refresh rate.
-  // WHY: Chromium browsers run requestAnimationFrame at the display's refresh rate, but
-  // Edge historically caps/schedules it differently (~70fps) than Chrome does on a
-  // 120/144Hz panel. With arcade physics advanced by the *variable* frame delta, that
-  // difference makes the SAME game feel smooth in one browser and stuttery in another. We
-  // fix the simulation to a steady 60Hz so movement is identical everywhere, independent
-  // of how fast (or unevenly) a given browser paints frames.
-  fps: {
-    target: 60,
-    min: 30, // floor the delta so a hitch can't make the fixed-step loop over-correct
-    forceSetTimeOut: false, // keep rAF (vsync); only the physics step is fixed, not paint
-    smoothStep: true, // smooth out delta jitter between frames (reduces micro-stutter)
-  },
   render: {
     antialias: true,
     // Let the browser pick the GPU. 'high-performance' can force a discrete-GPU switch on
@@ -57,8 +44,7 @@ const config: Phaser.Types.Core.GameConfig = {
     // Chromium (Edge included). Safe for a game canvas that fully repaints each frame.
     desynchronized: true,
     // Do NOT refuse to start on machines where WebGL is only available via a slow software
-    // path. Letting it run (or fall back to Canvas) is better than a black screen on locked
-    // down/old devices. Smoothness there is covered by the fixed-step loop.
+    // path. Letting it run (or fall back to Canvas) is better than a black screen.
     failIfMajorPerformanceCaveat: false,
   },
   physics: {
@@ -66,11 +52,14 @@ const config: Phaser.Types.Core.GameConfig = {
     arcade: {
       gravity: { x: 0, y: GRAVITY_Y },
       debug: false,
-      // Run physics on a FIXED timestep locked to `fps.target` (60Hz) instead of advancing
-      // by the raw render delta. This is THE core cross-browser fix: jump arcs, run speed,
-      // and hazard motion are now frame-rate-independent, so Edge and Chrome feel the same.
-      fps: 60,
-      fixedStep: true,
+      // Use Phaser's DEFAULT VARIABLE timestep (do NOT set fixedStep:true).
+      // WHY: every moving thing here is velocity-based (setVelocityX/Y in px/second), which
+      // is inherently frame-rate-independent — position integrates velocity by the REAL
+      // elapsed delta, so run/jump speed is correct at any FPS. A FIXED step (my earlier
+      // attempt) advances physics a fixed amount PER STEP, but the number of steps is driven
+      // by the render loop: when a browser (e.g. Edge) runs below 60fps the physics can't
+      // complete 60 steps/second, so everything moved in SLOW MOTION. The variable step
+      // always advances by true wall-clock time and cannot slow-mo.
     },
   },
   scale: {
