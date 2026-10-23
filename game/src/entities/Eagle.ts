@@ -7,18 +7,11 @@ import Phaser from 'phaser';
 
 const TEXTURE_KEY = 'eagle';
 
-// Wing-flap tilt speed in radians/second. The original advanced wingPhase by 0.12 PER FRAME
-// = 0.12 × 60 = 7.2 rad/s at 60fps. Driving it from the scene CLOCK makes the gentle banking
-// tilt flap at this exact rate on any refresh rate — so on a 120/144Hz display it no longer
-// oscillates ~2× too fast (which read as the eagle "blinking").
-const WING_RATE_RAD_PER_SEC = 7.2;
-
 export class Eagle extends Phaser.Physics.Arcade.Sprite {
   private minX: number;
   private maxX: number;
   private baseY: number;
   private speed: number;
-  private wingPhase = 0;
   private dead = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number, range: number, speed: number) {
@@ -85,7 +78,7 @@ export class Eagle extends Phaser.Physics.Arcade.Sprite {
     return true;
   }
 
-  /** Swoop: patrol left↔right and bob in a sine arc. Call each frame. */
+  /** Swoop: patrol left↔right and bob in a smooth sine arc. Call each frame. */
   patrol(): void {
     if (this.dead) return;
     if (this.x <= this.minX) {
@@ -95,14 +88,15 @@ export class Eagle extends Phaser.Physics.Arcade.Sprite {
       this.setVelocityX(-this.speed);
       this.setFlipX(true);
     }
-    this.wingPhase = (this.scene.time.now / 1000) * WING_RATE_RAD_PER_SEC;
-    // Vertical swoop arc based on horizontal progress.
+    // Vertical swoop arc based on horizontal progress — a single smooth rise-and-fall over
+    // the patrol span. This is the ONLY motion: the eagle glides.
+    //
+    // NO per-frame rotation/tilt flap. Rotating this tiny 58×34 bitmap a few degrees back
+    // and forth every frame (under antialias + roundPixels, then camera-upscaled) made its
+    // edges shimmer — which read as the eagle "blinking" and looking washed-out/faded.
+    // Gliding without the micro-rotation keeps the silhouette crisp and solid at all times.
     const t = (this.x - this.minX) / Math.max(1, this.maxX - this.minX);
     this.y = this.baseY + Math.sin(t * Math.PI) * 46;
-    // Wing flap as a GENTLE tilt (angle) rather than a vertical squash. Squashing a tiny
-    // sprite every frame under roundPixels made it look like it was flickering/blinking;
-    // a small banking tilt reads cleanly as flight and never jitters the silhouette.
-    this.setAngle(Math.sin(this.wingPhase) * 6 * (this.flipX ? -1 : 1));
     (this.body as Phaser.Physics.Arcade.Body).updateFromGameObject?.();
   }
 
