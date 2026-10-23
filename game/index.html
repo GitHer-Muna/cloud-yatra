@@ -391,11 +391,20 @@
           status.textContent = 'offline';
           return;
         }
+        // Don't poll while the tab is in the background — saves backend D1 row-reads for
+        // tabs nobody is looking at.
+        if (document.hidden) return;
         try {
           const [statsRes, lbRes] = await Promise.all([
             fetch(`${apiBase}/stats`, { headers: { Accept: 'application/json' } }),
             fetch(`${apiBase}/leaderboard?limit=5`, { headers: { Accept: 'application/json' } }),
           ]);
+          // If the backend is rate-limited / erroring, show a calm message instead of
+          // rendering broken tiles, and let the next interval retry.
+          if (!statsRes.ok || !lbRes.ok) {
+            status.textContent = 'live stats paused — backend busy, retrying…';
+            return;
+          }
           const s = await statsRes.json();
           const lb = await lbRes.json();
           const countries = (s.topCountries || []).map((c) => `${c.country} ${c.sessions}`).join(' · ');
@@ -411,14 +420,22 @@
             tile('Top countries', countries || '—');
           grid.hidden = false;
           empty.hidden = true;
-          status.textContent = 'live · updates every 5s';
+          status.textContent = 'live · updates every 30s';
         } catch {
           status.textContent = 'reconnecting…';
         }
       }
 
+      // Refresh every 30s (was 5s). The in-page tiles don't need second-by-second freshness,
+      // and /stats runs several full-table aggregates in D1 — polling every 5s from every
+      // open tab was burning through Cloudflare D1's free-tier daily row-read budget. 30s is
+      // a 6× reduction while still feeling live. Re-fetch immediately when a hidden tab is
+      // brought back to the foreground so it's fresh on return.
       refresh();
-      setInterval(refresh, 5000);
+      setInterval(refresh, 30000);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) refresh();
+      });
     </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
