@@ -5,6 +5,11 @@ import { PLAYER } from './playerConfig';
 
 const maxJumpHeight = (PLAYER.jumpVelocity * PLAYER.jumpVelocity) / (2 * GRAVITY_Y);
 const maxHorizontalFlight = PLAYER.moveSpeed * ((2 * PLAYER.jumpVelocity) / GRAVITY_Y);
+// With the double jump, the reachable ceiling is the first jump's height plus the
+// (slightly softer) mid-air jump's height — so every platform layer is climbable.
+const secondJumpHeight =
+  (PLAYER.jumpVelocity * PLAYER.doubleJumpFactor) ** 2 / (2 * GRAVITY_Y);
+const doubleJumpCeiling = maxJumpHeight + secondJumpHeight;
 
 function platformTopRise(previousDy: number, nextDy: number): number {
   return Math.max(0, previousDy - nextDy);
@@ -53,6 +58,18 @@ describe('three-region route accessibility', () => {
         const horizontalGap = next.x - next.w / 2 - (previous.x + previous.w / 2);
         expect(horizontalGap).toBeLessThanOrEqual(maxHorizontalFlight);
         expect(platformTopRise(previous.dy, next.dy)).toBeLessThanOrEqual(maxJumpHeight);
+      }
+    }
+  });
+
+  it('keeps every platform layer reachable from the ground with the double jump', () => {
+    // The player can jump once from the ground and once more in mid-air (PLAYER.maxJumps).
+    // Together those reach `doubleJumpCeiling`, so no platform — however high a layer it
+    // sits on — should be out of reach for a player collecting blooms/bells up there.
+    expect(PLAYER.maxJumps).toBeGreaterThanOrEqual(2);
+    for (const id of LEVEL_ORDER) {
+      for (const platform of LEVELS[id].platforms) {
+        expect(-platform.dy).toBeLessThanOrEqual(doubleJumpCeiling);
       }
     }
   });

@@ -116,6 +116,7 @@ export class Yatri extends Phaser.Physics.Arcade.Sprite {
   private jumpBufferedAt = -1e9;
   private isJumpingUp = false;
   private jumpWasHeld = false;
+  private jumpsUsed = 0; // jumps taken since last grounded (0..PLAYER.maxJumps)
 
   private attackUntil = 0; // while now < this, the swing (and hitbox) is active
   private attackCooldownUntil = 0; // earliest time the next swing may start
@@ -182,7 +183,10 @@ export class Yatri extends Phaser.Physics.Arcade.Sprite {
     const now = this.scene.time.now;
     const body = this.body as Phaser.Physics.Arcade.Body;
     const onGround = body.blocked.down || body.touching.down;
-    if (onGround) this.lastGroundedAt = now;
+    if (onGround) {
+      this.lastGroundedAt = now;
+      this.jumpsUsed = 0; // landed — refill both jumps
+    }
 
     const left = Boolean(cursors.left?.isDown || alt?.left?.isDown);
     const right = Boolean(cursors.right?.isDown || alt?.right?.isDown);
@@ -213,11 +217,21 @@ export class Yatri extends Phaser.Physics.Arcade.Sprite {
 
     const canCoyote = now - this.lastGroundedAt <= PLAYER.coyoteMs;
     const hasBufferedJump = now - this.jumpBufferedAt <= PLAYER.jumpBufferMs;
-    if (hasBufferedJump && canCoyote && (onGround || body.velocity.y >= 0)) {
-      this.setVelocityY(-PLAYER.jumpVelocity);
+    // First jump: from the ground (or within the coyote-time grace just after leaving it).
+    const canGroundJump = canCoyote && (onGround || body.velocity.y >= 0) && this.jumpsUsed < 1;
+    // Double jump: already airborne with a jump to spare. Allowed whether rising or
+    // falling, so a player can boost up to the next platform layer at any point.
+    const canDoubleJump = !onGround && !canCoyote && this.jumpsUsed >= 1 && this.jumpsUsed < PLAYER.maxJumps;
+
+    if (hasBufferedJump && (canGroundJump || canDoubleJump)) {
+      const impulse = canGroundJump
+        ? PLAYER.jumpVelocity
+        : PLAYER.jumpVelocity * PLAYER.doubleJumpFactor;
+      this.setVelocityY(-impulse);
       this.isJumpingUp = true;
       this.jumpBufferedAt = -1e9;
-      this.lastGroundedAt = -1e9;
+      this.lastGroundedAt = -1e9; // consume coyote grace so it can't double-fire
+      this.jumpsUsed += 1;
       this.emit_('jump');
     }
 
@@ -279,6 +293,7 @@ export class Yatri extends Phaser.Physics.Arcade.Sprite {
   bounceOffStomp(): void {
     this.setVelocityY(-PLAYER.jumpVelocity * 0.72);
     this.isJumpingUp = true;
+    this.jumpsUsed = 0; // a stomp bounce is a fresh launch — refill the air jump
     this.emit_('stomp');
   }
 
@@ -365,6 +380,7 @@ export class Yatri extends Phaser.Physics.Arcade.Sprite {
     this.jumpBufferedAt = -1e9;
     this.jumpWasHeld = false;
     this.isJumpingUp = false;
+    this.jumpsUsed = 0;
     // Kill any in-flight damage-blink tween and clear its tint/alpha, otherwise a respawn
     // mid-blink leaves a faint red tint or partial transparency fighting the flash below.
     this.scene.tweens.killTweensOf(this);

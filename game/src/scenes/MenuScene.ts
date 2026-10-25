@@ -485,8 +485,8 @@ export class MenuScene extends Phaser.Scene {
     const cx = VIEW_WIDTH / 2;
     const y = PANEL_BOTTOM - 34;
     const controls = isTouchDevice()
-      ? 'Move  ◀ ▶   ·   Jump  ⤒   ·   Khukuri  🗡   (on-screen)'
-      : 'Move  ← →   ·   Jump  ↑   ·   Khukuri  F';
+      ? 'Move  ◀ ▶   ·   Jump  ⤒  (tap again in the air to double-jump)   ·   Khukuri  🗡'
+      : 'Move  ← →   ·   Jump  ↑  (press again in the air to double-jump)   ·   Khukuri  F';
     this.add
       .text(cx, y, controls, {
         fontFamily: 'system-ui, sans-serif',

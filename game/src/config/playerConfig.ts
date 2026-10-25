@@ -7,17 +7,25 @@
 export const PLAYER = {
   // Movement feel.
   moveSpeed: 250, // horizontal px/s
-  // Jump impulse. Set to 520 so every collectible on a platform top is COMFORTABLY
-  // reachable (not a pixel-perfect max jump). With GRAVITY_Y=1000 this gives:
-  //   max height = 520²/(2·1000) = 135.2px  (tallest platform rise is 80px → big margin)
+  // Jump impulse. Set to 520 so the lower platforms are COMFORTABLY reachable from the
+  // ground (not a pixel-perfect max jump). With GRAVITY_Y=1000 this gives:
+  //   max height = 520²/(2·1000) = 135.2px  per jump
   //   air-time   = 2·520/1000    = 1.04s
   //   h-flight   = 250·1.04      = 260px     (widest platform gap ≈225px → clears it)
-  // Blooms/bells that sit on elevated platforms now have ~55px of headroom over the
-  // tallest rise, so grabbing them never requires a frame-perfect jump. The
-  // levels.test.ts accessibility checks derive their bounds from this value, so they
-  // continue to guard that no gap/rise ever exceeds what the jump can clear.
-  jumpVelocity: 520, // upward impulse (bigger = higher)
+  // A single jump reaches the lower ledges directly; the DOUBLE JUMP (below) lets Yatri
+  // climb to the higher platform layers to collect blooms/bells placed up there, and hop
+  // from a mid platform up to the next layer. The levels.test.ts accessibility checks
+  // derive their bounds from these values so no gap/rise exceeds what the jumps can clear.
+  jumpVelocity: 520, // upward impulse for the first (ground) jump (bigger = higher)
   airControl: 0.9,
+
+  // Double jump: Yatri can jump once more while airborne, so higher platform layers (and
+  // the collectibles on them) are reachable from the ground or from a lower platform.
+  // maxJumps=2 means ground jump + one mid-air jump. The mid-air jump is a touch softer so
+  // it still feels like a boost, not a free second full leap.
+  //   second-jump height ≈ (520·0.92)²/(2·1000) ≈ 114px  (stacked well above one layer)
+  maxJumps: 2,
+  doubleJumpFactor: 0.92, // mid-air jump impulse = jumpVelocity × this
 
   // Forgiving-platformer feel.
   coyoteMs: 90,
