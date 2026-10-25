@@ -111,6 +111,17 @@ export class HimalRajyaScene extends Phaser.Scene {
   private progressPct = 0;
   private progressBucket = -1;
 
+  // Per-journey performance tracking for the end-of-run "Your run" summary card.
+  private maxCombo = 1; // highest combo multiplier reached this level (1 = none)
+  private deathsThisJourney = 0; // lives lost on THIS level
+  private garlandsEarned = 0; // completed bloom garlands (malas) on THIS level
+  // Totals carried from previous levels so the summary reflects the whole journey.
+  private carriedBlooms = 0;
+  private carriedBells = 0;
+  private carriedGarlands = 0;
+  private carriedDeaths = 0;
+  private carriedMaxCombo = 1;
+
   private statusText!: Phaser.GameObjects.Text;
   private telemetry!: TelemetryService;
   private fpsSampler!: FpsSampler;
@@ -126,6 +137,12 @@ export class HimalRajyaScene extends Phaser.Scene {
     cumulativeScore?: number;
     playerName?: string;
     attempt?: number;
+    // Journey-wide performance totals carried across level advances for the end-of-run card.
+    journeyBlooms?: number;
+    journeyBells?: number;
+    journeyGarlands?: number;
+    journeyDeaths?: number;
+    journeyMaxCombo?: number;
   }): void {
     const levelIndex = Math.max(1, Math.min(3, data.levelIndex ?? 1));
     this.level = levelByIndex(levelIndex);
@@ -138,6 +155,13 @@ export class HimalRajyaScene extends Phaser.Scene {
     // when the player restarts a fresh journey after death or completion. Fed to the
     // dashboard + Guru Megh so "attempts" is a truthful per-journey metric.
     this.attempt = Math.max(1, data.attempt ?? 1);
+    // Carry journey-wide performance totals from previous levels (added to this level's
+    // counters in the end-of-run summary so it reflects the WHOLE journey, like score).
+    this.carriedBlooms = Math.max(0, data.journeyBlooms ?? 0);
+    this.carriedBells = Math.max(0, data.journeyBells ?? 0);
+    this.carriedGarlands = Math.max(0, data.journeyGarlands ?? 0);
+    this.carriedDeaths = Math.max(0, data.journeyDeaths ?? 0);
+    this.carriedMaxCombo = Math.max(1, data.journeyMaxCombo ?? 1);
     try {
       this.bestScore = Number(localStorage.getItem('cy_best_score') ?? '0') || 0;
     } catch {
@@ -152,6 +176,9 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.bellsCollected = 0;
     this.combo = 0;
     this.comboExpiresAt = 0;
+    this.maxCombo = 1;
+    this.deathsThisJourney = 0;
+    this.garlandsEarned = 0;
     this.progressPct = 0;
     this.progressBucket = -1;
     this.levelComplete = false;
@@ -305,15 +332,16 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.hud.showIntro(2600, `Level ${this.level.index} — ${this.level.name}`, this.level.subtitle);
 
     this.statusText = this.add
-      .text(VIEW_WIDTH / 2, VIEW_HEIGHT * 0.34, '', {
+      .text(VIEW_WIDTH / 2, VIEW_HEIGHT * 0.5, '', {
         fontFamily: 'system-ui, sans-serif',
-        fontSize: '22px',
+        fontSize: '18px',
         color: '#eaf4ff',
         backgroundColor: 'rgba(16,35,59,0.92)',
         stroke: '#10233b',
         strokeThickness: 2,
-        padding: { x: 20, y: 16 },
+        padding: { x: 22, y: 16 },
         align: 'center',
+        lineSpacing: 2,
       })
       .setOrigin(0.5)
       .setScrollFactor(0)
@@ -718,6 +746,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     const points = Math.round(SCORING.scorePerBloom * multiplier);
     this.score += points;
     this.bloomsCollected += 1;
+    if (multiplier > this.maxCombo) this.maxCombo = multiplier;
 
     this.hud.setScore(this.score);
     this.hud.setCombo(multiplier > 1 ? multiplier : 0);
@@ -752,6 +781,7 @@ export class HimalRajyaScene extends Phaser.Scene {
 
   /** A completed rhododendron garland (every garlandSize blooms): +1 life + points. */
   private awardGarland(): void {
+    this.garlandsEarned += 1;
     this.score += SCORING.garlandBonusPoints;
     const gained = this.yatri.gainLife(1);
     if (gained > 0) {
@@ -915,6 +945,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     } else if (e.type === 'attack') {
       this.sound_?.play('slash');
     } else if (e.type === 'damaged') {
+      this.deathsThisJourney += 1;
       this.sound_?.play('damage');
     }
   }
@@ -1026,7 +1057,9 @@ export class HimalRajyaScene extends Phaser.Scene {
             `You climbed from the Terai jungle to the roof of Himal Rajya.\n\n` +
             `Final score: ${this.cumulativeScore}\n` +
             (newBest ? '⭐ NEW BEST!\n' : `Best: ${this.bestScore}\n`) +
-            `\nThe prayer flags fly for you. Opening the leaderboard…`,
+            '\n' +
+            this.runSummaryLines(timeMs) +
+            `\n\nThe prayer flags fly for you. Opening the leaderboard…`,
         )
         .setVisible(true);
       // Hold on the summit so the finale lands as a climax, not a quick cut.
@@ -1070,6 +1103,29 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.telemetry.setLevel(this.level.id);
   }
 
+  /**
+   * Your-run performance summary, shown on every end-of-run card (win or loss) so a player
+   * always sees how THIS journey went: how far they climbed, what they gathered, their
+   * best combo, how many falls, and the time. Pure presentation — reads tracked counters.
+   */
+  private runSummaryLines(timeMs: number): string {
+    const region = this.level.name; // Terai Lowlands / Middle Hills / High Himalaya
+    const depth = Math.round(this.progressPct);
+    const blooms = this.carriedBlooms + this.bloomsCollected;
+    const bells = this.carriedBells + this.bellsCollected;
+    const garlands = this.carriedGarlands + this.garlandsEarned;
+    const falls = this.carriedDeaths + this.deathsThisJourney;
+    const bestCombo = Math.max(this.carriedMaxCombo, this.maxCombo);
+    const combo = bestCombo >= 1.1 ? `x${bestCombo.toFixed(1)}` : 'none';
+    const secs = (timeMs / 1000).toFixed(1);
+    return (
+      `\u2500\u2500 your run \u2500\u2500\n` +
+      `Reached: ${region}  (${depth}% up)\n` +
+      `\uD83C\uDF38 ${blooms} blooms   \uD83D\uDD14 ${bells} bells   \uD83D\uDCFF ${garlands} garlands\n` +
+      `Best combo: ${combo}   \u00b7   Falls: ${falls}   \u00b7   Time: ${secs}s`
+    );
+  }
+
   private endGame(cause: string): void {
     if (this.gameOver) return;
     this.gameOver = true;
@@ -1111,7 +1167,8 @@ export class HimalRajyaScene extends Phaser.Scene {
           `This level: ${this.score}\n` +
           `Journey total: ${this.cumulativeScore + this.score}\n` +
           `Best: ${this.bestScore}\n\n` +
-          `Press R to begin a new journey (from the Terai)`,
+          this.runSummaryLines(this.telemetry.sinceStartMs()) +
+          `\n\nPress R to begin a new journey (from the Terai)`,
       )
       .setVisible(true);
     this.armDeathRestart();
@@ -1165,6 +1222,11 @@ export class HimalRajyaScene extends Phaser.Scene {
       cumulativeScore: this.cumulativeScore,
       playerName: this.playerName,
       attempt: this.attempt, // same journey → keep the attempt number
+      journeyBlooms: this.carriedBlooms + this.bloomsCollected,
+      journeyBells: this.carriedBells + this.bellsCollected,
+      journeyGarlands: this.carriedGarlands + this.garlandsEarned,
+      journeyDeaths: this.carriedDeaths + this.deathsThisJourney,
+      journeyMaxCombo: Math.max(this.carriedMaxCombo, this.maxCombo),
     });
   }
 
