@@ -89,7 +89,7 @@
    }
   ]
  },
- "description": "Cloud Yatra \u2014 Grand Observatory. A dark, presentation-ready, full-stack story: live pulse \u2192 Cloudflare Worker + D1 backend health (metrics, logs, traces) \u2192 browser RUM \u2192 game performance \u2192 Yatri's deep gameplay analytics \u2192 the shared D1 leaderboard. Frontend (Faro) + backend (Prometheus/Loki/Tempo) + database (D1 via Infinity).",
+ "description": "Full-stack telemetry for Cloud Yatra, end to end: live service pulse, Cloudflare Worker + D1 backend health (metrics, logs, traces), browser real-user monitoring, game performance, gameplay analytics, and the shared leaderboard. Frontend via Faro; backend via Prometheus, Loki, and Tempo; database via Infinity.",
  "editable": true,
  "graphTooltip": 1,
  "liveNow": true,
@@ -97,15 +97,15 @@
  "schemaVersion": 39,
  "tags": [
   "cloud-yatra",
+  "observability",
+  "full-stack",
   "cloudflare",
+  "worker",
   "d1",
   "faro",
-  "full-stack",
-  "graduation",
-  "himal-rajya",
-  "nepal",
-  "observability",
-  "worker"
+  "prometheus",
+  "loki",
+  "tempo"
  ],
  "templating": {
   "list": [
@@ -133,6 +133,24 @@
     "label": "D1 Stats",
     "name": "DS_INFINITY",
     "query": "yesoreyeram-infinity-datasource",
+    "refresh": 1,
+    "type": "datasource"
+   },
+   {
+    "current": {},
+    "hide": 0,
+    "label": "Backend Logs",
+    "name": "DS_BACKEND_LOGS",
+    "query": "loki",
+    "refresh": 1,
+    "type": "datasource"
+   },
+   {
+    "current": {},
+    "hide": 0,
+    "label": "Traces",
+    "name": "DS_TEMPO",
+    "query": "tempo",
     "refresh": 1,
     "type": "datasource"
    },
@@ -197,9 +215,9 @@
   ]
  },
  "timezone": "",
- "title": "Cloud Yatra \u00b7 Grand Observatory",
+ "title": "Cloud Yatra · Grand Observatory",
  "uid": "cloud-yatra-np",
- "version": 3,
+ "version": 5,
  "panels": [
   {
    "type": "text",
@@ -213,12 +231,12 @@
    },
    "options": {
     "mode": "markdown",
-    "content": "<div style=\"display:flex;align-items:center;gap:16px;padding:6px 10px;background:linear-gradient(90deg,#0b1020 0%,#20357a 40%,#c0392b 70%,#f6b73c 100%);border-radius:10px;color:#fff;\"><div style=\"font-size:30px;line-height:1\">\ud83c\udfd4\ufe0f</div><div><div style=\"font-size:20px;font-weight:700;letter-spacing:.3px\">Cloud Yatra \u00b7 Grand Observatory</div><div style=\"opacity:.9;font-size:12px\">Yatri's climb through Himal Rajya \u2014 a full-stack live telemetry story: <b>browser \u2192 Faro</b> \u00b7 <b>Worker \u2192 Prometheus/Loki/Tempo</b> \u00b7 <b>D1 \u2192 Infinity</b>. Play at <b>cloud-yatra.pages.dev</b> and watch your run appear below.</div></div><div style=\"margin-left:auto;text-align:right;font-size:11px;opacity:.85\">\ud83d\udfe2 healthy&nbsp;&nbsp;\ud83d\udfe1 strained&nbsp;&nbsp;\ud83d\udd34 danger / chaos</div></div>"
+    "content": "<div style=\"display:flex;align-items:center;gap:16px;padding:6px 10px;background:linear-gradient(90deg,#0b1020 0%,#20357a 40%,#c0392b 70%,#f6b73c 100%);border-radius:10px;color:#fff;\"><div style=\"font-size:30px;line-height:1\">🏔️</div><div><div style=\"font-size:20px;font-weight:700;letter-spacing:.3px\">Cloud Yatra · Grand Observatory</div><div style=\"opacity:.9;font-size:12px\">Live telemetry from Yatri's climb through Himal Rajya — <b>browser → Faro</b> · <b>Worker → Prometheus / Loki / Tempo</b> · <b>D1 → Infinity</b>. Play at <b>cloud-yatra.pages.dev</b>; your run appears below.</div></div><div style=\"margin-left:auto;text-align:right;font-size:11px;opacity:.85\">🟢 healthy&nbsp;&nbsp;🟡 strained&nbsp;&nbsp;🔴 chaos / danger</div></div>"
    }
   },
   {
    "type": "row",
-   "title": "YOUR RUN \u00b7 live metrics for your own climb (updates as you play)",
+   "title": "YOUR RUN · live stats for the current session",
    "collapsed": false,
    "gridPos": {
     "h": 1,
@@ -232,7 +250,7 @@
   {
    "type": "stat",
    "title": "Best score",
-   "description": "Your highest score this run (from D1, live).",
+   "description": "Your highest score so far this session (D1).",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -298,7 +316,7 @@
   {
    "type": "stat",
    "title": "Progress",
-   "description": "How far up Himal Rajya you've climbed.",
+   "description": "How far up Himal Rajya this session has climbed.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -364,7 +382,7 @@
   {
    "type": "stat",
    "title": "Completions",
-   "description": "Summits you've reached this session.",
+   "description": "Summits reached this session.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -430,7 +448,7 @@
   {
    "type": "stat",
    "title": "Deaths",
-   "description": "Falls and hazards faced.",
+   "description": "Falls and hazards taken this session.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -496,7 +514,7 @@
   {
    "type": "stat",
    "title": "Jumps",
-   "description": "Leaps taken on the trail.",
+   "description": "Jumps made this session.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -562,7 +580,7 @@
   {
    "type": "stat",
    "title": "Collectibles",
-   "description": "Flowers + bells gathered.",
+   "description": "Flowers and bells gathered this session.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -627,7 +645,7 @@
   },
   {
    "type": "row",
-   "title": "LIVE NOW \u00b7 the pulse of the pilgrimage",
+   "title": "LIVE NOW · service pulse",
    "collapsed": false,
    "gridPos": {
     "h": 1,
@@ -641,7 +659,7 @@
   {
    "type": "stat",
    "title": "Active pilgrims (5m)",
-   "description": "Anonymous game sessions seen by the backend in the last 5 minutes (from D1 via the Worker).",
+   "description": "Distinct game sessions seen by the backend in the last 5 minutes (D1).",
    "datasource": {
     "type": "prometheus",
     "uid": "${DS_PROM}"
@@ -691,7 +709,7 @@
   {
    "type": "stat",
    "title": "Requests / sec",
-   "description": "Backend Worker request rate across all routes (Prometheus).",
+   "description": "Worker request rate across all routes (Prometheus).",
    "datasource": {
     "type": "prometheus",
     "uid": "${DS_PROM}"
@@ -741,7 +759,7 @@
   {
    "type": "stat",
    "title": "Events ingested / min",
-   "description": "Gameplay telemetry events accepted into D1 per minute (Prometheus).",
+   "description": "Gameplay events accepted into D1 per minute (Prometheus).",
    "datasource": {
     "type": "prometheus",
     "uid": "${DS_PROM}"
@@ -791,7 +809,7 @@
   {
    "type": "stat",
    "title": "p95 API latency",
-   "description": "95th-percentile backend request duration (Prometheus histogram).",
+   "description": "95th-percentile request duration (Prometheus histogram).",
    "datasource": {
     "type": "prometheus",
     "uid": "${DS_PROM}"
@@ -857,7 +875,7 @@
   {
    "type": "stat",
    "title": "Backend error rate",
-   "description": "Share of 5xx backend responses (Prometheus).",
+   "description": "Share of 5xx responses from the backend (Prometheus).",
    "datasource": {
     "type": "prometheus",
     "uid": "${DS_PROM}"
@@ -923,7 +941,7 @@
   {
    "type": "stat",
    "title": "Gameplay events (D1 total)",
-   "description": "Total gameplay signals persisted in D1. Live from /stats.",
+   "description": "Total gameplay events persisted in D1.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -996,7 +1014,7 @@
    "type": "row",
    "id": 55,
    "collapsed": false,
-   "title": "SLOs & ERROR BUDGET \u00b7 service reliability (RED \u2192 SLI/SLO, industry-standard)",
+   "title": "SLOs & ERROR BUDGET · service reliability",
    "gridPos": {
     "h": 1,
     "w": 24,
@@ -1010,7 +1028,7 @@
    "id": 56,
    "transparent": true,
    "title": "Availability SLI",
-   "description": "Percentage of non-5xx responses over 30 days. SLO target: 99%.",
+   "description": "Non-5xx responses over the selected window. Target: 99%.",
    "datasource": {
     "type": "prometheus",
     "uid": "${DS_PROM}"
@@ -1075,7 +1093,7 @@
    "id": 57,
    "transparent": true,
    "title": "Error budget remaining",
-   "description": "Share of the 1% monthly error budget still unspent (99% availability SLO).",
+   "description": "Fraction of the 1% error budget still unspent against the 99% availability SLO.",
    "datasource": {
     "type": "prometheus",
     "uid": "${DS_PROM}"
@@ -1139,8 +1157,8 @@
    "type": "gauge",
    "id": 58,
    "transparent": true,
-   "title": "Latency SLO \u00b7 <500ms",
-   "description": "Share of requests served under 500ms. SLO target: 95%.",
+   "title": "Latency SLO · <500ms",
+   "description": "Requests served under 500 ms. Target: 95%.",
    "datasource": {
     "type": "prometheus",
     "uid": "${DS_PROM}"
@@ -1195,7 +1213,7 @@
     {
      "refId": "A",
      "expr": "100 * sum(rate(cy_api_request_duration_ms_bucket{le=\"500\"}[$__range])) / clamp_min(sum(rate(cy_api_request_duration_ms_count[$__range])),0.0001)",
-     "legendFormat": "Latency SLO \u00b7 <500ms (30d)",
+     "legendFormat": "Latency SLO · <500ms (30d)",
      "editorMode": "code"
     }
    ]
@@ -1205,7 +1223,7 @@
    "id": 59,
    "transparent": true,
    "title": "Error-budget burn (1h)",
-   "description": "How fast the budget is being spent right now vs. sustainable (1.0 = on-pace). >14 = page.",
+   "description": "Budget burn rate over the last hour. 1.0 is on-pace; above 14 warrants paging.",
    "datasource": {
     "type": "prometheus",
     "uid": "${DS_PROM}"
@@ -1267,7 +1285,7 @@
   },
   {
    "type": "row",
-   "title": "BACKEND \u00b7 Cloudflare Worker + D1 health (metrics & traces)",
+   "title": "BACKEND · Cloudflare Worker + D1 health",
    "collapsed": false,
    "gridPos": {
     "h": 1,
@@ -1281,7 +1299,7 @@
   {
    "type": "timeseries",
    "title": "Request rate by route",
-   "description": "Per-route request throughput served by the Worker.",
+   "description": "Request throughput per route served by the Worker.",
    "datasource": {
     "type": "prometheus",
     "uid": "${DS_PROM}"
@@ -1354,8 +1372,8 @@
   },
   {
    "type": "timeseries",
-   "title": "Latency percentiles (p50/p90/p99)",
-   "description": "Backend request duration percentiles from the Prometheus histogram. Exemplars link latency spikes to the exact Tempo trace (via OTLP).",
+   "title": "Latency percentiles · p50 / p90 / p99",
+   "description": "Request duration percentiles from the Prometheus histogram. Each bucket also carries a trace exemplar, so a latency spike can link straight to its trace in Tempo.",
    "datasource": {
     "type": "prometheus",
     "uid": "${DS_PROM}"
@@ -1447,7 +1465,7 @@
   {
    "type": "timeseries",
    "title": "Responses by status class",
-   "description": "2xx / 4xx / 5xx response mix \u2014 the backend reliability signal.",
+   "description": "2xx / 4xx / 5xx response mix — the core backend reliability signal.",
    "datasource": {
     "type": "prometheus",
     "uid": "${DS_PROM}"
@@ -1582,7 +1600,7 @@
   {
    "type": "timeseries",
    "title": "Rejected vs accepted events",
-   "description": "Validation outcome at the ingest boundary. Rejections are grouped by reason.",
+   "description": "Validation outcome at the ingest boundary; rejections grouped by reason.",
    "datasource": {
     "type": "prometheus",
     "uid": "${DS_PROM}"
@@ -1685,28 +1703,451 @@
     {
      "refId": "B",
      "expr": "sum by (reason) (rate(cy_events_rejected_total[5m])) * 60",
-     "legendFormat": "rejected \u00b7 {{reason}}",
+     "legendFormat": "rejected · {{reason}}",
      "range": true
     }
    ]
   },
   {
    "type": "row",
-   "title": "PLAYER EXPERIENCE \u00b7 browser health (Faro RUM)",
+   "id": 60,
    "collapsed": false,
+   "title": "BACKEND LOGS & TRACES · structured logs and request traces",
    "gridPos": {
     "h": 1,
     "w": 24,
     "x": 0,
     "y": 40
    },
+   "panels": []
+  },
+  {
+   "type": "logs",
+   "id": 61,
+   "title": "Live backend logs",
+   "description": "One structured JSON log per request from the Worker, shipped to Loki. Each line carries a correlationId, route, status, and duration.",
+   "datasource": {
+    "type": "loki",
+    "uid": "${DS_BACKEND_LOGS}"
+   },
+   "transparent": true,
+   "gridPos": {
+    "h": 9,
+    "w": 24,
+    "x": 0,
+    "y": 41
+   },
+   "options": {
+    "showTime": true,
+    "showLabels": false,
+    "showCommonLabels": false,
+    "wrapLogMessage": true,
+    "prettifyLogMessage": true,
+    "enableLogDetails": true,
+    "dedupStrategy": "none",
+    "sortOrder": "Descending"
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "{service_name=\"cloud-yatra-api\", source=\"worker\"} | json | line_format \"{{.level}} {{.route}} {{.status}} {{.durationMs}}ms cid={{.correlationId}} {{.msg}}\"",
+     "queryType": "range"
+    }
+   ]
+  },
+  {
+   "type": "barchart",
+   "id": 62,
+   "title": "Log volume by level",
+   "description": "Backend log lines per interval by severity. Rising warn and error bars are the first sign the backend is under stress.",
+   "datasource": {
+    "type": "loki",
+    "uid": "${DS_BACKEND_LOGS}"
+   },
+   "transparent": true,
+   "gridPos": {
+    "h": 7,
+    "w": 12,
+    "x": 0,
+    "y": 50
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "custom": {
+      "lineWidth": 1,
+      "fillOpacity": 80,
+      "gradientMode": "none",
+      "axisPlacement": "auto",
+      "axisLabel": "",
+      "axisColorMode": "text",
+      "scaleDistribution": {
+       "type": "linear"
+      },
+      "axisCenteredZero": false,
+      "hideFrom": {
+       "tooltip": false,
+       "viz": false,
+       "legend": false
+      },
+      "thresholdsStyle": {
+       "mode": "off"
+      },
+      "stacking": {
+       "mode": "normal",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "error"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "red"
+        }
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "warn"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "orange"
+        }
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "info"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "green"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "orientation": "auto",
+    "stacking": "normal",
+    "showValue": "auto",
+    "barWidth": 0.9,
+    "groupWidth": 0.7,
+    "fullHighlight": false,
+    "xTickLabelRotation": 0,
+    "xTickLabelSpacing": 100,
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true,
+     "calcs": []
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum by (level) (count_over_time({service_name=\"cloud-yatra-api\", source=\"worker\"} | json [$__interval]))",
+     "legendFormat": "{{level}}",
+     "queryType": "range"
+    }
+   ]
+  },
+  {
+   "type": "timeseries",
+   "id": 63,
+   "title": "Error & warning log rate",
+   "description": "Rate of warn- and error-level backend logs. Pairs with the 5xx panel: the metric shows that errors happened, the logs show which requests and why.",
+   "datasource": {
+    "type": "loki",
+    "uid": "${DS_BACKEND_LOGS}"
+   },
+   "transparent": true,
+   "gridPos": {
+    "h": 7,
+    "w": 12,
+    "x": 12,
+    "y": 50
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "logs",
+     "decimals": 2,
+     "custom": {
+      "drawStyle": "line",
+      "fillOpacity": 18,
+      "gradientMode": "opacity",
+      "lineInterpolation": "smooth",
+      "lineWidth": 2,
+      "showPoints": "never",
+      "spanNulls": true,
+      "pointSize": 5,
+      "axisBorderShow": false,
+      "axisGridShow": true,
+      "axisLabel": "",
+      "scaleDistribution": {
+       "type": "linear"
+      },
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      },
+      "axisCenteredZero": false,
+      "hideFrom": {
+       "tooltip": false,
+       "viz": false,
+       "legend": false
+      }
+     },
+     "overrides": []
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "error"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "red"
+        }
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "warn"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "orange"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max",
+      "mean"
+     ],
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum(rate({service_name=\"cloud-yatra-api\", source=\"worker\"} | json | level=\"error\" [$__interval]))",
+     "legendFormat": "error"
+    },
+    {
+     "refId": "B",
+     "expr": "sum(rate({service_name=\"cloud-yatra-api\", source=\"worker\"} | json | level=\"warn\" [$__interval]))",
+     "legendFormat": "warn"
+    }
+   ]
+  },
+  {
+   "type": "table",
+   "id": 64,
+   "title": "Recent request traces (Tempo)",
+   "description": "Per-request spans shipped to Tempo from the Worker. Open a row to see the full trace.",
+   "datasource": {
+    "type": "tempo",
+    "uid": "${DS_TEMPO}"
+   },
+   "transparent": true,
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 57
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      },
+      "inspect": false
+     },
+     "overrides": []
+    }
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false,
+     "reducer": [
+      "sum"
+     ],
+     "countRows": false,
+     "fields": ""
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "tempo",
+      "uid": "${DS_TEMPO}"
+     },
+     "queryType": "traceqlSearch",
+     "limit": 20,
+     "tableType": "traces",
+     "filters": [
+      {
+       "id": "service-name",
+       "tag": "service.name",
+       "operator": "=",
+       "scope": "resource",
+       "value": [
+        "cloud-yatra-api"
+       ],
+       "valueType": "string"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "timeseries",
+   "id": 65,
+   "title": "Trace span rate by status",
+   "description": "Request-span throughput from Tempo, split by span status. Mirrors backend request rate and confirms traces are arriving.",
+   "datasource": {
+    "type": "tempo",
+    "uid": "${DS_TEMPO}"
+   },
+   "transparent": true,
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 57
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "reqps",
+     "decimals": 2,
+     "custom": {
+      "drawStyle": "line",
+      "fillOpacity": 18,
+      "gradientMode": "opacity",
+      "lineInterpolation": "smooth",
+      "lineWidth": 2,
+      "showPoints": "never",
+      "spanNulls": true,
+      "pointSize": 5,
+      "axisBorderShow": false,
+      "axisGridShow": true,
+      "axisLabel": "",
+      "scaleDistribution": {
+       "type": "linear"
+      },
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      },
+      "axisCenteredZero": false,
+      "hideFrom": {
+       "tooltip": false,
+       "viz": false,
+       "legend": false
+      }
+     },
+     "overrides": []
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max",
+      "mean"
+     ],
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "tempo",
+      "uid": "${DS_TEMPO}"
+     },
+     "queryType": "traceql",
+     "query": "{resource.service.name=\"cloud-yatra-api\"} | rate() by (status)",
+     "tableType": "spans",
+     "limit": 20
+    }
+   ]
+  },
+  {
+   "type": "row",
+   "title": "PLAYER EXPERIENCE · browser real-user monitoring",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 65
+   },
    "id": 17,
    "panels": []
   },
   {
    "type": "timeseries",
-   "title": "Web Vitals \u00b7 LCP / INP (p95)",
-   "description": "Real-user loading and interaction latency from Faro web-vitals.",
+   "title": "Web Vitals · LCP / INP (p95)",
+   "description": "Real-user loading and interaction latency from Faro web vitals.",
    "datasource": {
     "type": "loki",
     "uid": "${DS_FARO}"
@@ -1715,7 +2156,7 @@
     "h": 7,
     "w": 12,
     "x": 0,
-    "y": 41
+    "y": 66
    },
    "id": 18,
    "transparent": true,
@@ -1790,8 +2231,8 @@
   },
   {
    "type": "timeseries",
-   "title": "Web Vitals \u00b7 CLS / TTFB / FCP",
-   "description": "Layout stability and first-byte/paint timing.",
+   "title": "Web Vitals · CLS / TTFB / FCP",
+   "description": "Layout stability and first-byte / first-paint timing (Faro).",
    "datasource": {
     "type": "loki",
     "uid": "${DS_FARO}"
@@ -1800,7 +2241,7 @@
     "h": 7,
     "w": 8,
     "x": 12,
-    "y": 41
+    "y": 66
    },
    "id": 19,
    "transparent": true,
@@ -1874,7 +2315,7 @@
   {
    "type": "stat",
    "title": "Browser exceptions",
-   "description": "JS errors + unhandled rejections (Faro). Drill into Frontend Observability for stacks.",
+   "description": "JavaScript errors and unhandled rejections captured by Faro.",
    "datasource": {
     "type": "loki",
     "uid": "${DS_FARO}"
@@ -1883,7 +2324,7 @@
     "h": 7,
     "w": 4,
     "x": 20,
-    "y": 41
+    "y": 66
    },
    "id": 20,
    "transparent": true,
@@ -1917,7 +2358,7 @@
        "type": "value",
        "options": {
         "0": {
-         "text": "None \ud83c\udf89",
+         "text": "None 🎉",
          "color": "#73d13d"
         }
        }
@@ -1956,13 +2397,13 @@
   },
   {
    "type": "row",
-   "title": "LIVE GAME PERFORMANCE \u00b7 can Yatri move smoothly?",
+   "title": "LIVE GAME PERFORMANCE · frame rate and smoothness",
    "collapsed": false,
    "gridPos": {
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 48
+    "y": 73
    },
    "id": 21,
    "panels": []
@@ -1970,7 +2411,7 @@
   {
    "type": "timeseries",
    "title": "Sampled FPS by region",
-   "description": "Average FPS sampled ~every 2s (never per-frame), split by Nepal region.",
+   "description": "Average FPS sampled roughly every 2 seconds (never per-frame), split by region.",
    "datasource": {
     "type": "loki",
     "uid": "${DS_FARO}"
@@ -1979,7 +2420,7 @@
     "h": 7,
     "w": 12,
     "x": 0,
-    "y": 49
+    "y": 74
    },
    "id": 22,
    "transparent": true,
@@ -2042,7 +2483,7 @@
     {
      "refId": "A",
      "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_client_perf\" | unwrap value_fps [$__interval])",
-     "legendFormat": "FPS \u00b7 {{level}}"
+     "legendFormat": "FPS · {{level}}"
     }
    ],
    "links": [
@@ -2056,7 +2497,7 @@
   {
    "type": "heatmap",
    "title": "FPS distribution (heatmap)",
-   "description": "How smooth play actually feels across all players and devices.",
+   "description": "FPS distribution across all players and devices.",
    "datasource": {
     "type": "loki",
     "uid": "${DS_FARO}"
@@ -2065,7 +2506,7 @@
     "h": 7,
     "w": 12,
     "x": 12,
-    "y": 49
+    "y": 74
    },
    "id": 23,
    "transparent": true,
@@ -2099,8 +2540,8 @@
   },
   {
    "type": "bargauge",
-   "title": "\ud83e\udded Progression funnel \u00b7 how far pilgrims climb (D1)",
-   "description": "Distinct sessions reaching each stage. Live from /stats \u2192 funnel.",
+   "title": "Progression funnel · how far pilgrims climb",
+   "description": "Distinct sessions reaching each stage (D1).",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -2109,7 +2550,7 @@
     "h": 6,
     "w": 24,
     "x": 0,
-    "y": 56
+    "y": 81
    },
    "id": 24,
    "transparent": true,
@@ -2194,8 +2635,8 @@
    "type": "bargauge",
    "id": 53,
    "transparent": true,
-   "title": "\ud83e\uddd7 Climb intensity by region (D1)",
-   "description": "Where the action happens across Terai \u2192 Hills \u2192 Himal. Live from /stats \u2192 byLevel events.",
+   "title": "Climb intensity by region",
+   "description": "Activity across Terai, Hills, and Himal (D1).",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -2204,7 +2645,7 @@
     "h": 6,
     "w": 24,
     "x": 0,
-    "y": 62
+    "y": 87
    },
    "fieldConfig": {
     "defaults": {
@@ -2268,21 +2709,21 @@
   },
   {
    "type": "row",
-   "title": "YATRI'S JOURNEY \u00b7 deep gameplay analytics (D1 + Faro)",
+   "title": "YATRI'S JOURNEY · gameplay analytics",
    "collapsed": false,
    "gridPos": {
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 68
+    "y": 93
    },
    "id": 25,
    "panels": []
   },
   {
    "type": "barchart",
-   "title": "\ud83c\udfae Gameplay actions by type (D1)",
-   "description": "Every signal Yatri generates, by type. Live from /stats \u2192 eventsByType.",
+   "title": "Gameplay actions by type",
+   "description": "Every gameplay signal by type (D1).",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -2291,7 +2732,7 @@
     "h": 7,
     "w": 12,
     "x": 0,
-    "y": 69
+    "y": 94
    },
    "id": 26,
    "transparent": true,
@@ -2358,8 +2799,8 @@
   },
   {
    "type": "barchart",
-   "title": "Deaths by cause (from D1)",
-   "description": "Where the trail teaches players. Computed by the backend directly from D1 (GET /stats \u2192 deathsByCause).",
+   "title": "Deaths by cause",
+   "description": "Where the trail is hardest, computed from D1.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -2368,7 +2809,7 @@
     "h": 7,
     "w": 6,
     "x": 12,
-    "y": 69
+    "y": 94
    },
    "id": 27,
    "transparent": true,
@@ -2428,8 +2869,8 @@
   },
   {
    "type": "piechart",
-   "title": "Collectibles by kind (from D1)",
-   "description": "Marigold / rhododendron / blue-poppy / prayer-bell mix, from D1 (GET /stats \u2192 collectsByKind).",
+   "title": "Collectibles by kind",
+   "description": "Mix of blooms and prayer bells gathered (D1).",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -2438,7 +2879,7 @@
     "h": 7,
     "w": 6,
     "x": 18,
-    "y": 69
+    "y": 94
    },
    "id": 28,
    "transparent": true,
@@ -2509,8 +2950,8 @@
   },
   {
    "type": "barchart",
-   "title": "\ud83c\udfd4\ufe0f Journey by region \u00b7 events / deaths / completions (D1)",
-   "description": "How each region of Himal Rajya plays out. Live from /stats \u2192 byLevel.",
+   "title": "Journey by region · events / deaths / completions",
+   "description": "How each region of Himal Rajya plays out (D1).",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -2519,7 +2960,7 @@
     "h": 7,
     "w": 16,
     "x": 0,
-    "y": 76
+    "y": 101
    },
    "id": 29,
    "transparent": true,
@@ -2590,8 +3031,8 @@
   },
   {
    "type": "table",
-   "title": "Progression funnel (from D1)",
-   "description": "Distinct sessions reaching each stage, computed from D1 (GET /stats \u2192 funnel).",
+   "title": "Progression funnel",
+   "description": "Distinct sessions reaching each stage (D1).",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -2600,7 +3041,7 @@
     "h": 7,
     "w": 8,
     "x": 16,
-    "y": 76
+    "y": 101
    },
    "id": 30,
    "transparent": true,
@@ -2663,21 +3104,21 @@
   },
   {
    "type": "row",
-   "title": "SCORES & ENGAGEMENT \u00b7 the shared leaderboard (D1)",
+   "title": "SCORES & ENGAGEMENT · the shared leaderboard",
    "collapsed": false,
    "gridPos": {
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 83
+    "y": 108
    },
    "id": 31,
    "panels": []
   },
   {
    "type": "table",
-   "title": "\ud83c\udfd4\ufe0f Shared leaderboard \u2014 Top Pilgrims (live from D1)",
-   "description": "The real cross-player leaderboard, served by the Worker from D1 (GET /leaderboard).",
+   "title": "Shared leaderboard · top pilgrims",
+   "description": "The cross-player leaderboard, served by the Worker from D1.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -2686,7 +3127,7 @@
     "h": 8,
     "w": 12,
     "x": 0,
-    "y": 84
+    "y": 109
    },
    "id": 32,
    "transparent": true,
@@ -2809,8 +3250,8 @@
   },
   {
    "type": "stat",
-   "title": "Total completions (D1)",
-   "description": "Summit/level completions persisted in D1 (GET /stats \u2192 totals.completions).",
+   "title": "Total completions",
+   "description": "Level and summit completions persisted in D1.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -2819,7 +3260,7 @@
     "h": 4,
     "w": 4,
     "x": 12,
-    "y": 84
+    "y": 109
    },
    "id": 33,
    "transparent": true,
@@ -2874,8 +3315,8 @@
   },
   {
    "type": "stat",
-   "title": "Total events (D1)",
-   "description": "All gameplay events persisted in D1 (GET /stats \u2192 totals.events).",
+   "title": "Total events",
+   "description": "All gameplay events persisted in D1.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -2884,7 +3325,7 @@
     "h": 4,
     "w": 4,
     "x": 16,
-    "y": 84
+    "y": 109
    },
    "id": 34,
    "transparent": true,
@@ -2939,8 +3380,8 @@
   },
   {
    "type": "piechart",
-   "title": "\ud83c\udf3c Blooms & bells gathered (D1)",
-   "description": "Rhododendron blooms vs prayer bells collected. Live from /stats \u2192 collectsByKind.",
+   "title": "Blooms & bells gathered",
+   "description": "Rhododendron blooms versus prayer bells collected (D1).",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -2949,7 +3390,7 @@
     "h": 8,
     "w": 4,
     "x": 20,
-    "y": 84
+    "y": 109
    },
    "id": 35,
    "transparent": true,
@@ -3018,8 +3459,8 @@
   },
   {
    "type": "stat",
-   "title": "Avg FPS (last hour, D1)",
-   "description": "Average sampled client FPS recorded in D1. Live from /stats \u2192 avgFps.",
+   "title": "Average FPS · last hour",
+   "description": "Average sampled client FPS recorded in D1.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -3028,7 +3469,7 @@
     "h": 4,
     "w": 8,
     "x": 12,
-    "y": 92
+    "y": 117
    },
    "id": 36,
    "transparent": true,
@@ -3097,13 +3538,13 @@
   },
   {
    "type": "row",
-   "title": "WORLD & CONTEXT \u00b7 where the pilgrims play",
+   "title": "WORLD & CONTEXT · where the pilgrims play",
    "collapsed": false,
    "gridPos": {
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 96
+    "y": 121
    },
    "id": 37,
    "panels": []
@@ -3112,8 +3553,8 @@
    "type": "geomap",
    "id": 54,
    "transparent": true,
-   "title": "\ud83d\uddfa\ufe0f Pilgrims around the world \u00b7 by country",
-   "description": "Where Yatri's fellow travellers play (Cloudflare edge country). Live from D1 (/stats \u2192 topCountries).",
+   "title": "Pilgrims around the world · by country",
+   "description": "Where players connect from, by Cloudflare edge country (D1). No IP addresses are stored.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -3122,7 +3563,7 @@
     "h": 9,
     "w": 12,
     "x": 0,
-    "y": 97
+    "y": 122
    },
    "fieldConfig": {
     "defaults": {
@@ -3229,8 +3670,8 @@
   },
   {
    "type": "table",
-   "title": "Top countries (from D1)",
-   "description": "Coarse edge-country of sessions, from D1 (GET /stats \u2192 topCountries). No IPs stored.",
+   "title": "Top countries",
+   "description": "Edge country of sessions (D1). No IP addresses are stored.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -3239,7 +3680,7 @@
     "h": 9,
     "w": 6,
     "x": 12,
-    "y": 97
+    "y": 122
    },
    "id": 38,
    "transparent": true,
@@ -3292,8 +3733,8 @@
   },
   {
    "type": "table",
-   "title": "Events by type (from D1)",
-   "description": "Full breakdown of every persisted gameplay signal (GET /stats \u2192 eventsByType).",
+   "title": "Events by type",
+   "description": "Full breakdown of every persisted gameplay signal (D1).",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -3302,7 +3743,7 @@
     "h": 9,
     "w": 6,
     "x": 18,
-    "y": 97
+    "y": 122
    },
    "id": 39,
    "transparent": true,
@@ -3355,18 +3796,18 @@
   },
   {
    "type": "text",
-   "title": "Architecture \u2014 Cloudflare + Grafana Cloud",
+   "title": "Architecture",
    "gridPos": {
     "h": 4,
     "w": 24,
     "x": 0,
-    "y": 106
+    "y": 131
    },
    "id": 40,
    "transparent": true,
    "options": {
     "mode": "markdown",
-    "content": "## Cloud Yatra \u2014 Grand Observatory\n\n**Browser (Phaser)** \u2192 **Cloudflare Pages** (static game)\n\n**Browser** \u2192 **Cloudflare Worker** `cloud-yatra-api` \u2192 **Cloudflare D1** (SQLite)\n\n**Signals into Grafana Cloud:**\n- Frontend RUM + gameplay \u2192 **Faro** (Loki)\n- Backend request metrics & histograms \u2192 **Prometheus** (`/metrics`)\n- Backend structured logs \u2192 **Loki**\n- Backend request traces \u2192 **Tempo**\n- D1-derived gameplay analytics \u2192 **Infinity** (`/stats`, `/leaderboard`)\n\nEverything is free-tier: Cloudflare Pages + Workers + D1, Grafana Cloud free."
+    "content": "**Browser (Phaser)** → **Cloudflare Pages** — the static game.\n\n**Browser** → **Cloudflare Worker** `cloud-yatra-api` → **Cloudflare D1** (SQLite).\n\n**Signals into Grafana Cloud**\n- Frontend RUM and gameplay events → **Faro** (Loki)\n- Backend request metrics and histograms → **Prometheus** (`/metrics`)\n- Backend structured logs → **Loki**\n- Backend request traces → **Tempo**\n- Database-derived gameplay analytics → **Infinity** (`/stats`, `/leaderboard`)\n\nRuns entirely on free tiers: Cloudflare Pages, Workers, and D1, plus Grafana Cloud free."
    },
    "fieldConfig": {
     "defaults": {
@@ -3377,12 +3818,12 @@
   {
    "type": "row",
    "collapsed": false,
-   "title": "CHAOS MODE \u00b7 demo the dashboard reacting (admin-triggered, self-only, ~60s)",
+   "title": "CHAOS MODE · fault injection and recovery (admin-triggered, ~60s)",
    "gridPos": {
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 110
+    "y": 135
    },
    "id": 41,
    "panels": []
@@ -3391,7 +3832,7 @@
    "type": "stat",
    "title": "Chaos active",
    "id": 42,
-   "description": "1 while an admin-triggered chaos window is injecting faults into the gameplay routes. Source: cy_chaos_active gauge.",
+   "description": "1 while a chaos window is injecting faults into the gameplay routes (cy_chaos_active).",
    "datasource": {
     "type": "prometheus",
     "uid": "${DS_PROM}"
@@ -3400,7 +3841,7 @@
     "h": 6,
     "w": 4,
     "x": 0,
-    "y": 111
+    "y": 136
    },
    "transparent": true,
    "fieldConfig": {
@@ -3417,7 +3858,7 @@
          "color": "#73d13d"
         },
         "1": {
-         "text": "\u26a1 CHAOS",
+         "text": "⚡ CHAOS",
          "color": "#e0294a"
         }
        }
@@ -3464,9 +3905,9 @@
   },
   {
    "type": "timeseries",
-   "title": "Chaos-injected requests / sec (by route)",
+   "title": "Chaos-injected requests / sec by route",
    "id": 43,
-   "description": "Rate of gameplay requests perturbed by chaos (extra latency and/or synthetic 503). Source: cy_chaos_injected_total.",
+   "description": "Rate of gameplay requests perturbed by injected latency or synthetic 503s (cy_chaos_injected_total).",
    "datasource": {
     "type": "prometheus",
     "uid": "${DS_PROM}"
@@ -3475,7 +3916,7 @@
     "h": 6,
     "w": 20,
     "x": 4,
-    "y": 111
+    "y": 136
    },
    "fieldConfig": {
     "defaults": {
@@ -3540,7 +3981,7 @@
    "type": "table",
    "title": "Recent chaos episodes",
    "id": 45,
-   "description": "Start/stop/expire markers from the Worker's /chaos/events feed (Infinity datasource).",
+   "description": "Start, stop, and expiry markers from the Worker's chaos feed.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -3549,7 +3990,7 @@
     "h": 7,
     "w": 24,
     "x": 0,
-    "y": 117
+    "y": 142
    },
    "fieldConfig": {
     "defaults": {

@@ -115,7 +115,7 @@ export default {
     const durationMs = Date.now() - startMs;
     const sclass = statusClass(response.status);
     inc('cy_api_requests_total', { route, status_class: sclass }, 'HTTP requests by route/status');
-    observe('cy_api_request_duration_ms', durationMs, { route }, 'Request duration (ms)');
+    observe('cy_api_request_duration_ms', durationMs, { route }, 'Request duration (ms)', traceId);
     // Surface chaos as a first-class gauge so the dashboard can show + annotate it.
     setGauge('cy_chaos_active', isActive() ? 1 : 0, {}, 'Chaos mode active (1=on)');
 

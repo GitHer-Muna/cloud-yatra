@@ -89,7 +89,7 @@
    }
   ]
  },
- "description": "Cloud Yatra \u2014 Grand Observatory. A dark, presentation-ready, full-stack story: live pulse \u2192 Cloudflare Worker + D1 backend health (metrics, logs, traces) \u2192 browser RUM \u2192 game performance \u2192 Yatri's deep gameplay analytics \u2192 the shared D1 leaderboard. Frontend (Faro) + backend (Prometheus/Loki/Tempo) + database (D1 via Infinity).",
+ "description": "Live telemetry from Cloud Yatra: browser real-user monitoring and in-game performance from Faro, plus gameplay analytics and the shared leaderboard from the backend database. Updates in near-real-time as people play.",
  "editable": true,
  "graphTooltip": 1,
  "liveNow": true,
@@ -97,15 +97,10 @@
  "schemaVersion": 39,
  "tags": [
   "cloud-yatra",
-  "cloudflare",
-  "d1",
-  "faro",
-  "full-stack",
-  "graduation",
-  "himal-rajya",
-  "nepal",
   "observability",
-  "worker"
+  "cloudflare",
+  "faro",
+  "rum"
  ],
  "templating": {
   "list": []
@@ -132,9 +127,9 @@
   ]
  },
  "timezone": "",
- "title": "Cloud Yatra \u00b7 Live Observatory (public)",
+ "title": "Cloud Yatra · Live Observatory",
  "uid": "cloud-yatra-public",
- "version": 3,
+ "version": 4,
  "panels": [
   {
    "type": "text",
@@ -148,13 +143,13 @@
    },
    "options": {
     "mode": "markdown",
-    "content": "<div style=\"display:flex;align-items:center;gap:16px;padding:6px 10px;background:linear-gradient(90deg,#0b1020 0%,#20357a 40%,#c0392b 70%,#f6b73c 100%);border-radius:10px;color:#fff;\"><div style=\"font-size:30px;line-height:1\">\ud83c\udfd4\ufe0f</div><div><div style=\"font-size:20px;font-weight:700;letter-spacing:.3px\">Cloud Yatra \u00b7 Grand Observatory</div><div style=\"opacity:.9;font-size:12px\">Yatri's climb through Himal Rajya \u2014 a full-stack live telemetry story: <b>browser \u2192 Faro</b> \u00b7 <b>Worker \u2192 Prometheus/Loki/Tempo</b> \u00b7 <b>D1 \u2192 Infinity</b>. Play at <b>cloud-yatra.pages.dev</b> and watch your run appear below.</div></div><div style=\"margin-left:auto;text-align:right;font-size:11px;opacity:.85\">\ud83d\udfe2 healthy&nbsp;&nbsp;\ud83d\udfe1 strained&nbsp;&nbsp;\ud83d\udd34 danger / chaos</div></div>"
+    "content": "<div style=\"display:flex;align-items:center;gap:16px;padding:6px 10px;background:linear-gradient(90deg,#0b1020 0%,#20357a 40%,#c0392b 70%,#f6b73c 100%);border-radius:10px;color:#fff;\"><div style=\"font-size:30px;line-height:1\">🏔️</div><div><div style=\"font-size:20px;font-weight:700;letter-spacing:.3px\">Cloud Yatra · Live Observatory</div><div style=\"opacity:.9;font-size:12px\">Live telemetry from Yatri's climb through Himal Rajya. Play at <b>cloud-yatra.pages.dev</b>; the panels below update as people play.</div></div><div style=\"margin-left:auto;text-align:right;font-size:11px;opacity:.85\">🟢 healthy&nbsp;&nbsp;🟡 strained&nbsp;&nbsp;🔴 danger</div></div>"
    }
   },
   {
    "type": "timeseries",
-   "title": "Web Vitals \u00b7 LCP / INP (p95)",
-   "description": "Real-user loading and interaction latency from Faro web-vitals.",
+   "title": "Web vitals · LCP / INP (p95)",
+   "description": "Real-user loading and interaction latency from Faro web vitals.",
    "datasource": {
     "type": "loki",
     "uid": "${DS_FARO}"
@@ -238,8 +233,8 @@
   },
   {
    "type": "timeseries",
-   "title": "Web Vitals \u00b7 CLS / TTFB / FCP",
-   "description": "Layout stability and first-byte/paint timing.",
+   "title": "Web vitals · CLS / TTFB / FCP",
+   "description": "Layout stability and first-byte / first-paint timing.",
    "datasource": {
     "type": "loki",
     "uid": "${DS_FARO}"
@@ -322,7 +317,7 @@
   {
    "type": "timeseries",
    "title": "Sampled FPS by region",
-   "description": "Average FPS sampled ~every 2s (never per-frame), split by Nepal region.",
+   "description": "Average FPS sampled roughly every 2 seconds, split by region.",
    "datasource": {
     "type": "loki",
     "uid": "${DS_FARO}"
@@ -394,7 +389,7 @@
     {
      "refId": "A",
      "expr": "avg_over_time({kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"game_client_perf\" | unwrap value_fps [$__interval])",
-     "legendFormat": "FPS \u00b7 {{level}}"
+     "legendFormat": "FPS · {{level}}"
     }
    ],
    "links": [
@@ -407,8 +402,8 @@
   },
   {
    "type": "heatmap",
-   "title": "FPS distribution (heatmap)",
-   "description": "How smooth play actually feels across all players and devices.",
+   "title": "FPS distribution",
+   "description": "How smooth play feels across all players and devices.",
    "datasource": {
     "type": "loki",
     "uid": "${DS_FARO}"
@@ -451,8 +446,8 @@
   },
   {
    "type": "bargauge",
-   "title": "\ud83e\udded Progression funnel \u00b7 how far pilgrims climb (D1)",
-   "description": "Distinct sessions reaching each stage. Live from /stats \u2192 funnel.",
+   "title": "🧭 Progression funnel · how far pilgrims climb",
+   "description": "Distinct sessions reaching each stage.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -546,8 +541,8 @@
    "type": "bargauge",
    "id": 53,
    "transparent": true,
-   "title": "\ud83e\uddd7 Climb intensity by region (D1)",
-   "description": "Where the action happens across Terai \u2192 Hills \u2192 Himal. Live from /stats \u2192 byLevel events.",
+   "title": "🧗 Climb intensity by region",
+   "description": "Activity across Terai, Hills, and Himal.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -620,8 +615,8 @@
   },
   {
    "type": "barchart",
-   "title": "\ud83c\udfae Gameplay actions by type (D1)",
-   "description": "Every signal Yatri generates, by type. Live from /stats \u2192 eventsByType.",
+   "title": "🎮 Gameplay actions by type",
+   "description": "Every gameplay signal, by type.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -697,8 +692,8 @@
   },
   {
    "type": "barchart",
-   "title": "Deaths by cause (from D1)",
-   "description": "Where the trail teaches players. Computed by the backend directly from D1 (GET /stats \u2192 deathsByCause).",
+   "title": "Deaths by cause",
+   "description": "Where the trail is hardest for players.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -767,8 +762,8 @@
   },
   {
    "type": "piechart",
-   "title": "Collectibles by kind (from D1)",
-   "description": "Marigold / rhododendron / blue-poppy / prayer-bell mix, from D1 (GET /stats \u2192 collectsByKind).",
+   "title": "Collectibles by kind",
+   "description": "The mix of blooms and prayer bells gathered.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -848,8 +843,8 @@
   },
   {
    "type": "barchart",
-   "title": "\ud83c\udfd4\ufe0f Journey by region \u00b7 events / deaths / completions (D1)",
-   "description": "How each region of Himal Rajya plays out. Live from /stats \u2192 byLevel.",
+   "title": "🏔️ Journey by region · events / deaths / completions",
+   "description": "How each region of Himal Rajya plays out.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -929,8 +924,8 @@
   },
   {
    "type": "table",
-   "title": "\ud83c\udfd4\ufe0f Shared leaderboard \u2014 Top Pilgrims (live from D1)",
-   "description": "The real cross-player leaderboard, served by the Worker from D1 (GET /leaderboard).",
+   "title": "🏔️ Shared leaderboard · top pilgrims",
+   "description": "The cross-player leaderboard.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -1062,8 +1057,8 @@
   },
   {
    "type": "stat",
-   "title": "Total completions (D1)",
-   "description": "Summit/level completions persisted in D1 (GET /stats \u2192 totals.completions).",
+   "title": "Total completions",
+   "description": "Level and summit completions recorded.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -1127,8 +1122,8 @@
   },
   {
    "type": "stat",
-   "title": "Total events (D1)",
-   "description": "All gameplay events persisted in D1 (GET /stats \u2192 totals.events).",
+   "title": "Total events",
+   "description": "All gameplay events recorded.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -1192,8 +1187,8 @@
   },
   {
    "type": "piechart",
-   "title": "\ud83c\udf3c Blooms & bells gathered (D1)",
-   "description": "Rhododendron blooms vs prayer bells collected. Live from /stats \u2192 collectsByKind.",
+   "title": "🌼 Blooms & bells gathered",
+   "description": "Rhododendron blooms versus prayer bells collected.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -1271,8 +1266,8 @@
   },
   {
    "type": "stat",
-   "title": "Avg FPS (last hour, D1)",
-   "description": "Average sampled client FPS recorded in D1. Live from /stats \u2192 avgFps.",
+   "title": "Average FPS · last hour",
+   "description": "Average sampled client frame rate.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -1352,8 +1347,8 @@
    "type": "geomap",
    "id": 54,
    "transparent": true,
-   "title": "\ud83d\uddfa\ufe0f Pilgrims around the world \u00b7 by country",
-   "description": "Where Yatri's fellow travellers play (Cloudflare edge country). Live from D1 (/stats \u2192 topCountries).",
+   "title": "🗺️ Pilgrims around the world",
+   "description": "Where players connect from, by edge country. No IP addresses are stored.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -1469,8 +1464,8 @@
   },
   {
    "type": "table",
-   "title": "Top countries (from D1)",
-   "description": "Coarse edge-country of sessions, from D1 (GET /stats \u2192 topCountries). No IPs stored.",
+   "title": "Top countries",
+   "description": "Edge country of sessions. No IP addresses are stored.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"
@@ -1532,8 +1527,8 @@
   },
   {
    "type": "table",
-   "title": "Events by type (from D1)",
-   "description": "Full breakdown of every persisted gameplay signal (GET /stats \u2192 eventsByType).",
+   "title": "Events by type",
+   "description": "Full breakdown of every gameplay signal.",
    "datasource": {
     "type": "yesoreyeram-infinity-datasource",
     "uid": "${DS_INFINITY}"

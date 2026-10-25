@@ -300,6 +300,22 @@ describe('/metrics', () => {
     expect(text).toContain('cy_api_requests_total');
     expect(text).toContain('# TYPE cy_api_request_duration_ms histogram');
   });
+
+  it('emits an OpenMetrics trace_id exemplar on the duration histogram', async () => {
+    // Any handled request records the request duration with the request's traceId as an
+    // exemplar, so at least one `_bucket` line carries a `# {trace_id="..."} <v> <ts>`
+    // suffix that a latency panel can use to jump to the Tempo trace.
+    await call('GET', '/healthz');
+    const text = await (await call('GET', '/metrics')).text();
+    const bucketLines = text
+      .split('\n')
+      .filter((l) => l.startsWith('cy_api_request_duration_ms_bucket'));
+    expect(bucketLines.length).toBeGreaterThan(0);
+    const exemplarLine = bucketLines.find((l) => l.includes('# {trace_id="'));
+    expect(exemplarLine).toBeDefined();
+    // The exemplar must be well-formed: `# {trace_id="<hex>"} <value> <unixSeconds>`.
+    expect(exemplarLine).toMatch(/ # \{trace_id="[0-9a-f]+"\} \d+(\.\d+)? \d+(\.\d+)?$/);
+  });
 });
 
 /** Like call() but with extra headers (used for the chaos admin token). */
