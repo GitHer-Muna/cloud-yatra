@@ -146,6 +146,37 @@
         gap: 12px;
         margin-top: 8px;
       }
+      /* Your latest run — your own session, highlighted above the shared stats. */
+      #cy-yourrun {
+        margin-top: 10px;
+        padding: 14px 16px 16px;
+        border: 1px solid rgba(243, 198, 35, 0.4);
+        border-radius: 14px;
+        background: linear-gradient(145deg, rgba(40, 53, 122, 0.28), rgba(12, 24, 41, 0.35));
+      }
+      #cy-yourrun .cy-yourrun-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      #cy-yourrun h3 {
+        margin: 0;
+        font-size: 15px;
+        color: #f6b73c;
+        letter-spacing: 0.02em;
+      }
+      #cy-yourrun .cy-yourrun-head a {
+        font-size: 12px;
+        color: #8ecbff;
+      }
+      #cy-yourrun-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+      }
       .cy-tile {
         background: linear-gradient(145deg, rgba(23, 46, 77, 0.9), rgba(12, 24, 41, 0.9));
         border: 1px solid rgba(142, 203, 255, 0.18);
@@ -343,6 +374,20 @@
       <!-- Full Grafana dashboard, embedded directly below the game. Only appears when a
            framable Grafana *public dashboard* URL is configured (VITE_GRAFANA_DASHBOARD_URL). -->
       <div id="cy-grafana-embed" hidden></div>
+
+      <!-- Your latest run: this browser's own session, read live from D1 via /session.
+           Public Grafana dashboards can't filter by a per-player variable, so this
+           personal view lives on the page (which knows your anonymous session id). -->
+      <div id="cy-yourrun" hidden>
+        <div class="cy-yourrun-head">
+          <h3>Your latest run</h3>
+        </div>
+        <div id="cy-yourrun-grid"></div>
+        <p id="cy-yourrun-empty" class="cy-tile-sub" style="margin:4px 2px 0">
+          Play a run and your own stats appear here within a few seconds.
+        </p>
+      </div>
+
       <div id="cy-obs-grid"></div>
       <p style="margin-top:14px;font-size:12px;color:#7fa8c7">
         Want the full-stack Grafana view (metrics, logs, traces, SLOs)?
@@ -375,6 +420,19 @@
       const empty = document.getElementById('cy-observatory-empty');
       const status = document.getElementById('cy-observatory-status');
       const gLink = document.getElementById('cy-obs-grafana-link');
+
+      // Your-latest-run elements + the anonymous per-tab session id (same sessionStorage
+      // key the telemetry pipeline uses in src/telemetry/ids.ts), so this page can ask the
+      // backend for THIS run's stats via /session?id=.
+      const yourRunBox = document.getElementById('cy-yourrun');
+      const yourRunGrid = document.getElementById('cy-yourrun-grid');
+      const yourRunEmpty = document.getElementById('cy-yourrun-empty');
+      let sessionId = '';
+      try {
+        sessionId = globalThis.sessionStorage?.getItem('cloud-yatra.sessionId') || '';
+      } catch {
+        /* sessionStorage blocked — the your-run section simply stays hidden */
+      }
 
       if (grafanaUrl && gLink) {
         gLink.href = grafanaUrl;
@@ -452,6 +510,56 @@
           `</div>`;
       }
 
+      // Your latest run: fetch THIS browser's session rollup from D1 and render personal
+      // tiles. Keyed to the anonymous per-tab session id (no PII). Shown only when a
+      // backend is configured and the session has produced at least one event.
+      async function refreshYourRun() {
+        if (!apiBase || !yourRunBox) return;
+        if (document.hidden) return;
+        // Re-read each tick: the game creates the session id on first play, which may be
+        // after this page first loaded, so pick it up as soon as it exists.
+        if (!sessionId) {
+          try {
+            sessionId = globalThis.sessionStorage?.getItem('cloud-yatra.sessionId') || '';
+          } catch {
+            /* blocked */
+          }
+        }
+        if (!sessionId) return;
+        try {
+          const res = await fetch(`${apiBase}/session?id=${encodeURIComponent(sessionId)}`, {
+            headers: { Accept: 'application/json' },
+          });
+          if (!res.ok) return; // leave the previous view; next tick retries
+          const data = await res.json();
+          const r = (data.session && data.session[0]) || null;
+          yourRunBox.hidden = false;
+          if (!r || !r.found || (r.eventCount ?? 0) === 0) {
+            yourRunGrid.innerHTML = '';
+            yourRunEmpty.hidden = false;
+            return;
+          }
+          yourRunEmpty.hidden = true;
+          const region =
+            (r.maxProgress ?? 0) >= 99
+              ? 'Summit'
+              : (r.maxProgress ?? 0) >= 66
+                ? 'Himal'
+                : (r.maxProgress ?? 0) >= 33
+                  ? 'Hills'
+                  : 'Terai';
+          yourRunGrid.innerHTML =
+            tile('Best score', num(r.bestScore)) +
+            tile('Progress', `${Math.round(r.maxProgress ?? 0)}%`, `reached ${region}`) +
+            tile('Completions', num(r.completed)) +
+            tile('Falls', num(r.deaths)) +
+            tile('Jumps', num(r.jumps)) +
+            tile('Collectibles', num((r.collects ?? 0) + (r.bells ?? 0)), `🌸 ${num(r.collects)}  ·  🔔 ${num(r.bells)}`);
+        } catch {
+          /* transient — keep the last render, retry next interval */
+        }
+      }
+
       async function refresh() {
         if (!apiBase) {
           grid.hidden = true;
@@ -500,9 +608,16 @@
       // a 6× reduction while still feeling live. Re-fetch immediately when a hidden tab is
       // brought back to the foreground so it's fresh on return.
       refresh();
+      refreshYourRun();
       setInterval(refresh, 30000);
+      // Your-run polls faster (10s): /session is a single-row lookup (cheap, unlike the
+      // full-table /stats aggregates), so a fresh run shows up promptly after playing.
+      setInterval(refreshYourRun, 10000);
       document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) refresh();
+        if (!document.hidden) {
+          refresh();
+          refreshYourRun();
+        }
       });
     </script>
     <script type="module" src="/src/main.ts"></script>
