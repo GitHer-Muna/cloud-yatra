@@ -6,6 +6,12 @@
 import Phaser from 'phaser';
 
 const TEXTURE_KEY = 'eagle';
+// Logical (display) size of the eagle. The texture is rendered at SS× this resolution and
+// then shown at the logical size, so the FIT camera upscale stays crisp instead of
+// washed-out/blurry (which is what made the eagle look faint and faded before).
+const EAGLE_W = 58;
+const EAGLE_H = 34;
+const SS = 3; // supersample factor
 
 export class Eagle extends Phaser.Physics.Arcade.Sprite {
   private minX: number;
@@ -19,13 +25,17 @@ export class Eagle extends Phaser.Physics.Arcade.Sprite {
     super(scene, x, y, TEXTURE_KEY);
     scene.add.existing(this);
     scene.physics.add.existing(this);
+    // The texture is SS× oversampled; display it at the logical size so it reads sharp
+    // (crisp dark silhouette) under the camera's FIT upscale.
+    this.setDisplaySize(EAGLE_W, EAGLE_H);
     const body = this.body as Phaser.Physics.Arcade.Body;
     body.setAllowGravity(false);
     body.setImmovable(true);
     // Hit only the BODY, not the full wingspan — the spread wings are visual, so the
-    // player isn't killed by a feather tip. (Texture is 58×34; body is the central mass.)
-    body.setSize(26, 16);
-    body.setOffset((58 - 26) / 2, (34 - 16) / 2);
+    // player isn't killed by a feather tip. (Logical size is 58×34; body is the central
+    // mass.) setSize/offset are in TEXTURE (oversampled) pixels, so scale by SS.
+    body.setSize(26 * SS, 16 * SS);
+    body.setOffset(((EAGLE_W - 26) / 2) * SS, ((EAGLE_H - 16) / 2) * SS);
     this.setDepth(1);
 
     this.minX = x - range / 2;
@@ -96,23 +106,31 @@ export class Eagle extends Phaser.Physics.Arcade.Sprite {
     // edges shimmer — which read as the eagle "blinking" and looking washed-out/faded.
     // Gliding without the micro-rotation keeps the silhouette crisp and solid at all times.
     const t = (this.x - this.minX) / Math.max(1, this.maxX - this.minX);
-    this.y = this.baseY + Math.sin(t * Math.PI) * 46;
+    // Round the swoop height to a whole pixel. The eagle texture is tiny (58×34) and the
+    // camera upscales it (FIT scale). A fractional Y under roundPixels snaps the sprite
+    // between two pixel rows every frame → an edge shimmer that reads as "blinking". Keeping
+    // Y on an integer row makes the silhouette rock-solid and stops the flicker entirely.
+    this.y = Math.round(this.baseY + Math.sin(t * Math.PI) * 46);
     (this.body as Phaser.Physics.Arcade.Body).updateFromGameObject?.();
   }
 
   private static ensureTexture(scene: Phaser.Scene): void {
     if (scene.textures.exists(TEXTURE_KEY)) return;
     const g = scene.add.graphics();
-    const w = 58;
-    const h = 34;
+    // Draw everything scaled up by SS so the generated texture has SS× the pixels. The
+    // sprite is then shown at the logical EAGLE_W×EAGLE_H size (see constructor), keeping
+    // the silhouette crisp and dark under the camera upscale (no faded/blurry edges).
+    g.setScale(SS);
+    const w = EAGLE_W;
+    const h = EAGLE_H;
     const cx = w / 2;
     const cy = h / 2;
-    const outline = 0x241403; // near-black brown outline for a bold silhouette
-    const bodyC = 0x5a3410; // deep, saturated chocolate-brown body
-    const wingC = 0x3f2409; // darker wings for contrast against the body
-    const wingTip = 0xc79a5a; // warm golden feather tips
-    const headC = 0xb9822f; // golden-brown head (a Himalayan golden-eagle cue)
-    const beakC = 0xf3a81b;
+    const outline = 0x1a0e02; // near-black brown outline for a bold, solid silhouette
+    const bodyC = 0x4a2a0b; // deep, dark chocolate-brown body (never washed-out)
+    const wingC = 0x2e1a06; // very dark wings for strong contrast against the sky
+    const wingTip = 0xb07f3c; // warm golden feather tips (kept, but a touch deeper)
+    const headC = 0xa06f22; // golden-brown head (a Himalayan golden-eagle cue)
+    const beakC = 0xe09413;
 
     // Outline pass: draw each shape slightly larger in the outline colour first.
     const drawBird = (fillBody: number, fillWing: number, grow: number): void => {
@@ -150,7 +168,7 @@ export class Eagle extends Phaser.Physics.Arcade.Sprite {
     g.fillStyle(outline, 1);
     g.fillCircle(cx + 11.5, cy - 3, 0.9);
 
-    g.generateTexture(TEXTURE_KEY, w, h);
+    g.generateTexture(TEXTURE_KEY, w * SS, h * SS);
     g.destroy();
   }
 }

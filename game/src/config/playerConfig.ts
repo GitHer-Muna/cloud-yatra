@@ -7,12 +7,16 @@
 export const PLAYER = {
   // Movement feel.
   moveSpeed: 250, // horizontal px/s
-  // Jump impulse. Lowered from 560 → 480 so the jump is less floaty/high (height
-  // 157px→115px, air-time 1.12s→0.96s). 480 is still comfortably within the LEVEL
-  // DEMANDS — the widest platform gap is 225px needing flight ≥225 (480 gives 240) and
-  // the tallest rise is 80px needing height ≥80 (480 gives 115). The levels.test.ts
-  // accessibility checks guard this: anything lower than ~460 would make a gap unreachable.
-  jumpVelocity: 480, // upward impulse (bigger = higher)
+  // Jump impulse. Set to 520 so every collectible on a platform top is COMFORTABLY
+  // reachable (not a pixel-perfect max jump). With GRAVITY_Y=1000 this gives:
+  //   max height = 520²/(2·1000) = 135.2px  (tallest platform rise is 80px → big margin)
+  //   air-time   = 2·520/1000    = 1.04s
+  //   h-flight   = 250·1.04      = 260px     (widest platform gap ≈225px → clears it)
+  // Blooms/bells that sit on elevated platforms now have ~55px of headroom over the
+  // tallest rise, so grabbing them never requires a frame-perfect jump. The
+  // levels.test.ts accessibility checks derive their bounds from this value, so they
+  // continue to guard that no gap/rise ever exceeds what the jump can clear.
+  jumpVelocity: 520, // upward impulse (bigger = higher)
   airControl: 0.9,
 
   // Forgiving-platformer feel.

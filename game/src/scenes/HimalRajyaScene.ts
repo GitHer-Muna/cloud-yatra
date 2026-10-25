@@ -167,6 +167,8 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.rockfalls = [];
     this.cuttables = [];
     this.checkpoints = [];
+    // Stable baked-backdrop texture keys per level build (reused across scene.restart()).
+    this.bakeSeq = 0;
 
     this.physics.world.setBounds(0, 0, this.worldWidth, WORLD_HEIGHT);
     this.cameras.main.setBounds(0, 0, this.worldWidth, WORLD_HEIGHT);
@@ -291,6 +293,8 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.hud.setScore(this.score);
     this.hud.setLives(this.yatri.getLives());
     this.hud.setCombo(0);
+    // Show which backdrop render path is active (helps A/B the Edge frame rate).
+    this.hud.setFpsMode(this.disableBake ? 'nobake (live Graphics)' : 'baked');
     this.hud.showIntro(2600, `Level ${this.level.index} — ${this.level.name}`, this.level.subtitle);
 
     this.statusText = this.add
@@ -1302,6 +1306,51 @@ export class HimalRajyaScene extends Phaser.Scene {
 
   // --- background builders (visual only) ---
 
+  // Monotonic counter so each baked backdrop texture gets a unique key per scene build.
+  private bakeSeq = 0;
+  // A/B test switch: add `?nobake=1` to the URL to DISABLE backdrop baking and keep the
+  // old live-Graphics path, so you can measure the Edge frame rate both ways (the HUD
+  // shows which mode is active). Default (no flag) = baking ON (the fast path).
+  private readonly disableBake =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).has('nobake');
+
+  /**
+   * PERFORMANCE: the backdrops below are STATIC art — drawn once, never animated. Left as
+   * live Phaser `Graphics`, every one of them re-tessellates and re-uploads its (often
+   * hundreds of) vector fills to the GPU EVERY FRAME. On a browser whose WebGL compositor
+   * path is weaker/throttled — notably Microsoft Edge, which was the one reported as
+   * sluggish while Chrome/Brave/Firefox were smooth — that per-frame vector cost is enough
+   * to drop the frame rate, which (with the real-delta loop) reads as heavy, "hard to move"
+   * controls.
+   *
+   * `bakeStatic` flattens a finished Graphics into a single texture and replaces it with a
+   * one-quad `Image` at the same world position, depth and parallax scroll factor. A quad
+   * costs essentially nothing per frame, so the backdrop stops competing with gameplay for
+   * GPU time on every browser. The look is pixel-identical; only the cost changes.
+   *
+   * We bake over the full world extent (worldWidth ≤ 3800 < the 4096 GPU texture limit) so
+   * world-space draw coordinates map 1:1 into the texture and the Image sits at (0,0).
+   */
+  private bakeStatic(g: Phaser.GameObjects.Graphics): void {
+    // A/B test: `?nobake=1` keeps the live Graphics (slow path) for measurement.
+    if (this.disableBake) return;
+    const scrollX = g.scrollFactorX;
+    const scrollY = g.scrollFactorY;
+    const depth = g.depth;
+    const key = `cy-bake-${this.level.id}-${this.bakeSeq++}`;
+    // Reuse across restarts if present (textures persist on the global TextureManager).
+    if (!this.textures.exists(key)) {
+      g.generateTexture(key, this.worldWidth, WORLD_HEIGHT);
+    }
+    g.destroy();
+    this.add
+      .image(0, 0, key)
+      .setOrigin(0, 0)
+      .setScrollFactor(scrollX, scrollY)
+      .setDepth(depth);
+  }
+
   private createSky(): void {
     const g = this.add.graphics().setScrollFactor(0).setDepth(-100);
     // Vertical gradient via stacked bands (arcade-simple, original), from the palette.
@@ -1355,6 +1404,7 @@ export class HimalRajyaScene extends Phaser.Scene {
       const h = 60 + Math.sin(x / 90) * 20;
       far.fillCircle(x, horizon, h * 0.7);
     }
+    this.bakeStatic(far);
 
     // Mid sal-forest tree silhouettes (trunk + rounded canopy), warm greens.
     const mid = this.add.graphics().setScrollFactor(0.3).setDepth(-82);
@@ -1375,6 +1425,7 @@ export class HimalRajyaScene extends Phaser.Scene {
       const canopy = i % 2 === 0 ? 0x3f7d34 : 0x2f6a2a;
       tree(x, scale, canopy, 0x5a3d24);
     }
+    this.bakeStatic(mid);
 
     // Tall grass fringe near the ground (near layer, brighter warm green).
     const grass = this.add.graphics().setScrollFactor(0.55).setDepth(-70);
@@ -1391,6 +1442,7 @@ export class HimalRajyaScene extends Phaser.Scene {
       grass.fillStyle(this.palette.accent, 0.95);
       grass.fillCircle(x, gy - 10, 4);
     }
+    this.bakeStatic(grass);
   }
 
   // ===================== HILLS backdrop =====================
@@ -1444,6 +1496,8 @@ export class HimalRajyaScene extends Phaser.Scene {
     };
     drawRidge(WORLD_HEIGHT * 0.58, 30, 0x9ec493, 0.55);
     drawRidge(WORLD_HEIGHT * 0.66, 40, 0x79ad6e, 0.7);
+    this.bakeStatic(haze);
+    this.bakeStatic(ridge);
   }
 
   private createHimalaya(): void {
@@ -1579,6 +1633,8 @@ export class HimalRajyaScene extends Phaser.Scene {
     mid.lineTo(fx - 40, apex + 224);
     mid.closePath();
     mid.fillPath();
+    this.bakeStatic(far);
+    this.bakeStatic(mid);
   }
 
   /**
@@ -1615,6 +1671,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     band(WORLD_HEIGHT * 0.54, 56, 0x8fc47f, terraceLip, terraceLine); // far, pale
     band(WORLD_HEIGHT * 0.66, 80, 0x5fa64f, terraceLip, terraceLine); // mid
     band(WORLD_HEIGHT * 0.8, 120, 0x3f8a37, terraceLip, terraceLine); // near, deep green
+    this.bakeStatic(g);
   }
 
   /**
@@ -1642,6 +1699,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     for (let x = 520, i = 0; x < this.worldWidth; x += 620, i++) {
       bush(x, baseY + (i % 2) * 14, 0.9 + (i % 3) * 0.12);
     }
+    this.bakeStatic(g);
   }
 
   private createPagoda(): void {
@@ -1712,6 +1770,7 @@ export class HimalRajyaScene extends Phaser.Scene {
 
     drawPagoda(1350, WORLD_HEIGHT * 0.62);
     drawStupa(2500, WORLD_HEIGHT * 0.6);
+    this.bakeStatic(g);
 
     // --- A spinning PRAYER WHEEL (mani wheel): golden cylinder with vertical ribs that
     //     rotates — a constant sight along Nepali pilgrim paths. ---
@@ -1773,6 +1832,7 @@ export class HimalRajyaScene extends Phaser.Scene {
         g.fillRect(px - 1, py, 11, 15);
       }
     }
+    this.bakeStatic(g);
   }
 
   // ===================== HIMAL (high snow) backdrop =====================
@@ -1827,6 +1887,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     for (let x = 200, i = 0; x < this.worldWidth + 400; x += 620, i++) {
       bigPeak(x, 560 + (i % 2) * 120, 420 + (i % 3) * 60);
     }
+    this.bakeStatic(mid);
 
     // A near GLACIER shelf of pale blue ice just above the ground.
     const glacier = this.add.graphics().setScrollFactor(0.5).setDepth(-72);
@@ -1845,6 +1906,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     for (let x = 120; x < this.worldWidth; x += 260) {
       glacier.fillRect(x, gy, 2, 30);
     }
+    this.bakeStatic(glacier);
 
     // High prayer flags strung across the thin-air pass (kept, they belong up here).
     const flags = this.add.graphics().setScrollFactor(0.55).setDepth(-70);
@@ -1871,6 +1933,7 @@ export class HimalRajyaScene extends Phaser.Scene {
         flags.fillRect(px - 1, py, 11, 15);
       }
     }
+    this.bakeStatic(flags);
   }
 
   private createClouds(): void {

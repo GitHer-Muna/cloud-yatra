@@ -35,16 +35,22 @@ const config: Phaser.Types.Core.GameConfig = {
   backgroundColor: PALETTE.skyLow,
   pixelArt: false,
   roundPixels: true, // draw sprites at integer positions → no sub-pixel shimmer
-  // ─── Smooth, CONSISTENT motion on every browser/refresh rate ───────────────────────
-  // The game loop smooths frame-delta jitter and clamps it to a sane floor. Combined with
-  // the VARIABLE physics step below, this removes the "sometimes fast, sometimes slow"
-  // judder that came from Phaser's default FIXED-step catch-up (which runs 0, 1, or 2
-  // physics steps per frame depending on frame timing — a lurch when it doubles, a freeze
-  // when it skips). See the arcade block for the full rationale.
+  // ─── Responsive, consistent input on every browser (esp. Chrome) ───────────────────
+  // IMPORTANT: we DO NOT average the frame delta ('smoothStep' is OFF). Delta-smoothing
+  // blends each frame's delta with recent frames, which SMEARS the time applied to
+  // movement for a frame or two after any jitter. On Chrome — whose rAF cadence is
+  // noticeably jitterier than other browsers on a WebGL canvas doing lots of procedural
+  // fills — that smearing read as laggy, "sticky" controls: you press → Yatri barely
+  // moves for a beat → then catches up. Using the RAW per-frame delta makes a key press
+  // translate to movement on the very next frame, which is what the other browsers were
+  // already doing well.
   fps: {
-    min: 30, // floor: delta is clamped to ≤33.3ms so a stall/GC pause can't teleport Yatri
+    min: 20, // a lower clamp floor: only truly huge stalls (>50ms) are capped, so a normal
+             // Chrome frame is NEVER shortened — the old 30 floor (33ms) clipped Chrome's
+             // slightly-long frames and made Yatri move LESS than real time (the "hard to
+             // move / so slow to go forward" feeling). 20 ≈ 50ms still blocks tunneling.
     target: 60, // the rate the game feel is tuned around
-    smoothStep: true, // average out frame-to-frame delta jitter → even motion
+    smoothStep: false, // RAW delta → immediate, 1-frame-latency input response
   },
   render: {
     antialias: true,
@@ -77,8 +83,10 @@ const config: Phaser.Types.Core.GameConfig = {
       // With fixedStep:false, physics advances by the REAL elapsed delta exactly ONCE per
       // frame (position += velocity × realSeconds), so movement/jump/fall are perfectly
       // proportional to wall-clock time at ANY refresh rate — no lurches, no freezes, fully
-      // consistent. The only risk (tunneling through thin platforms on a giant delta) is
-      // handled by the fps.min:30 delta clamp above.
+      // consistent. Combined with RAW (un-smoothed) deltas and the low fps.min:20 clamp
+      // above, a key press now moves Yatri the correct amount on the very next frame, which
+      // is what fixed the Chrome "sluggish / hard to move" feel. The only risk (tunneling
+      // through a thin platform on a giant delta) is bounded by the fps.min:20 clamp.
       fixedStep: false,
     },
   },
