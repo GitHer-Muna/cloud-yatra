@@ -113,7 +113,7 @@ npm test                      # vitest in the real workerd runtime (in-memory D1
 npx wrangler dev --local      # local Worker + local SQLite
 ```
 
-Routes: `GET /healthz /metrics /stats /leaderboard /chaos/status /chaos/events`,
+Routes: `GET /healthz /metrics /stats /leaderboard /session /chaos/status /chaos/events`,
 `POST /event /events /score /chaos/start /chaos/stop`. See `backend/wrangler.toml` for the
 D1 binding and the optional Grafana push / Chaos Mode secrets (all set via
 `wrangler secret put`, never committed).
@@ -123,9 +123,13 @@ D1 binding and the optional Grafana push / Chaos Mode secrets (all set via
 Import `observability/dashboards/cloud-yatra-grand-observatory.json` and map its three
 live data sources — Faro Loki (RUM), Prometheus (Worker `/metrics`), and the Infinity
 plugin (D1 analytics via the Worker's JSON endpoints). A trimmed, variable-free
-`cloud-yatra-live-observatory-public.json` is also included for public sharing / the live
-tiles embedded in the game page. `observability/grafana-alerts.yaml` holds real,
-importable Grafana-managed alert rules.
+`cloud-yatra-live-observatory-public.json` is also included for public sharing: import it,
+turn it into a Grafana **public dashboard** (Share → Share externally), and the game page
+will **embed it in an iframe directly below the game** via `VITE_GRAFANA_DASHBOARD_URL`.
+(Public-dashboard URLs — `/public-dashboards/<token>` — are the only Grafana URLs that are
+framable; a normal `/d/<uid>/...` URL is refused with `frame-ancestors 'none'`, so with one
+of those the page falls back to the native live tiles instead.)
+`observability/grafana-alerts.yaml` holds real, importable Grafana-managed alert rules.
 
 > **Logs (Loki) and traces (Tempo) are instrumented in the Worker and ship on demand:** set
 > the `GRAFANA_LOKI_*` / `GRAFANA_OTLP_*` secrets (see Configuration) and they push to Grafana
@@ -189,7 +193,7 @@ the client. Copy `game/.env.example` to `game/.env` to connect a backend:
 |----------|---------|
 | `VITE_API_BASE_URL` | Deployed Cloudflare Worker (`backend/`): telemetry ingest + shared D1 leaderboard. Empty = offline (local board). |
 | `VITE_FARO_URL` / `VITE_FARO_APP_KEY` | Grafana Faro RUM collector (optional). |
-| `VITE_GRAFANA_DASHBOARD_URL` | Public Grafana dashboard/share URL embedded below the game (optional). |
+| `VITE_GRAFANA_DASHBOARD_URL` | Grafana **public dashboard** URL (`/public-dashboards/<token>`) embedded in an iframe below the game (optional). A regular `/d/` URL isn't framable and falls back to the native live tiles. |
 
 With none set, the game still plays fully: telemetry logs to the console (dev only), the
 leaderboard uses a local browser-stored board, and Guru Megh uses built-in lines.

@@ -11,6 +11,7 @@
  *   GET  /metrics       → Prometheus text (isolate-lifetime counters/histograms)
  *   GET  /stats         → aggregate dashboard stats from D1 (JSON)
  *   GET  /leaderboard   → top scores from D1 (JSON)
+ *   GET  /session?id=   → per-session "Your Run" rollup from D1 (JSON)
  *   POST /score         → submit a completed run (best-per-name)
  *   POST /event         → ingest a single telemetry event
  *   POST /events        → ingest a batch of telemetry events

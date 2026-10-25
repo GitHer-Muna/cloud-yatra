@@ -116,8 +116,30 @@
       #cy-observatory code {
         color: #f3c623;
       }
-      /* Native live "mini-observatory" tiles — real D1 data fetched on the same page
-         (Grafana Cloud blocks iframe embedding, so we render our own live tiles). */
+      /* Embedded Grafana dashboard (shown only when VITE_GRAFANA_DASHBOARD_URL is a
+         framable public-dashboard URL; otherwise this stays hidden and the live tiles
+         below act as the fallback). */
+      #cy-grafana-embed[hidden] {
+        display: none !important;
+      }
+      #cy-grafana-embed {
+        margin-top: 8px;
+        border: 1px solid rgba(142, 203, 255, 0.18);
+        border-radius: 12px;
+        overflow: hidden;
+        background: rgba(12, 24, 41, 0.9);
+      }
+      #cy-grafana-embed iframe {
+        display: block;
+        width: 100%;
+        height: 70vh;
+        min-height: 480px;
+        border: 0;
+      }
+      /* Native live "mini-observatory" tiles — real D1 data fetched on the same page.
+         These are the FALLBACK when no framable Grafana public-dashboard URL is set (a
+         regular /d/ dashboard URL is refused in an iframe), and they also complement the
+         embedded dashboard with always-present, zero-config live numbers. */
       #cy-obs-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -311,13 +333,16 @@
       <div class="cy-observatory-heading">
         <div>
           <h2 id="cy-observatory-title">Cloud Yatra · Live Observatory</h2>
-          <p>Live data from the backend as you and other pilgrims play — read straight from Cloudflare D1 via the Worker's public API, refreshed every few seconds.</p>
+          <p>Live data from the backend as you and other pilgrims play — read straight from Cloudflare D1 via the Worker's public API, refreshed about every 30 seconds.</p>
         </div>
         <span class="cy-observatory-status" id="cy-observatory-status" aria-live="polite" role="status">connecting…</span>
       </div>
       <div class="cy-observatory-empty" id="cy-observatory-empty" hidden>
         Backend not configured — the game still plays fully; live stats appear when a backend is connected.
       </div>
+      <!-- Full Grafana dashboard, embedded directly below the game. Only appears when a
+           framable Grafana *public dashboard* URL is configured (VITE_GRAFANA_DASHBOARD_URL). -->
+      <div id="cy-grafana-embed" hidden></div>
       <div id="cy-obs-grid"></div>
       <p style="margin-top:14px;font-size:12px;color:#7fa8c7">
         Want the full-stack Grafana view (metrics, logs, traces, SLOs)?
@@ -334,11 +359,16 @@
       <p style="text-align: center">Cloud Yatra needs JavaScript enabled to play.</p>
     </noscript>
     <script type="module">
-      // Native live "mini-observatory" — Grafana Cloud blocks iframe embedding
-      // (frame-ancestors 'none'), so instead of embedding the Grafana UI we fetch the SAME
-      // real data (Cloudflare D1 via the Worker's public /stats + /leaderboard) and render
-      // live tiles on this page. Refreshes every 5s. The full Grafana dashboard (metrics,
-      // logs, traces, SLOs) is shown side-by-side in Grafana for the deep story.
+      // Live Observatory below the game. Two layers that work together:
+      //   1) The real Grafana dashboard, EMBEDDED in an iframe — enabled when
+      //      VITE_GRAFANA_DASHBOARD_URL is a Grafana "public dashboard" URL
+      //      (/public-dashboards/<token>), which is framable. Regular /d/ dashboard URLs
+      //      send `frame-ancestors 'none'` and are refused, so for those the embed stays
+      //      hidden and we rely on layer 2.
+      //   2) Native "mini-observatory" tiles — the SAME real data (Cloudflare D1 via the
+      //      Worker's public /stats + /leaderboard), rendered on-page and refreshed every
+      //      ~30s (and paused while the tab is hidden) to stay within D1 free-tier reads.
+      //      Always available (even with no Grafana URL) and zero-config.
       const apiBase = (import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/$/, '');
       const grafanaUrl = import.meta.env.VITE_GRAFANA_DASHBOARD_URL;
       const grid = document.getElementById('cy-obs-grid');
@@ -350,6 +380,44 @@
         gLink.href = grafanaUrl;
         gLink.style.display = 'inline';
       }
+
+      // Embed the real Grafana dashboard right below the game — but ONLY when the configured
+      // URL is a Grafana "public dashboard" (/public-dashboards/<token>). Regular dashboard
+      // URLs set `frame-ancestors 'none'` and are refused in an iframe, so for those we keep
+      // the embed hidden and let the native live tiles below stand in.
+      (function mountGrafanaEmbed() {
+        const host = document.getElementById('cy-grafana-embed');
+        if (!host || !grafanaUrl) return;
+        let isPublic = false;
+        try {
+          isPublic = new URL(grafanaUrl).pathname.includes('/public-dashboards/');
+        } catch {
+          return; // not a valid URL — skip embedding
+        }
+        if (!isPublic) return;
+
+        // Present it cleanly: `kiosk` hides Grafana's chrome so it reads as a panel grid,
+        // a dark theme matches the page, and a short refresh keeps it live. URLSearchParams
+        // preserves any params already on the public-dashboard URL (e.g. a default range).
+        let src = grafanaUrl;
+        try {
+          const u = new URL(grafanaUrl);
+          if (!u.searchParams.has('theme')) u.searchParams.set('theme', 'dark');
+          if (!u.searchParams.has('refresh')) u.searchParams.set('refresh', '10s');
+          // `kiosk` is a valueless flag Grafana expects as-is; append it separately.
+          src = u.toString() + (u.search.includes('kiosk') ? '' : (u.search ? '&' : '?') + 'kiosk');
+        } catch {
+          return;
+        }
+        const iframe = document.createElement('iframe');
+        iframe.src = src;
+        iframe.title = 'Cloud Yatra — Grafana Live Observatory';
+        iframe.loading = 'lazy';
+        iframe.referrerPolicy = 'no-referrer-when-downgrade';
+        iframe.setAttribute('allowfullscreen', '');
+        host.appendChild(iframe);
+        host.hidden = false;
+      })();
 
       const esc = (s) =>
         String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
