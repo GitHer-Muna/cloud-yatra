@@ -109,6 +109,21 @@ export class RhododendronBloom extends Phaser.Physics.Arcade.Sprite {
     return this.collected;
   }
 
+  /**
+   * Extend the pickup hitbox DOWNWARD by `px` pixels (the visual stays put). Used when a
+   * bloom sits on an elevated platform: a player jumping up from the ground below should
+   * collect it as the jump arc reaches the ledge, without having to land perfectly on top.
+   */
+  extendPickupDownward(px: number): void {
+    if (px <= 0) return;
+    const body = this.body as Phaser.Physics.Arcade.Body;
+    // With a bottom-centre origin, the body's top-left offset is measured from the top of
+    // the texture; growing the height and keeping offset.y=0 stretches the box downward
+    // past the stem base into the airspace below the ledge.
+    body.setSize(TEX_SIZE, TEX_SIZE + px);
+    body.setOffset(0, 0);
+  }
+
   /** Pick up: returns true only the FIRST time (prevents double scoring). */
   collect(): boolean {
     if (this.collected) return false;

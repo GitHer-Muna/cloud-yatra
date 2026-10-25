@@ -62,6 +62,17 @@ export class PrayerBell extends Phaser.Physics.Arcade.Sprite {
     });
   }
 
+  /**
+   * Extend the pickup hitbox DOWNWARD by `px` pixels (the visual stays put), so a bell on
+   * an elevated ledge can be collected by a jump rising from the ground below.
+   */
+  extendPickupDownward(px: number): void {
+    if (px <= 0) return;
+    const body = this.body as Phaser.Physics.Arcade.Body;
+    body.setSize(TEX_SIZE, TEX_SIZE + px);
+    body.setOffset(0, 0);
+  }
+
   collect(): boolean {
     if (this.collected) return false;
     this.collected = true;

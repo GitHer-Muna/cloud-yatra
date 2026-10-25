@@ -219,7 +219,12 @@ export class HimalRajyaScene extends Phaser.Scene {
       // (ground or platform top). The bloom sprite uses a bottom-centre origin, so passing
       // the surface top places it sitting on the trail — collectible by simply walking past.
       const surfaceTop = this.surfaceTopAt(b.x, groundTop);
-      blooms.add(new RhododendronBloom(this, b.x, surfaceTop, bloomVariant));
+      const bloom = new RhododendronBloom(this, b.x, surfaceTop, bloomVariant);
+      // If it sits on an elevated ledge, extend its pickup box down into the airspace
+      // below so a player jumping (double-jumping) up from the ground collects it on the
+      // way up — no pixel-perfect landing on the ledge required.
+      this.extendElevatedPickup(bloom, groundTop - surfaceTop);
+      blooms.add(bloom);
     }
     this.physics.add.overlap(this.yatri, blooms, (_p, obj) =>
       this.collectBloom(obj as RhododendronBloom),
@@ -232,7 +237,9 @@ export class HimalRajyaScene extends Phaser.Scene {
     // sprite uses a bottom-centre origin, so we pass the surface top at the bell's x.
     for (const b of this.level.bells) {
       const surfaceTop = this.surfaceTopAt(b.x, groundTop);
-      bells.add(new PrayerBell(this, b.x, surfaceTop));
+      const bell = new PrayerBell(this, b.x, surfaceTop);
+      this.extendElevatedPickup(bell, groundTop - surfaceTop);
+      bells.add(bell);
     }
     this.physics.add.overlap(this.yatri, bells, (_p, obj) =>
       this.collectBell(obj as PrayerBell),
@@ -1973,6 +1980,28 @@ export class HimalRajyaScene extends Phaser.Scene {
       }
     }
     return surfaceTop;
+  }
+
+  /**
+   * Make an elevated collectible grabbable by a jump rising from the ground.
+   *
+   * On-ledge blooms/bells sit on a solid platform top; a straight-up jump from the ground
+   * directly below hits the platform's underside instead of the pickup. To fix this the
+   * standard platformer way (generous pickup reach / coins the jump arc sweeps through),
+   * we stretch the pickup hitbox DOWNWARD into the airspace below the ledge so the player
+   * collects it as they jump up toward it. The visual (flower/bell on the ledge) is
+   * unchanged; only the collision box grows. `heightAboveGround` is 0 for ground-level
+   * pickups (no change) and the ledge rise for elevated ones.
+   */
+  private extendElevatedPickup(
+    pickup: RhododendronBloom | PrayerBell,
+    heightAboveGround: number,
+  ): void {
+    if (heightAboveGround <= 20) return; // ground-level — leave the tidy walk-through box
+    // Reach down to within ~18px of the ground so the full gap under the ledge is covered
+    // (a double jump easily enters this zone), without quite touching the ground path.
+    const GROUND_CLEARANCE = 18;
+    pickup.extendPickupDownward(Math.max(0, heightAboveGround - GROUND_CLEARANCE));
   }
 
   private createGroundAndPlatforms(): Phaser.Physics.Arcade.StaticGroup {
