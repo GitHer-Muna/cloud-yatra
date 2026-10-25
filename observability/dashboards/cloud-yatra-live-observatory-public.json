@@ -129,7 +129,7 @@
  "timezone": "",
  "title": "Cloud Yatra · Live Observatory",
  "uid": "cloud-yatra-public",
- "version": 4,
+ "version": 5,
  "panels": [
   {
    "type": "text",
@@ -147,304 +147,6 @@
    }
   },
   {
-   "type": "timeseries",
-   "title": "Web vitals · LCP / INP (p95)",
-   "description": "Real-user loading and interaction latency from Faro web vitals.",
-   "datasource": {
-    "type": "loki",
-    "uid": "${DS_FARO}"
-   },
-   "gridPos": {
-    "h": 7,
-    "w": 12,
-    "x": 0,
-    "y": 4
-   },
-   "id": 18,
-   "transparent": true,
-   "fieldConfig": {
-    "defaults": {
-     "unit": "ms",
-     "decimals": 0,
-     "custom": {
-      "drawStyle": "line",
-      "fillOpacity": 18,
-      "gradientMode": "opacity",
-      "lineInterpolation": "smooth",
-      "lineWidth": 2,
-      "showPoints": "never",
-      "spanNulls": true,
-      "pointSize": 5,
-      "axisBorderShow": false,
-      "axisGridShow": true,
-      "axisLabel": "",
-      "scaleDistribution": {
-       "type": "linear"
-      },
-      "stacking": {
-       "mode": "none",
-       "group": "A"
-      },
-      "axisCenteredZero": false,
-      "hideFrom": {
-       "tooltip": false,
-       "viz": false,
-       "legend": false
-      }
-     }
-    },
-    "overrides": []
-   },
-   "options": {
-    "legend": {
-     "displayMode": "table",
-     "placement": "bottom",
-     "calcs": [
-      "lastNotNull",
-      "max",
-      "mean"
-     ],
-     "showLegend": true
-    },
-    "tooltip": {
-     "mode": "multi",
-     "sort": "desc"
-    }
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "quantile_over_time(0.95, {kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"web-vitals\" | label_format vital=\"{{ or .value_lcp .lcp }}\" | unwrap vital [$__interval])",
-     "legendFormat": "LCP p95"
-    },
-    {
-     "refId": "B",
-     "expr": "quantile_over_time(0.95, {kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"web-vitals\" | label_format vital=\"{{ or .value_inp .inp }}\" | unwrap vital [$__interval])",
-     "legendFormat": "INP p95"
-    }
-   ],
-   "links": [
-    {
-     "title": "Open Frontend Observability drill-down",
-     "url": "https://curioushalibut2108.grafana.net/a/grafana-kowalski-app/apps/2383",
-     "targetBlank": true
-    }
-   ]
-  },
-  {
-   "type": "timeseries",
-   "title": "Web vitals · CLS / TTFB / FCP",
-   "description": "Layout stability and first-byte / first-paint timing.",
-   "datasource": {
-    "type": "loki",
-    "uid": "${DS_FARO}"
-   },
-   "gridPos": {
-    "h": 7,
-    "w": 8,
-    "x": 12,
-    "y": 4
-   },
-   "id": 19,
-   "transparent": true,
-   "fieldConfig": {
-    "defaults": {
-     "unit": "short",
-     "decimals": 0,
-     "custom": {
-      "drawStyle": "line",
-      "fillOpacity": 18,
-      "gradientMode": "opacity",
-      "lineInterpolation": "smooth",
-      "lineWidth": 2,
-      "showPoints": "never",
-      "spanNulls": true,
-      "pointSize": 5,
-      "axisBorderShow": false,
-      "axisGridShow": true,
-      "axisLabel": "",
-      "scaleDistribution": {
-       "type": "linear"
-      },
-      "stacking": {
-       "mode": "none",
-       "group": "A"
-      },
-      "axisCenteredZero": false,
-      "hideFrom": {
-       "tooltip": false,
-       "viz": false,
-       "legend": false
-      }
-     }
-    },
-    "overrides": []
-   },
-   "options": {
-    "legend": {
-     "displayMode": "table",
-     "placement": "bottom",
-     "calcs": [
-      "lastNotNull",
-      "max",
-      "mean"
-     ],
-     "showLegend": true
-    },
-    "tooltip": {
-     "mode": "multi",
-     "sort": "desc"
-    }
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "avg_over_time({kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"web-vitals\" | label_format vital=\"{{ or .value_cls .cls }}\" | unwrap vital [$__interval])",
-     "legendFormat": "CLS"
-    },
-    {
-     "refId": "B",
-     "expr": "avg_over_time({kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"web-vitals\" | label_format vital=\"{{ or .value_ttfb .ttfb }}\" | unwrap vital [$__interval])",
-     "legendFormat": "TTFB"
-    },
-    {
-     "refId": "C",
-     "expr": "avg_over_time({kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"web-vitals\" | label_format vital=\"{{ or .value_fcp .fcp }}\" | unwrap vital [$__interval])",
-     "legendFormat": "FCP"
-    }
-   ]
-  },
-  {
-   "type": "timeseries",
-   "title": "Sampled FPS by region",
-   "description": "Average FPS sampled roughly every 2 seconds, split by region.",
-   "datasource": {
-    "type": "loki",
-    "uid": "${DS_FARO}"
-   },
-   "gridPos": {
-    "h": 7,
-    "w": 12,
-    "x": 0,
-    "y": 11
-   },
-   "id": 22,
-   "transparent": true,
-   "fieldConfig": {
-    "defaults": {
-     "unit": "fps",
-     "decimals": 0,
-     "custom": {
-      "drawStyle": "line",
-      "fillOpacity": 18,
-      "gradientMode": "opacity",
-      "lineInterpolation": "smooth",
-      "lineWidth": 2,
-      "showPoints": "never",
-      "spanNulls": true,
-      "pointSize": 5,
-      "axisBorderShow": false,
-      "axisGridShow": true,
-      "axisLabel": "",
-      "scaleDistribution": {
-       "type": "linear"
-      },
-      "stacking": {
-       "mode": "none",
-       "group": "A"
-      },
-      "axisCenteredZero": false,
-      "hideFrom": {
-       "tooltip": false,
-       "viz": false,
-       "legend": false
-      }
-     },
-     "min": 0,
-     "max": 70,
-     "color": {
-      "mode": "fixed",
-      "fixedColor": "#63d8b4"
-     }
-    },
-    "overrides": []
-   },
-   "options": {
-    "legend": {
-     "displayMode": "table",
-     "placement": "bottom",
-     "calcs": [
-      "lastNotNull",
-      "max",
-      "mean"
-     ],
-     "showLegend": true
-    },
-    "tooltip": {
-     "mode": "multi",
-     "sort": "desc"
-    }
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "avg_over_time({kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"game_client_perf\" | unwrap value_fps [$__interval])",
-     "legendFormat": "FPS · {{level}}"
-    }
-   ],
-   "links": [
-    {
-     "title": "Open Frontend Observability drill-down",
-     "url": "https://curioushalibut2108.grafana.net/a/grafana-kowalski-app/apps/2383",
-     "targetBlank": true
-    }
-   ]
-  },
-  {
-   "type": "heatmap",
-   "title": "FPS distribution",
-   "description": "How smooth play feels across all players and devices.",
-   "datasource": {
-    "type": "loki",
-    "uid": "${DS_FARO}"
-   },
-   "gridPos": {
-    "h": 7,
-    "w": 12,
-    "x": 12,
-    "y": 11
-   },
-   "id": 23,
-   "transparent": true,
-   "options": {
-    "calculate": false,
-    "color": {
-     "scheme": "Turbo",
-     "mode": "scheme",
-     "steps": 64
-    },
-    "cellGap": 1,
-    "yAxis": {
-     "unit": "ms"
-    },
-    "legend": {
-     "show": true
-    },
-    "tooltip": {
-     "show": true,
-     "yHistogram": true
-    }
-   },
-   "targets": [
-    {
-     "refId": "A",
-     "expr": "avg_over_time({kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"game_client_perf\" | unwrap value_fps [$__interval])",
-     "format": "heatmap",
-     "range": true
-    }
-   ]
-  },
-  {
    "type": "bargauge",
    "title": "🧭 Progression funnel · how far pilgrims climb",
    "description": "Distinct sessions reaching each stage.",
@@ -456,7 +158,7 @@
     "h": 6,
     "w": 24,
     "x": 0,
-    "y": 18
+    "y": 4
    },
    "id": 24,
    "transparent": true,
@@ -529,13 +231,7 @@
      }
     }
    ],
-   "links": [
-    {
-     "title": "Open Frontend Observability drill-down",
-     "url": "https://curioushalibut2108.grafana.net/a/grafana-kowalski-app/apps/2383",
-     "targetBlank": true
-    }
-   ]
+   "links": []
   },
   {
    "type": "bargauge",
@@ -551,7 +247,7 @@
     "h": 6,
     "w": 24,
     "x": 0,
-    "y": 24
+    "y": 10
    },
    "fieldConfig": {
     "defaults": {
@@ -625,7 +321,7 @@
     "h": 7,
     "w": 12,
     "x": 0,
-    "y": 30
+    "y": 16
    },
    "id": 26,
    "transparent": true,
@@ -682,13 +378,7 @@
      }
     }
    ],
-   "links": [
-    {
-     "title": "Open Frontend Observability drill-down",
-     "url": "https://curioushalibut2108.grafana.net/a/grafana-kowalski-app/apps/2383",
-     "targetBlank": true
-    }
-   ]
+   "links": []
   },
   {
    "type": "barchart",
@@ -702,7 +392,7 @@
     "h": 7,
     "w": 6,
     "x": 12,
-    "y": 30
+    "y": 16
    },
    "id": 27,
    "transparent": true,
@@ -772,7 +462,7 @@
     "h": 7,
     "w": 6,
     "x": 18,
-    "y": 30
+    "y": 16
    },
    "id": 28,
    "transparent": true,
@@ -853,7 +543,7 @@
     "h": 7,
     "w": 16,
     "x": 0,
-    "y": 37
+    "y": 23
    },
    "id": 29,
    "transparent": true,
@@ -934,7 +624,7 @@
     "h": 8,
     "w": 12,
     "x": 0,
-    "y": 44
+    "y": 30
    },
    "id": 32,
    "transparent": true,
@@ -1067,7 +757,7 @@
     "h": 4,
     "w": 4,
     "x": 12,
-    "y": 44
+    "y": 30
    },
    "id": 33,
    "transparent": true,
@@ -1132,7 +822,7 @@
     "h": 4,
     "w": 4,
     "x": 16,
-    "y": 44
+    "y": 30
    },
    "id": 34,
    "transparent": true,
@@ -1197,7 +887,7 @@
     "h": 8,
     "w": 4,
     "x": 20,
-    "y": 44
+    "y": 30
    },
    "id": 35,
    "transparent": true,
@@ -1275,8 +965,8 @@
    "gridPos": {
     "h": 4,
     "w": 8,
-    "x": 12,
-    "y": 52
+    "x": 0,
+    "y": 38
    },
    "id": 36,
    "transparent": true,
@@ -1356,8 +1046,8 @@
    "gridPos": {
     "h": 9,
     "w": 12,
-    "x": 0,
-    "y": 56
+    "x": 8,
+    "y": 38
    },
    "fieldConfig": {
     "defaults": {
@@ -1473,8 +1163,8 @@
    "gridPos": {
     "h": 9,
     "w": 6,
-    "x": 12,
-    "y": 56
+    "x": 0,
+    "y": 47
    },
    "id": 38,
    "transparent": true,
@@ -1536,8 +1226,8 @@
    "gridPos": {
     "h": 9,
     "w": 6,
-    "x": 18,
-    "y": 56
+    "x": 6,
+    "y": 47
    },
    "id": 39,
    "transparent": true,
