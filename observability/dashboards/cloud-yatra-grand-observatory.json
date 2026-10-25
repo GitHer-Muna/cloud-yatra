@@ -71,6 +71,12 @@
    "id": "yesoreyeram-infinity-datasource",
    "name": "Infinity",
    "version": "2.0.0"
+  },
+  {
+   "type": "panel",
+   "id": "innius-video-panel",
+   "name": "Video",
+   "version": ""
   }
  ],
  "annotations": {
@@ -217,7 +223,7 @@
  "timezone": "",
  "title": "Cloud Yatra · Grand Observatory",
  "uid": "cloud-yatra-np",
- "version": 5,
+ "version": 6,
  "panels": [
   {
    "type": "text",
@@ -236,13 +242,54 @@
   },
   {
    "type": "row",
+   "id": 66,
+   "collapsed": false,
+   "title": "PLAY CLOUD YATRA · the game runs here; your telemetry streams below",
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 4
+   },
+   "panels": []
+  },
+  {
+   "type": "innius-video-panel",
+   "id": 67,
+   "title": "Cloud Yatra — play here",
+   "description": "The live game embedded via the Video panel (iframe mode). Play a run and watch your own stats and the service telemetry update in the panels below.",
+   "gridPos": {
+    "h": 15,
+    "w": 24,
+    "x": 0,
+    "y": 5
+   },
+   "transparent": false,
+   "options": {
+    "videoType": "iframe",
+    "iframeURL": "https://cloud-yatra.pages.dev",
+    "autoPlay": false,
+    "loop": false,
+    "customBackground": false
+   },
+   "datasource": null,
+   "links": [
+    {
+     "title": "Open the game full-screen",
+     "url": "https://cloud-yatra.pages.dev",
+     "targetBlank": true
+    }
+   ]
+  },
+  {
+   "type": "row",
    "title": "YOUR RUN · live stats for the current session",
    "collapsed": false,
    "gridPos": {
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 4
+    "y": 20
    },
    "id": 44,
    "panels": []
@@ -259,7 +306,7 @@
     "h": 5,
     "w": 4,
     "x": 0,
-    "y": 5
+    "y": 21
    },
    "id": 46,
    "transparent": true,
@@ -325,7 +372,7 @@
     "h": 5,
     "w": 4,
     "x": 4,
-    "y": 5
+    "y": 21
    },
    "id": 47,
    "transparent": true,
@@ -391,7 +438,7 @@
     "h": 5,
     "w": 4,
     "x": 8,
-    "y": 5
+    "y": 21
    },
    "id": 48,
    "transparent": true,
@@ -457,7 +504,7 @@
     "h": 5,
     "w": 4,
     "x": 12,
-    "y": 5
+    "y": 21
    },
    "id": 49,
    "transparent": true,
@@ -523,7 +570,7 @@
     "h": 5,
     "w": 4,
     "x": 16,
-    "y": 5
+    "y": 21
    },
    "id": 50,
    "transparent": true,
@@ -589,7 +636,7 @@
     "h": 5,
     "w": 4,
     "x": 20,
-    "y": 5
+    "y": 21
    },
    "id": 51,
    "transparent": true,
@@ -651,7 +698,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 10
+    "y": 26
    },
    "id": 1,
    "panels": []
@@ -668,7 +715,7 @@
     "h": 6,
     "w": 4,
     "x": 0,
-    "y": 11
+    "y": 27
    },
    "id": 2,
    "transparent": true,
@@ -718,7 +765,7 @@
     "h": 6,
     "w": 4,
     "x": 4,
-    "y": 11
+    "y": 27
    },
    "id": 3,
    "transparent": true,
@@ -768,7 +815,7 @@
     "h": 6,
     "w": 4,
     "x": 8,
-    "y": 11
+    "y": 27
    },
    "id": 4,
    "transparent": true,
@@ -818,7 +865,7 @@
     "h": 6,
     "w": 4,
     "x": 12,
-    "y": 11
+    "y": 27
    },
    "id": 5,
    "transparent": true,
@@ -884,7 +931,7 @@
     "h": 6,
     "w": 4,
     "x": 16,
-    "y": 11
+    "y": 27
    },
    "id": 6,
    "transparent": true,
@@ -950,7 +997,7 @@
     "h": 6,
     "w": 4,
     "x": 20,
-    "y": 11
+    "y": 27
    },
    "id": 7,
    "transparent": true,
@@ -1019,7 +1066,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 17
+    "y": 33
    },
    "panels": []
   },
@@ -1037,7 +1084,7 @@
     "h": 7,
     "w": 6,
     "x": 0,
-    "y": 18
+    "y": 34
    },
    "fieldConfig": {
     "defaults": {
@@ -1102,7 +1149,7 @@
     "h": 7,
     "w": 6,
     "x": 6,
-    "y": 18
+    "y": 34
    },
    "fieldConfig": {
     "defaults": {
@@ -1167,7 +1214,7 @@
     "h": 7,
     "w": 6,
     "x": 12,
-    "y": 18
+    "y": 34
    },
    "fieldConfig": {
     "defaults": {
@@ -1232,7 +1279,7 @@
     "h": 7,
     "w": 6,
     "x": 18,
-    "y": 18
+    "y": 34
    },
    "fieldConfig": {
     "defaults": {
@@ -1291,7 +1338,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 25
+    "y": 41
    },
    "id": 8,
    "panels": []
@@ -1308,7 +1355,7 @@
     "h": 7,
     "w": 12,
     "x": 0,
-    "y": 26
+    "y": 42
    },
    "id": 9,
    "transparent": true,
@@ -1382,7 +1429,7 @@
     "h": 7,
     "w": 12,
     "x": 12,
-    "y": 26
+    "y": 42
    },
    "id": 10,
    "transparent": true,
@@ -1474,7 +1521,7 @@
     "h": 7,
     "w": 8,
     "x": 0,
-    "y": 33
+    "y": 49
    },
    "id": 11,
    "transparent": true,
@@ -1609,7 +1656,7 @@
     "h": 7,
     "w": 8,
     "x": 8,
-    "y": 33
+    "y": 49
    },
    "id": 12,
    "transparent": true,
@@ -1717,7 +1764,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 40
+    "y": 56
    },
    "panels": []
   },
@@ -1735,7 +1782,7 @@
     "h": 9,
     "w": 24,
     "x": 0,
-    "y": 41
+    "y": 57
    },
    "options": {
     "showTime": true,
@@ -1769,7 +1816,7 @@
     "h": 7,
     "w": 12,
     "x": 0,
-    "y": 50
+    "y": 66
    },
    "fieldConfig": {
     "defaults": {
@@ -1890,7 +1937,7 @@
     "h": 7,
     "w": 12,
     "x": 12,
-    "y": 50
+    "y": 66
    },
    "fieldConfig": {
     "defaults": {
@@ -2000,7 +2047,7 @@
     "h": 8,
     "w": 12,
     "x": 0,
-    "y": 57
+    "y": 73
    },
    "fieldConfig": {
     "defaults": {
@@ -2065,7 +2112,7 @@
     "h": 8,
     "w": 12,
     "x": 12,
-    "y": 57
+    "y": 73
    },
    "fieldConfig": {
     "defaults": {
@@ -2139,7 +2186,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 65
+    "y": 81
    },
    "id": 17,
    "panels": []
@@ -2156,7 +2203,7 @@
     "h": 7,
     "w": 12,
     "x": 0,
-    "y": 66
+    "y": 82
    },
    "id": 18,
    "transparent": true,
@@ -2241,7 +2288,7 @@
     "h": 7,
     "w": 8,
     "x": 12,
-    "y": 66
+    "y": 82
    },
    "id": 19,
    "transparent": true,
@@ -2324,7 +2371,7 @@
     "h": 7,
     "w": 4,
     "x": 20,
-    "y": 66
+    "y": 82
    },
    "id": 20,
    "transparent": true,
@@ -2403,7 +2450,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 73
+    "y": 89
    },
    "id": 21,
    "panels": []
@@ -2420,7 +2467,7 @@
     "h": 7,
     "w": 12,
     "x": 0,
-    "y": 74
+    "y": 90
    },
    "id": 22,
    "transparent": true,
@@ -2506,7 +2553,7 @@
     "h": 7,
     "w": 12,
     "x": 12,
-    "y": 74
+    "y": 90
    },
    "id": 23,
    "transparent": true,
@@ -2550,7 +2597,7 @@
     "h": 6,
     "w": 24,
     "x": 0,
-    "y": 81
+    "y": 97
    },
    "id": 24,
    "transparent": true,
@@ -2645,7 +2692,7 @@
     "h": 6,
     "w": 24,
     "x": 0,
-    "y": 87
+    "y": 103
    },
    "fieldConfig": {
     "defaults": {
@@ -2715,7 +2762,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 93
+    "y": 109
    },
    "id": 25,
    "panels": []
@@ -2732,7 +2779,7 @@
     "h": 7,
     "w": 12,
     "x": 0,
-    "y": 94
+    "y": 110
    },
    "id": 26,
    "transparent": true,
@@ -2809,7 +2856,7 @@
     "h": 7,
     "w": 6,
     "x": 12,
-    "y": 94
+    "y": 110
    },
    "id": 27,
    "transparent": true,
@@ -2879,7 +2926,7 @@
     "h": 7,
     "w": 6,
     "x": 18,
-    "y": 94
+    "y": 110
    },
    "id": 28,
    "transparent": true,
@@ -2960,7 +3007,7 @@
     "h": 7,
     "w": 16,
     "x": 0,
-    "y": 101
+    "y": 117
    },
    "id": 29,
    "transparent": true,
@@ -3041,7 +3088,7 @@
     "h": 7,
     "w": 8,
     "x": 16,
-    "y": 101
+    "y": 117
    },
    "id": 30,
    "transparent": true,
@@ -3110,7 +3157,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 108
+    "y": 124
    },
    "id": 31,
    "panels": []
@@ -3127,7 +3174,7 @@
     "h": 8,
     "w": 12,
     "x": 0,
-    "y": 109
+    "y": 125
    },
    "id": 32,
    "transparent": true,
@@ -3260,7 +3307,7 @@
     "h": 4,
     "w": 4,
     "x": 12,
-    "y": 109
+    "y": 125
    },
    "id": 33,
    "transparent": true,
@@ -3325,7 +3372,7 @@
     "h": 4,
     "w": 4,
     "x": 16,
-    "y": 109
+    "y": 125
    },
    "id": 34,
    "transparent": true,
@@ -3390,7 +3437,7 @@
     "h": 8,
     "w": 4,
     "x": 20,
-    "y": 109
+    "y": 125
    },
    "id": 35,
    "transparent": true,
@@ -3469,7 +3516,7 @@
     "h": 4,
     "w": 8,
     "x": 12,
-    "y": 117
+    "y": 133
    },
    "id": 36,
    "transparent": true,
@@ -3544,7 +3591,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 121
+    "y": 137
    },
    "id": 37,
    "panels": []
@@ -3563,7 +3610,7 @@
     "h": 9,
     "w": 12,
     "x": 0,
-    "y": 122
+    "y": 138
    },
    "fieldConfig": {
     "defaults": {
@@ -3680,7 +3727,7 @@
     "h": 9,
     "w": 6,
     "x": 12,
-    "y": 122
+    "y": 138
    },
    "id": 38,
    "transparent": true,
@@ -3743,7 +3790,7 @@
     "h": 9,
     "w": 6,
     "x": 18,
-    "y": 122
+    "y": 138
    },
    "id": 39,
    "transparent": true,
@@ -3801,7 +3848,7 @@
     "h": 4,
     "w": 24,
     "x": 0,
-    "y": 131
+    "y": 147
    },
    "id": 40,
    "transparent": true,
@@ -3823,7 +3870,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 135
+    "y": 151
    },
    "id": 41,
    "panels": []
@@ -3841,7 +3888,7 @@
     "h": 6,
     "w": 4,
     "x": 0,
-    "y": 136
+    "y": 152
    },
    "transparent": true,
    "fieldConfig": {
@@ -3916,7 +3963,7 @@
     "h": 6,
     "w": 20,
     "x": 4,
-    "y": 136
+    "y": 152
    },
    "fieldConfig": {
     "defaults": {
@@ -3990,7 +4037,7 @@
     "h": 7,
     "w": 24,
     "x": 0,
-    "y": 142
+    "y": 158
    },
    "fieldConfig": {
     "defaults": {
