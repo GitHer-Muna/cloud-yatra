@@ -2,7 +2,7 @@
 /**
  * build-dashboard.mjs — generate the ONE canonical Cloud Yatra dashboard.
  *
- * There is a single source of truth: `cloud-yatra-grand-observatory.json` (rich, 12 rows,
+ * There is a single source of truth: `cloud-yatra-observatory.json` (rich, every signal,
  * every signal). This script derives the PUBLIC, embeddable dashboard from it so we never
  * hand-maintain two files. It writes:
  *   - cloud-yatra-observatory.json         (canonical: datasource template vars kept for a
@@ -104,6 +104,29 @@ function panelIsRow(p) {
 }
 
 /**
+ * Remove row markers that have no child panels (the panels between this row and the next
+ * were all filtered out). Keeps the dashboard free of empty section headers.
+ */
+function pruneEmptyRows(panels) {
+  const out = [];
+  for (let i = 0; i < panels.length; i++) {
+    const p = panels[i];
+    if (p.type === 'row') {
+      // Peek ahead: is there at least one non-row panel before the next row / end?
+      let hasChild = false;
+      for (let j = i + 1; j < panels.length && panels[j].type !== 'row'; j++) {
+        hasChild = true;
+        break;
+      }
+      if (hasChild) out.push(p);
+    } else {
+      out.push(p);
+    }
+  }
+  return out;
+}
+
+/**
  * Build the public dashboard from the grand one.
  */
 function buildPublic(grand) {
@@ -133,11 +156,30 @@ function buildPublic(grand) {
   // Remove the old header text panel(s) at y=0; we prepend our own branded header.
   panels = panels.filter((p) => !(p.type === 'text' && p.gridPos && p.gridPos.y === 0));
 
+  // Keep ONLY panels that actually render on a Grafana Cloud public dashboard. Public
+  // dashboards expose a limited datasource set: the Infinity datasource (our D1 analytics)
+  // works, but Prometheus/Loki/Tempo queries are withheld on public shares, so those panels
+  // would render empty/error. We drop them here so the public embed is complete and clean;
+  // the full multi-signal view lives in the authenticated source dashboard. Row markers and
+  // text panels are always kept (emptied rows are pruned below).
+  const PUBLIC_OK = new Set(['yesoreyeram-infinity-datasource']);
+  const publicRenderable = (p) => {
+    if (p.type === 'row' || p.type === 'text') return true;
+    const t = p.datasource && (p.datasource.type || '');
+    // panels with no datasource (e.g. pure text) or an Infinity datasource are fine
+    if (!t) return true;
+    return PUBLIC_OK.has(t);
+  };
+  panels = panels.filter(publicRenderable);
+
+  // Prune rows that no longer have any child panels after the datasource filter.
+  panels = pruneEmptyRows(panels);
+
   // Substitute literals (api_base_url, faro_app_id) and wire datasources by name.
   panels = panels.map((p) => wireDatasources(substituteLiterals(p)));
 
-  // Reflow the grid top-to-bottom so removed rows leave no gaps. We preserve each panel's
-  // width/height and its left-to-right order within a row, just re-stacking rows.
+  // Reflow the grid top-to-bottom so removed rows/panels leave no gaps. We preserve each
+  // panel's width/height and its left-to-right order within a row, just re-stacking rows.
   reflow(panels);
 
   // Prepend the branded header and shift everything down by its height (3).

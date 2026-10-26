@@ -92,16 +92,6 @@
         font-size: 13px;
         line-height: 1.5;
       }
-      #cy-observatory .cy-observatory-empty {
-        display: grid;
-        min-height: 180px;
-        place-items: center;
-        padding: 24px;
-        border: 1px dashed rgba(243, 198, 35, 0.45);
-        border-radius: 10px;
-        color: #d7e9f7;
-        text-align: center;
-      }
       /* Live-dashboard call-to-action banner. Grafana Cloud blocks iframe embedding (CSP
          frame-ancestors 'none'), so instead of a broken frame we present a clear, handsome
          button to open the real dashboard in a new tab. */
@@ -424,7 +414,7 @@
       // Live Observatory below the game — the REAL Grafana dashboard, inline. Grafana
       // Cloud sends CSP `frame-ancestors 'none'`, so the dashboard can't be iframed from
       // this origin directly. Instead we iframe it through the Worker's same-origin reverse
-      // proxy at `${API}/dash/public-dashboards/<token>`, which strips the frame-blocking
+      // proxy at `${API}/public-dashboards/<token>`, which strips the frame-blocking
       // headers. We need the API base (the Worker) and a PUBLIC-dashboard URL (so there's a
       // token to proxy). If either is missing, or the frame errors, we fall back to the
       // open-in-new-tab button. Hidden entirely in game-only embed mode (inside the Video

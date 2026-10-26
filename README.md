@@ -197,10 +197,10 @@ secrets in the client. Copy `game/.env.example` to `game/.env` to connect a back
 
 | Variable | Purpose |
 | --- | --- |
-| `VITE_API_BASE_URL` | Deployed Cloudflare Worker: telemetry ingest and the shared D1 leaderboard. Leave empty to run offline with a local leaderboard. |
+| `VITE_API_BASE_URL` | Deployed Cloudflare Worker: telemetry ingest, the shared D1 leaderboard, and the dashboard reverse-proxy. Leave empty to run offline with a local leaderboard. |
 | `VITE_FARO_URL`, `VITE_FARO_APP_KEY` | Grafana Faro RUM collector (optional). |
-| `VITE_GRAFANA_GRAND_URL` | Grafana grand-dashboard URL the "Open the live Grafana dashboard" button links to below the game — the game-in-dashboard view (optional). |
-| `VITE_GRAFANA_DASHBOARD_URL` | Fallback dashboard URL for that button when `VITE_GRAFANA_GRAND_URL` is unset, e.g. a public-dashboard URL (optional). |
+| `VITE_GRAFANA_DASHBOARD_URL` | Grafana public-dashboard URL (`/public-dashboards/<token>`). The page embeds it inline below the game, proxied through the Worker so it can be framed. |
+| `VITE_GRAFANA_GRAND_URL` | Optional authenticated dashboard URL (`/d/<uid>/...`) used only as an open-in-new-tab fallback if the inline embed can't load. |
 
 With none of these set, the game still plays fully: telemetry logs to the console in
 development, the leaderboard uses local browser storage, and Guru Megh uses built-in lines.

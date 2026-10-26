@@ -8,9 +8,11 @@
  * `<iframe src="https://<stack>.grafana.net/public-dashboards/...">` on another origin. The
  * only ways around that are an account-level Grafana setting (support ticket) or serving
  * the dashboard from the SAME origin as the embedding page. This proxy does the latter: the
- * Worker fetches the public dashboard from Grafana server-side and re-serves it under
- * `/dash/*` with the frame-blocking headers removed, so the game page can iframe
- * `${WORKER}/dash/...` with no browser refusal.
+ * Worker fetches the public dashboard from Grafana server-side and re-serves it from its own
+ * origin with the frame-blocking headers removed. The dashboard HTML is served at
+ * `/public-dashboards/<token>` (the Grafana boot script matches that pathname), and the
+ * SPA's root-absolute calls (`/api`, `/bootdata`, …) are proxied at the Worker root too, so
+ * the game page can iframe `${WORKER}/public-dashboards/<token>` with no browser refusal.
  *
  * SCOPE + SAFETY
  *  - PUBLIC dashboards only. There is no authentication to forward — the proxy never sees
@@ -67,9 +69,10 @@ function stripFrameHeaders(h: Headers): void {
 }
 
 /**
- * Proxy a `/dash/*` request to the configured Grafana origin. Returns a 404 Response when
- * the proxy is not configured. Rewrites the dashboard HTML's <base> so the SPA's relative
- * API calls come back through `/dash/`.
+ * Proxy a Grafana public-dashboard request to the configured Grafana origin. Returns a 404
+ * Response when the proxy is not configured. Handles both the `/public-dashboards/<token>`
+ * HTML entry and the SPA's root-absolute sub-requests; strips the frame-blocking headers and
+ * the stale Content-Encoding (the runtime auto-decompresses the body).
  */
 export async function handleProxy(req: Request, env: Env): Promise<Response> {
   const base = (env.GRAFANA_PROXY_BASE ?? '').trim().replace(/\/$/, '');
