@@ -462,6 +462,19 @@
       <p style="text-align: center">Cloud Yatra needs JavaScript enabled to play.</p>
     </noscript>
     <script type="module">
+      // Embed mode. When the page is shown INSIDE the Grafana dashboard's Video panel
+      // (game-in-dashboard, the mentor's Spice-Runner layout), we pass ?embed=game-only so
+      // the page renders JUST the game — no "Live Observatory" section — avoiding a
+      // Grafana-in-game-in-Grafana hall of mirrors and keeping the panel clean and focused.
+      // The standalone site (no flag) keeps the full dashboard-below-the-game experience.
+      const embedMode = new URLSearchParams(location.search).get('embed');
+      const gameOnly = embedMode === 'game-only';
+      if (gameOnly) {
+        document.documentElement.classList.add('cy-embed-game-only');
+        const obs = document.getElementById('cy-observatory');
+        if (obs) obs.hidden = true;
+      }
+
       // Live Observatory below the game. Two layers that work together:
       //   1) The real Grafana dashboard, EMBEDDED in an iframe — enabled when
       //      VITE_GRAFANA_DASHBOARD_URL is a Grafana "public dashboard" URL
@@ -545,6 +558,7 @@
       // URLs set `frame-ancestors 'none'` and are refused in an iframe, so for those we keep
       // the embed hidden and let the native live tiles below stand in.
       (function mountGrafanaEmbed() {
+        if (gameOnly) return; // no Grafana iframe inside the Grafana Video panel
         const host = document.getElementById('cy-grafana-embed');
         if (!host || !grafanaUrl) return;
         let isPublic = false;
@@ -709,18 +723,22 @@
       // open tab was burning through Cloudflare D1's free-tier daily row-read budget. 30s is
       // a 6× reduction while still feeling live. Re-fetch immediately when a hidden tab is
       // brought back to the foreground so it's fresh on return.
-      refresh();
-      refreshYourRun();
-      setInterval(refresh, 30000);
-      // Your-run polls faster (10s): /session is a single-row lookup (cheap, unlike the
-      // full-table /stats aggregates), so a fresh run shows up promptly after playing.
-      setInterval(refreshYourRun, 10000);
-      document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) {
-          refresh();
-          refreshYourRun();
-        }
-      });
+      // When embedded game-only (inside the Grafana Video panel) the observatory is hidden,
+      // so skip all of its polling — the embed should do zero dashboard work.
+      if (!gameOnly) {
+        refresh();
+        refreshYourRun();
+        setInterval(refresh, 30000);
+        // Your-run polls faster (10s): /session is a single-row lookup (cheap, unlike the
+        // full-table /stats aggregates), so a fresh run shows up promptly after playing.
+        setInterval(refreshYourRun, 10000);
+        document.addEventListener('visibilitychange', () => {
+          if (!document.hidden) {
+            refresh();
+            refreshYourRun();
+          }
+        });
+      }
     </script>
     <script type="module" src="/src/main.ts"></script>
   </body>

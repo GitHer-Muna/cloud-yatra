@@ -267,7 +267,7 @@
    "transparent": false,
    "options": {
     "videoType": "iframe",
-    "iframeURL": "https://cloud-yatra.pages.dev",
+    "iframeURL": "https://cloud-yatra.pages.dev/?embed=game-only",
     "autoPlay": false,
     "loop": false,
     "customBackground": false
