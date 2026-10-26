@@ -23,3 +23,5 @@
 # The HTML entry should always be revalidated so new deploys show up immediately.
 /index.html
   Cache-Control: public, max-age=0, must-revalidate
+
+# (rebuild trigger — picks up current VITE_GRAFANA_DASHBOARD_URL)
