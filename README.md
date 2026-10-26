@@ -86,7 +86,7 @@ metric label), and only a coarse edge country is recorded.
 ```
 cloud-yatra/
 ├── game/                  Frontend — Phaser 3 + TypeScript + Vite (static client)
-│   ├── index.html         Page shell (responsive container, canvas, dashboard embed)
+│   ├── index.html         Page shell (responsive container, canvas, dashboard link)
 │   └── src/
 │       ├── main.ts        Phaser bootstrap: scenes, scale, physics, Faro, chaos panel
 │       ├── config/        Constants, level data, player tuning, scoring
@@ -154,11 +154,23 @@ Cloud instance and map its data sources: Faro/Loki (RUM), Prometheus (Worker `/m
 Loki (backend logs), Tempo (traces), and Infinity (D1 analytics via the Worker's JSON
 endpoints).
 
-A trimmed, variable-free `cloud-yatra-live-observatory-public.json` is included for public
-sharing. Import it, turn it into a Grafana public dashboard (Share → Share externally), and
-the game page embeds it in an iframe below the game via `VITE_GRAFANA_DASHBOARD_URL`. Only
-public-dashboard URLs (`/public-dashboards/<token>`) can be framed; a regular `/d/<uid>/...`
-URL is refused by the browser, in which case the page falls back to its built-in live tiles.
+The grand dashboard is the main surface: the game plays inside it, embedded in a **Video
+panel** (`innius-video-panel`, iframe mode) at the top, with the live telemetry panels
+below. Install the Video panel from **Administration → Plugins and data → Plugins** (search
+"Video" by innius) and the game-in-dashboard panel renders. The game page's CSP allows
+framing by the Grafana Cloud origin for exactly this embed.
+
+Ready-to-import **preset** copies — `cloud-yatra-grand-observatory-preset.json` and
+`cloud-yatra-live-observatory-public-preset.json` — are wired to the standard Grafana Cloud
+datasource names, so they import with no "map your datasources" screen. A trimmed,
+variable-free `cloud-yatra-live-observatory-public.json` is included for public sharing
+(Share → Share externally).
+
+Below the game, the standalone page links to the real Grafana dashboard (opens in a new tab
+via `VITE_GRAFANA_GRAND_URL`, falling back to `VITE_GRAFANA_DASHBOARD_URL`). Grafana Cloud
+dashboards send CSP `frame-ancestors 'none'`, so they can't be iframed on another origin —
+hence the link-out, and hence the game-in-dashboard layout above, which embeds the game in
+Grafana rather than the reverse.
 
 `observability/grafana-alerts.yaml` holds importable Grafana-managed alert rules; set your
 Prometheus data source UID before importing.
@@ -186,7 +198,8 @@ secrets in the client. Copy `game/.env.example` to `game/.env` to connect a back
 | --- | --- |
 | `VITE_API_BASE_URL` | Deployed Cloudflare Worker: telemetry ingest and the shared D1 leaderboard. Leave empty to run offline with a local leaderboard. |
 | `VITE_FARO_URL`, `VITE_FARO_APP_KEY` | Grafana Faro RUM collector (optional). |
-| `VITE_GRAFANA_DASHBOARD_URL` | Grafana public-dashboard URL embedded below the game (optional). |
+| `VITE_GRAFANA_GRAND_URL` | Grafana grand-dashboard URL the "Open the live Grafana dashboard" button links to below the game — the game-in-dashboard view (optional). |
+| `VITE_GRAFANA_DASHBOARD_URL` | Fallback dashboard URL for that button when `VITE_GRAFANA_GRAND_URL` is unset, e.g. a public-dashboard URL (optional). |
 
 With none of these set, the game still plays fully: telemetry logs to the console in
 development, the leaderboard uses local browser storage, and Guru Megh uses built-in lines.
