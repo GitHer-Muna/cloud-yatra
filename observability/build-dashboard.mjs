@@ -81,19 +81,25 @@ function wireDatasources(node) {
 /** The branded header (Nepal dawn gradient), operator-voiced, non-AI. */
 function headerPanel(id) {
   const content =
-    '<div style="display:flex;align-items:center;gap:16px;padding:10px 16px;' +
+    '<div style="padding:14px 18px;' +
     'background:linear-gradient(90deg,#0b1020 0%,#20357a 38%,#8e2b2b 68%,#f6b73c 100%);' +
     'border-radius:12px;color:#fff;font-family:system-ui,sans-serif">' +
+    '<div style="display:flex;align-items:center;gap:14px">' +
     '<div style="font-size:34px;line-height:1">🏔️</div>' +
     '<div><div style="font-size:21px;font-weight:800;letter-spacing:.3px">Cloud Yatra · Live Observatory</div>' +
-    '<div style="opacity:.92;font-size:12px;margin-top:2px">Yatri\'s climb through Himal Rajya, in real time — ' +
-    'browser (Faro RUM) → Cloudflare Worker (metrics · logs · traces) → D1 analytics. ' +
-    'Play above; the system responds below.</div></div></div>';
+    '<div style="opacity:.92;font-size:12.5px;margin-top:3px">Every panel below is real traffic from a little ' +
+    'platformer about a Nepali traveller climbing from the jungle to the Himalaya. ' +
+    'Play the game above — then watch these numbers move.</div></div></div>' +
+    '<div style="margin-top:10px;font-size:11.5px;opacity:.85;line-height:1.5">' +
+    'How to read it: <b>At a glance</b> is the headline. <b>The climb</b> shows how far players get ' +
+    '(a classic funnel). <b>Yatri\'s journey</b> breaks down what happens on the trail. ' +
+    '<b>Scores</b> is the shared leaderboard, <b>Around the world</b> maps where people play, and ' +
+    '<b>Chaos Mode</b> is where I break my own backend on purpose to watch it recover.</div></div>';
   return {
     id,
     type: 'text',
     title: '',
-    gridPos: { h: 3, w: GRID_W, x: 0, y: 0 },
+    gridPos: { h: 5, w: GRID_W, x: 0, y: 0 },
     options: { mode: 'html', content },
     transparent: true,
   };
@@ -174,6 +180,23 @@ function buildPublic(grand) {
 
   // Prune rows that no longer have any child panels after the datasource filter.
   panels = pruneEmptyRows(panels);
+
+  // Re-title rows so each section matches the D1-only content it actually holds now (the
+  // metric/RUM panels were filtered out, so the source titles like "service pulse" or
+  // "frame rate" would be misleading on the public copy). Keyed by the source row title.
+  const PUBLIC_ROW_TITLES = {
+    'LIVE NOW': 'AT A GLANCE · the climb so far',
+    'LIVE GAME PERFORMANCE': 'THE CLIMB · how far pilgrims get',
+    "YATRI'S JOURNEY": "YATRI'S JOURNEY · what happens on the trail",
+    'SCORES & ENGAGEMENT': 'SCORES · the shared leaderboard',
+    'WORLD & CONTEXT': 'AROUND THE WORLD · where pilgrims play',
+    'CHAOS MODE': 'CHAOS MODE · fault injection and recovery',
+  };
+  for (const p of panels) {
+    if (p.type !== 'row') continue;
+    const key = (p.title || '').split('·')[0].trim();
+    if (PUBLIC_ROW_TITLES[key]) p.title = PUBLIC_ROW_TITLES[key];
+  }
 
   // Substitute literals (api_base_url, faro_app_id) and wire datasources by name.
   panels = panels.map((p) => wireDatasources(substituteLiterals(p)));
