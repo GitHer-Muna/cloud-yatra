@@ -92,17 +92,6 @@
         font-size: 13px;
         line-height: 1.5;
       }
-      #cy-observatory .cy-observatory-status {
-        flex: 0 0 auto;
-        color: #63d8b4;
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-      }
-      #cy-observatory .cy-observatory-empty[hidden] {
-        display: none !important;
-      }
       #cy-observatory .cy-observatory-empty {
         display: grid;
         min-height: 180px;
@@ -112,9 +101,6 @@
         border-radius: 10px;
         color: #d7e9f7;
         text-align: center;
-      }
-      #cy-observatory code {
-        color: #f3c623;
       }
       /* Live-dashboard call-to-action banner. Grafana Cloud blocks iframe embedding (CSP
          frame-ancestors 'none'), so instead of a broken frame we present a clear, handsome
@@ -167,194 +153,6 @@
       @media (prefers-reduced-motion: reduce) {
         #cy-dash-cta { transition: none; }
         #cy-dash-cta:hover { transform: none; }
-      }
-      /* Native live "mini-observatory" tiles — real D1 data fetched on the same page.
-         These are the FALLBACK when no framable Grafana public-dashboard URL is set (a
-         regular /d/ dashboard URL is refused in an iframe), and they also complement the
-         embedded dashboard with always-present, zero-config live numbers. */
-      #cy-obs-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 12px;
-        margin-top: 8px;
-      }
-      /* Your latest run — your own session, highlighted above the shared stats. */
-      #cy-yourrun {
-        margin-top: 10px;
-        padding: 14px 16px 16px;
-        border: 1px solid rgba(243, 198, 35, 0.4);
-        border-radius: 14px;
-        background: linear-gradient(145deg, rgba(40, 53, 122, 0.28), rgba(12, 24, 41, 0.35));
-      }
-      #cy-yourrun .cy-yourrun-head {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
-      #cy-yourrun h3 {
-        margin: 0;
-        font-size: 15px;
-        color: #f6b73c;
-        letter-spacing: 0.02em;
-      }
-      #cy-yourrun .cy-yourrun-head a {
-        font-size: 12px;
-        color: #8ecbff;
-      }
-      /* Session-id helper: lets a player copy their anonymous per-tab id and paste it into
-         the Grand Observatory's "Your session" dashboard variable to light up its YOUR RUN
-         row (public dashboards can't filter per-player, so the id is pasted by hand). */
-      #cy-session {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-top: 10px;
-        font-size: 12px;
-        color: #9ec7e8;
-      }
-      #cy-session .cy-session-label {
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        font-size: 11px;
-        color: #7fa8c7;
-      }
-      #cy-session code {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        font-size: 12px;
-        color: #eaf4ff;
-        background: rgba(12, 24, 41, 0.75);
-        border: 1px solid rgba(142, 203, 255, 0.2);
-        border-radius: 7px;
-        padding: 3px 8px;
-        user-select: all;
-        word-break: break-all;
-      }
-      #cy-session button {
-        font: inherit;
-        font-size: 12px;
-        color: #0c1829;
-        background: #f6b73c;
-        border: 0;
-        border-radius: 7px;
-        padding: 4px 11px;
-        cursor: pointer;
-        font-weight: 700;
-      }
-      #cy-session button:hover {
-        background: #ffcb5a;
-      }
-      #cy-session .cy-session-open {
-        font-size: 12px;
-        font-weight: 700;
-        color: #8ecbff;
-        text-decoration: none;
-        border: 1px solid rgba(142, 203, 255, 0.4);
-        border-radius: 7px;
-        padding: 4px 11px;
-      }
-      #cy-session .cy-session-open:hover {
-        background: rgba(142, 203, 255, 0.12);
-      }
-      #cy-session .cy-session-open[hidden] {
-        display: none;
-      }
-      #cy-session .cy-session-hint {
-        flex-basis: 100%;
-        font-size: 11px;
-        color: #6f97b6;
-        margin: 0;
-      }
-      #cy-yourrun-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-        gap: 10px;
-        margin-top: 10px;
-      }
-      .cy-tile {
-        background: linear-gradient(145deg, rgba(23, 46, 77, 0.9), rgba(12, 24, 41, 0.9));
-        border: 1px solid rgba(142, 203, 255, 0.18);
-        border-radius: 12px;
-        padding: 14px 16px;
-        min-height: 78px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-      }
-      .cy-tile .cy-tile-label {
-        color: #9ec7e8;
-        font-size: 11px;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        margin-bottom: 6px;
-      }
-      .cy-tile .cy-tile-value {
-        color: #f6b73c;
-        font-size: clamp(22px, 4vw, 34px);
-        font-weight: 800;
-        line-height: 1;
-      }
-      .cy-tile .cy-tile-sub {
-        color: #7fa8c7;
-        font-size: 11px;
-        margin-top: 4px;
-      }
-      .cy-tile.cy-span2 {
-        grid-column: span 2;
-      }
-      .cy-lb {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 13px;
-      }
-      .cy-lb th,
-      .cy-lb td {
-        text-align: left;
-        padding: 5px 8px;
-        border-bottom: 1px solid rgba(142, 203, 255, 0.1);
-        color: #d7e9f7;
-      }
-      .cy-lb th {
-        color: #9ec7e8;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-      }
-      .cy-lb td.cy-rank {
-        color: #f6b73c;
-        font-weight: 800;
-      }
-      .cy-bar-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin: 5px 0;
-      }
-      .cy-bar-label {
-        flex: 0 0 96px;
-        color: #cfe3f5;
-        font-size: 12px;
-      }
-      .cy-bar-track {
-        flex: 1;
-        height: 12px;
-        background: rgba(142, 203, 255, 0.12);
-        border-radius: 6px;
-        overflow: hidden;
-      }
-      .cy-bar-fill {
-        height: 100%;
-        border-radius: 6px;
-        background: linear-gradient(90deg, #2e8b57, #d9a441, #8ecbff);
-      }
-      .cy-bar-val {
-        flex: 0 0 auto;
-        color: #9ec7e8;
-        font-size: 12px;
-        min-width: 42px;
-        text-align: right;
       }
       /* Phones / small or coarse-pointer devices: the game still occupies the viewport,
          then the observatory follows below it and can be scrolled to. */
@@ -701,51 +499,22 @@
       <div class="cy-observatory-heading">
         <div>
           <h2 id="cy-observatory-title">Cloud Yatra · Live Observatory</h2>
-          <p>The full Grafana dashboard opens in its own tab (button below). These tiles mirror the same live data — read straight from Cloudflare D1 via the Worker's public API, refreshed about every 30 seconds — plus your own latest run, which public dashboards can't show.</p>
+          <p>The real Grafana dashboard — the game embedded at the top with live metrics, logs, traces, SLOs and RUM below, all updating in real time as people play. It opens in its own tab (Grafana Cloud dashboards can't be shown in a frame on another site).</p>
         </div>
-        <span class="cy-observatory-status" id="cy-observatory-status" aria-live="polite" role="status">connecting…</span>
-      </div>
-      <div class="cy-observatory-empty" id="cy-observatory-empty" hidden>
-        Backend not configured — the game still plays fully; live stats appear when a backend is connected.
       </div>
 
-      <!-- Live Grafana dashboard call-to-action. Grafana Cloud sends CSP frame-ancestors
-           'none' on dashboards, so they cannot be embedded in an iframe. Rather than show a
-           broken frame, we present a clear button to open the real dashboard in a new tab,
-           with the live native tiles below as an always-on, framable companion view. -->
+      <!-- The real dashboard. Grafana Cloud sends CSP frame-ancestors 'none' on its
+           dashboards, so they cannot be iframed on this origin. We open the real thing in a
+           new tab instead. This is the mentor-style "game-in-dashboard" grand dashboard:
+           the game plays inside a Video panel at the top, telemetry panels below. -->
       <a id="cy-dash-cta" href="#" target="_blank" rel="noopener" hidden>
         <span class="cy-dash-cta-icon" aria-hidden="true">📊</span>
         <span class="cy-dash-cta-text">
           <span class="cy-dash-cta-title">Open the live Grafana dashboard</span>
-          <span class="cy-dash-cta-sub">Metrics, logs, traces, SLOs and RUM — updating in real time as people play.</span>
+          <span class="cy-dash-cta-sub">The game embedded at the top, with live metrics, logs, traces, SLOs and RUM below — updating in real time as people play.</span>
         </span>
         <span class="cy-dash-cta-arrow" aria-hidden="true">↗</span>
       </a>
-
-      <!-- Your latest run: this browser's own session, read live from D1 via /session.
-           Public Grafana dashboards can't filter by a per-player variable, so this
-           personal view lives on the page (which knows your anonymous session id). -->
-      <div id="cy-yourrun" hidden>
-        <div class="cy-yourrun-head">
-          <h3>Your latest run</h3>
-        </div>
-        <div id="cy-yourrun-grid"></div>
-        <p id="cy-yourrun-empty" class="cy-tile-sub" style="margin:4px 2px 0">
-          Play a run and your own stats appear here within a few seconds.
-        </p>
-        <div id="cy-session" hidden>
-          <span class="cy-session-label">Your session</span>
-          <code id="cy-session-id"></code>
-          <button id="cy-session-copy" type="button">Copy</button>
-          <a id="cy-session-open" class="cy-session-open" href="#" target="_blank" rel="noopener" hidden>Open my run in Grafana →</a>
-          <p class="cy-session-hint">
-            Paste this into the Grand Observatory's “Your session” box to see this run alongside
-            the live telemetry.
-          </p>
-        </div>
-      </div>
-
-      <div id="cy-obs-grid"></div>
     </section>
     <div id="cy-rotate" role="dialog" aria-modal="true" aria-label="Please rotate your device to landscape to play Cloud Yatra">
       <div class="cy-phone" aria-hidden="true"></div>
@@ -789,254 +558,23 @@
         );
       }
 
-      // Live Observatory below the game. Two layers that work together:
-      //   1) The real Grafana dashboard, EMBEDDED in an iframe — enabled when
-      //      VITE_GRAFANA_DASHBOARD_URL is a Grafana "public dashboard" URL
-      //      (/public-dashboards/<token>), which is framable. Regular /d/ dashboard URLs
-      //      send `frame-ancestors 'none'` and are refused, so for those the embed stays
-      //      hidden and we rely on layer 2.
-      //   2) Native "mini-observatory" tiles — the SAME real data (Cloudflare D1 via the
-      //      Worker's public /stats + /leaderboard), rendered on-page and refreshed every
-      //      ~30s (and paused while the tab is hidden) to stay within D1 free-tier reads.
-      //      Always available (even with no Grafana URL) and zero-config.
-      const apiBase = (import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/$/, '');
-      const grafanaUrl = import.meta.env.VITE_GRAFANA_DASHBOARD_URL;
-      const grid = document.getElementById('cy-obs-grid');
-      const empty = document.getElementById('cy-observatory-empty');
-      const status = document.getElementById('cy-observatory-status');
-
-      // Your-latest-run elements + the anonymous per-tab session id (same sessionStorage
-      // key the telemetry pipeline uses in src/telemetry/ids.ts), so this page can ask the
-      // backend for THIS run's stats via /session?id=.
-      const yourRunBox = document.getElementById('cy-yourrun');
-      const yourRunGrid = document.getElementById('cy-yourrun-grid');
-      const yourRunEmpty = document.getElementById('cy-yourrun-empty');
-      // Session-id copy helper elements.
-      const sessionBox = document.getElementById('cy-session');
-      const sessionIdEl = document.getElementById('cy-session-id');
-      const sessionCopyBtn = document.getElementById('cy-session-copy');
-      const sessionOpenLink = document.getElementById('cy-session-open');
-      // Optional: the AUTHENTICATED Grand Observatory URL (a normal /d/<uid>/ link, NOT the
-      // public-dashboard embed). When set, we offer a one-click "Open my run" link that
-      // pre-fills the dashboard's `session` variable so the viewer lands straight on THIS run.
+      // Live Observatory below the game. The real demo surface is the Grafana dashboard
+      // itself (the mentor-style "game-in-dashboard" grand dashboard: the game embedded in
+      // a Video panel at the top, telemetry panels below). Grafana Cloud sends CSP
+      // `frame-ancestors 'none'` on its dashboards, so it cannot be iframed on this origin —
+      // we open the real thing in a new tab via a clear call-to-action. Prefer the grand
+      // dashboard URL; fall back to the public-dashboard URL if only that is set. Hidden in
+      // game-only embed mode (inside the Video panel) and when no dashboard URL exists.
       const grandUrl = (import.meta.env.VITE_GRAFANA_GRAND_URL || '').trim();
-      let sessionId = '';
-      try {
-        sessionId = globalThis.sessionStorage?.getItem('cloud-yatra.sessionId') || '';
-      } catch {
-        /* sessionStorage blocked — the your-run section simply stays hidden */
-      }
+      const publicUrl = (import.meta.env.VITE_GRAFANA_DASHBOARD_URL || '').trim();
+      const dashboardUrl = grandUrl || publicUrl;
 
-      // Reveal + populate the "Your session" copy row once a session id exists. Called on
-      // load and on each your-run tick (the id is created on first play, which may be after
-      // this page loaded). Idempotent: only writes the DOM when the id actually changes.
-      function showSessionId() {
-        if (!sessionId || !sessionBox || !sessionIdEl) return;
-        if (sessionIdEl.textContent !== sessionId) sessionIdEl.textContent = sessionId;
-        sessionBox.hidden = false;
-        // Build the one-click "Open my run" link: <grandUrl>?var-session=<id>, preserving any
-        // query already on the configured URL. Shown only when VITE_GRAFANA_GRAND_URL is set.
-        if (grandUrl && sessionOpenLink) {
-          try {
-            const u = new URL(grandUrl);
-            u.searchParams.set('var-session', sessionId);
-            sessionOpenLink.href = u.toString();
-            sessionOpenLink.hidden = false;
-          } catch {
-            sessionOpenLink.hidden = true; // not a valid URL — keep the copy-paste path only
-          }
-        }
-      }
-
-      if (sessionCopyBtn) {
-        sessionCopyBtn.addEventListener('click', async () => {
-          if (!sessionId) return;
-          let copied = false;
-          try {
-            await navigator.clipboard?.writeText(sessionId);
-            copied = true;
-          } catch {
-            // Clipboard API blocked (no https / permissions) → fall back to a manual select.
-            try {
-              const range = document.createRange();
-              range.selectNodeContents(sessionIdEl);
-              const sel = globalThis.getSelection();
-              sel?.removeAllRanges();
-              sel?.addRange(range);
-              copied = document.execCommand?.('copy') ?? false;
-            } catch {
-              /* give up silently — the id is still selectable by hand */
-            }
-          }
-          const original = 'Copy';
-          sessionCopyBtn.textContent = copied ? 'Copied ✓' : 'Select it';
-          setTimeout(() => {
-            sessionCopyBtn.textContent = original;
-          }, 1600);
-        });
-      }
-
-      showSessionId();
-
-      // Live-dashboard call-to-action. Grafana Cloud dashboards send CSP frame-ancestors
-      // 'none' and cannot be embedded in an iframe, so we point a clear button at the real
-      // dashboard (opens in a new tab) instead of ever rendering a broken frame. The native
-      // live tiles below mirror the same data on-page. Hidden in game-only embed mode and
-      // when no dashboard URL is configured.
-      if (!gameOnly && grafanaUrl) {
+      if (!gameOnly && dashboardUrl) {
         const cta = document.getElementById('cy-dash-cta');
         if (cta) {
-          cta.href = grafanaUrl;
+          cta.href = dashboardUrl;
           cta.hidden = false;
         }
-      }
-
-      const esc = (s) =>
-        String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-      const num = (n) => (typeof n === 'number' ? n.toLocaleString() : '—');
-
-      function tile(label, value, sub) {
-        return `<div class="cy-tile"><div class="cy-tile-label">${esc(label)}</div>` +
-          `<div class="cy-tile-value">${esc(value)}</div>` +
-          (sub ? `<div class="cy-tile-sub">${esc(sub)}</div>` : '') + `</div>`;
-      }
-
-      function regionBars(byLevel) {
-        const order = { terai: 0, hills: 1, himal: 2, himal_rajya: 3 };
-        const names = { terai: 'Terai', hills: 'Hills', himal: 'Himal', himal_rajya: 'Summit' };
-        const rows = (byLevel || []).slice().sort((a, b) => (order[a.level] ?? 9) - (order[b.level] ?? 9));
-        const max = Math.max(1, ...rows.map((r) => r.events || 0));
-        return `<div class="cy-tile cy-span2"><div class="cy-tile-label">Climb intensity by region</div>` +
-          rows.map((r) =>
-            `<div class="cy-bar-row"><span class="cy-bar-label">${esc(names[r.level] || r.level)}</span>` +
-            `<span class="cy-bar-track"><span class="cy-bar-fill" style="width:${Math.round((r.events / max) * 100)}%"></span></span>` +
-            `<span class="cy-bar-val">${num(r.events)}</span></div>`).join('') + `</div>`;
-      }
-
-      function leaderboardTile(entries) {
-        const rows = (entries || []).slice(0, 5).map((e, i) =>
-          `<tr><td class="cy-rank">${i + 1}</td><td>${esc(e.name ?? '—')}</td>` +
-          `<td>${num(e.score)}</td><td>${esc(e.country ?? '')}</td></tr>`).join('');
-        return `<div class="cy-tile cy-span2"><div class="cy-tile-label">🏔️ Shared leaderboard — top pilgrims</div>` +
-          (rows
-            ? `<table class="cy-lb"><thead><tr><th>#</th><th>Pilgrim</th><th>Score</th><th>From</th></tr></thead><tbody>${rows}</tbody></table>`
-            : `<div class="cy-tile-sub">No summit finishes yet — be the first to plant the pennant!</div>`) +
-          `</div>`;
-      }
-
-      // Your latest run: fetch THIS browser's session rollup from D1 and render personal
-      // tiles. Keyed to the anonymous per-tab session id (no PII). Shown only when a
-      // backend is configured and the session has produced at least one event.
-      async function refreshYourRun() {
-        if (!apiBase || !yourRunBox) return;
-        if (document.hidden) return;
-        // Re-read each tick: the game creates the session id on first play, which may be
-        // after this page first loaded, so pick it up as soon as it exists.
-        if (!sessionId) {
-          try {
-            sessionId = globalThis.sessionStorage?.getItem('cloud-yatra.sessionId') || '';
-          } catch {
-            /* blocked */
-          }
-        }
-        if (!sessionId) return;
-        showSessionId();
-        try {
-          const res = await fetch(`${apiBase}/session?id=${encodeURIComponent(sessionId)}`, {
-            headers: { Accept: 'application/json' },
-          });
-          if (!res.ok) return; // leave the previous view; next tick retries
-          const data = await res.json();
-          const r = (data.session && data.session[0]) || null;
-          yourRunBox.hidden = false;
-          if (!r || !r.found || (r.eventCount ?? 0) === 0) {
-            yourRunGrid.innerHTML = '';
-            yourRunEmpty.hidden = false;
-            return;
-          }
-          yourRunEmpty.hidden = true;
-          const region =
-            (r.maxProgress ?? 0) >= 99
-              ? 'Summit'
-              : (r.maxProgress ?? 0) >= 66
-                ? 'Himal'
-                : (r.maxProgress ?? 0) >= 33
-                  ? 'Hills'
-                  : 'Terai';
-          yourRunGrid.innerHTML =
-            tile('Best score', num(r.bestScore)) +
-            tile('Progress', `${Math.round(r.maxProgress ?? 0)}%`, `reached ${region}`) +
-            tile('Completions', num(r.completed)) +
-            tile('Falls', num(r.deaths)) +
-            tile('Jumps', num(r.jumps)) +
-            tile('Collectibles', num((r.collects ?? 0) + (r.bells ?? 0)), `🌸 ${num(r.collects)}  ·  🔔 ${num(r.bells)}`);
-        } catch {
-          /* transient — keep the last render, retry next interval */
-        }
-      }
-
-      async function refresh() {
-        if (!apiBase) {
-          grid.hidden = true;
-          empty.hidden = false;
-          status.textContent = 'offline';
-          return;
-        }
-        // Don't poll while the tab is in the background — saves backend D1 row-reads for
-        // tabs nobody is looking at.
-        if (document.hidden) return;
-        try {
-          const [statsRes, lbRes] = await Promise.all([
-            fetch(`${apiBase}/stats`, { headers: { Accept: 'application/json' } }),
-            fetch(`${apiBase}/leaderboard?limit=5`, { headers: { Accept: 'application/json' } }),
-          ]);
-          // If the backend is rate-limited / erroring, show a calm message instead of
-          // rendering broken tiles, and let the next interval retry.
-          if (!statsRes.ok || !lbRes.ok) {
-            status.textContent = 'live stats paused — backend busy, retrying…';
-            return;
-          }
-          const s = await statsRes.json();
-          const lb = await lbRes.json();
-          const countries = (s.topCountries || []).map((c) => `${c.country} ${c.sessions}`).join(' · ');
-          grid.innerHTML =
-            tile('Total events (D1)', num(s.totals?.events)) +
-            tile('Summit completions', num(s.totals?.completions)) +
-            tile('Pilgrims (sessions)', num(s.sessions?.total), `${num(s.sessions?.active5m)} active now`) +
-            tile('Avg FPS (1h)', s.avgFps != null ? s.avgFps.toFixed(1) : '—') +
-            regionBars(s.byLevel) +
-            leaderboardTile(lb.entries) +
-            tile('Blooms gathered', num((s.collectsByKind || []).find((k) => k.kind === 'rhododendron')?.count), 'rhododendron') +
-            tile('Prayer bells', num((s.collectsByKind || []).find((k) => k.kind === 'prayer_bell')?.count)) +
-            tile('Top countries', countries || '—');
-          grid.hidden = false;
-          empty.hidden = true;
-          status.textContent = 'live · updates every 30s';
-        } catch {
-          status.textContent = 'reconnecting…';
-        }
-      }
-
-      // Refresh every 30s (was 5s). The in-page tiles don't need second-by-second freshness,
-      // and /stats runs several full-table aggregates in D1 — polling every 5s from every
-      // open tab was burning through Cloudflare D1's free-tier daily row-read budget. 30s is
-      // a 6× reduction while still feeling live. Re-fetch immediately when a hidden tab is
-      // brought back to the foreground so it's fresh on return.
-      // When embedded game-only (inside the Grafana Video panel) the observatory is hidden,
-      // so skip all of its polling — the embed should do zero dashboard work.
-      if (!gameOnly) {
-        refresh();
-        refreshYourRun();
-        setInterval(refresh, 30000);
-        // Your-run polls faster (10s): /session is a single-row lookup (cheap, unlike the
-        // full-table /stats aggregates), so a fresh run shows up promptly after playing.
-        setInterval(refreshYourRun, 10000);
-        document.addEventListener('visibilitychange', () => {
-          if (!document.hidden) {
-            refresh();
-            refreshYourRun();
-          }
-        });
       }
     </script>
     <script type="module" src="/src/main.ts"></script>
