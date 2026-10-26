@@ -523,11 +523,54 @@
       /* In the Grafana Video panel (game-only), show ONLY the game — no hero, no tour. */
       .cy-embed-game-only #cy-hero,
       .cy-embed-game-only #cy-signals,
+      .cy-embed-game-only #cy-scrollcue,
       .cy-embed-game-only #cy-observatory {
         display: none !important;
       }
       .cy-embed-game-only #game-root {
         margin-top: 0;
+      }
+
+      /* ── Scroll cue: a gentle nudge that a live dashboard waits below the game. Fades out
+         once the visitor scrolls. Honours prefers-reduced-motion (no bounce). ── */
+      #cy-scrollcue {
+        width: min(960px, 92vw);
+        margin: 10px auto 0;
+        display: flex;
+        justify-content: center;
+      }
+      #cy-scrollcue button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font: inherit;
+        font-size: 13px;
+        color: #cfe6fb;
+        background: rgba(16, 35, 59, 0.6);
+        border: 1px solid rgba(142, 203, 255, 0.22);
+        border-radius: 999px;
+        padding: 8px 16px;
+        cursor: pointer;
+        transition: opacity 0.4s ease, background 0.2s ease;
+      }
+      #cy-scrollcue button:hover {
+        background: rgba(23, 46, 77, 0.9);
+      }
+      #cy-scrollcue .cy-scrollcue-chevron {
+        font-size: 15px;
+        animation: cy-bounce 1.8s ease-in-out infinite;
+      }
+      #cy-scrollcue[data-scrolled='true'] {
+        opacity: 0;
+        pointer-events: none;
+      }
+      @keyframes cy-bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(4px); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #cy-scrollcue .cy-scrollcue-chevron { animation: none; }
+        #cy-scrollcue button { transition: none; }
       }
     </style>
   </head>
@@ -565,6 +608,14 @@
     <!-- Phaser injects its <canvas> here (see src/main.ts), replacing the loader. -->
     <div id="game-root" role="application" aria-label="Cloud Yatra — a Nepali platformer game. Use arrow keys or WASD to move, up or space to jump, F to use the khukuri. On touch devices, on-screen buttons appear.">
       <div id="cy-loading">Loading Cloud Yatra…</div>
+    </div>
+
+    <!-- Scroll cue: nudges visitors to the live dashboard below. Fades after first scroll. -->
+    <div id="cy-scrollcue">
+      <button type="button" id="cy-scrollcue-btn" aria-label="Scroll down to the live observability dashboard">
+        <span>See the live dashboard</span>
+        <span class="cy-scrollcue-chevron" aria-hidden="true">⌄</span>
+      </button>
     </div>
 
     <!-- Signals tour: one line per telemetry signal shown in the dashboard below. -->
@@ -663,6 +714,26 @@
         document.documentElement.classList.add('cy-embed-game-only');
         const obs = document.getElementById('cy-observatory');
         if (obs) obs.hidden = true;
+      }
+
+      // Scroll cue: clicking it smooth-scrolls to the dashboard; it fades out once the
+      // visitor scrolls at all (purpose served). Inert in game-only embed mode.
+      if (!gameOnly) {
+        const cue = document.getElementById('cy-scrollcue');
+        const cueBtn = document.getElementById('cy-scrollcue-btn');
+        const reduceMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+        cueBtn?.addEventListener('click', () => {
+          document
+            .getElementById('cy-observatory')
+            ?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+        });
+        globalThis.addEventListener(
+          'scroll',
+          () => {
+            if (window.scrollY > 40 && cue) cue.dataset.scrolled = 'true';
+          },
+          { passive: true },
+        );
       }
 
       // Live Observatory below the game. Two layers that work together:

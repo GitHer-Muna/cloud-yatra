@@ -123,6 +123,7 @@ export class HimalRajyaScene extends Phaser.Scene {
   private carriedMaxCombo = 1;
 
   private statusText!: Phaser.GameObjects.Text;
+  private statusPanel!: Phaser.GameObjects.Graphics;
   private telemetry!: TelemetryService;
   private fpsSampler!: FpsSampler;
   private sound_?: NepaliAudio;
@@ -331,17 +332,23 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.hud.setFpsMode(this.disableBake ? 'nobake (live Graphics)' : 'baked');
     this.hud.showIntro(2600, `Level ${this.level.index} — ${this.level.name}`, this.level.subtitle);
 
+    // The end-of-run / level status card. A Graphics "panel" sits behind the text and is
+    // (re)drawn to fit, with an outcome-coloured accent bar — see styleStatusCard().
+    this.statusPanel = this.add
+      .graphics()
+      .setScrollFactor(0)
+      .setDepth(2499)
+      .setVisible(false);
     this.statusText = this.add
       .text(VIEW_WIDTH / 2, VIEW_HEIGHT * 0.5, '', {
         fontFamily: 'system-ui, sans-serif',
         fontSize: '18px',
         color: '#eaf4ff',
-        backgroundColor: 'rgba(16,35,59,0.92)',
         stroke: '#10233b',
         strokeThickness: 2,
-        padding: { x: 22, y: 16 },
+        padding: { x: 26, y: 22 },
         align: 'center',
-        lineSpacing: 2,
+        lineSpacing: 3,
       })
       .setOrigin(0.5)
       .setScrollFactor(0)
@@ -806,10 +813,11 @@ export class HimalRajyaScene extends Phaser.Scene {
    * Megh docks to the mid-lower band so the celebratory line never overlaps the card. */
   private statusBurst(msg: string): void {
     this.statusText.setText(msg).setVisible(true);
+    this.styleStatusCard(0x4a90d9); // neutral blue — transient tip
     this.guru.setDock('bottom');
     this.time.delayedCall(1300, () => {
       if (!this.gameOver && !this.levelComplete) {
-        this.statusText.setVisible(false);
+        this.hideStatusCard();
         this.guru.setDock('sky'); // back to the normal in-play position
       }
     });
@@ -879,8 +887,9 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.statusText
       .setText('Pilgrim\'s Grace saved you!\nThe journey continues from your pennant.')
       .setVisible(true);
+    this.styleStatusCard(0xf3c623); // gold — a blessing
     this.time.delayedCall(1500, () => {
-      if (!this.gameOver && !this.levelComplete) this.statusText.setVisible(false);
+      if (!this.gameOver && !this.levelComplete) this.hideStatusCard();
     });
     return true;
   }
@@ -1041,6 +1050,7 @@ export class HimalRajyaScene extends Phaser.Scene {
             `Auto-continuing in 8 seconds…  ·  Press R to restart`,
         )
         .setVisible(true);
+      this.styleStatusCard(0x2fae5a); // green — level cleared
       this.armLevelChoice();
     } else {
       // FINALE — reached the summit. Submit the final score and open the leaderboard.
@@ -1062,6 +1072,7 @@ export class HimalRajyaScene extends Phaser.Scene {
             `\n\nThe prayer flags fly for you. Opening the leaderboard…`,
         )
         .setVisible(true);
+      this.styleStatusCard(0xf6b73c); // gold — summit reached
       // Hold on the summit so the finale lands as a climax, not a quick cut.
       this.time.delayedCall(3200, () => void this.openLeaderboard());
     }
@@ -1151,6 +1162,40 @@ export class HimalRajyaScene extends Phaser.Scene {
     );
   }
 
+  /**
+   * Draw the status card's backing panel + a top accent bar, sized to the current text, in
+   * an outcome colour (gold = summit, green = level won, red = game over, blue = neutral).
+   * Call AFTER setting the text + making it visible so getBounds() reflects the final size.
+   */
+  private styleStatusCard(accent: number): void {
+    const b = this.statusText.getBounds();
+    const pad = 4;
+    const x = b.x - pad;
+    const y = b.y - pad;
+    const w = b.width + pad * 2;
+    const h = b.height + pad * 2;
+    const r = 16;
+    const g = this.statusPanel;
+    g.clear();
+    // Soft dark panel body.
+    g.fillStyle(0x0d1b2e, 0.95);
+    g.fillRoundedRect(x, y, w, h, r);
+    // Full border in the accent colour, plus a thicker accent bar across the top edge.
+    g.lineStyle(2, accent, 0.9);
+    g.strokeRoundedRect(x, y, w, h, r);
+    g.fillStyle(accent, 1);
+    g.fillRoundedRect(x + r, y, w - r * 2, 5, { tl: 0, tr: 0, bl: 4, br: 4 });
+    g.setVisible(true);
+    // Keep the panel behind the text.
+    this.statusPanel.setDepth(this.statusText.depth - 1);
+  }
+
+  /** Hide the status card and its backing panel together. */
+  private hideStatusCard(): void {
+    this.statusText.setVisible(false);
+    this.statusPanel.setVisible(false).clear();
+  }
+
   private endGame(cause: string): void {
     if (this.gameOver) return;
     this.gameOver = true;
@@ -1196,6 +1241,7 @@ export class HimalRajyaScene extends Phaser.Scene {
           `\n\nPress R to begin a new journey (from the Terai)`,
       )
       .setVisible(true);
+    this.styleStatusCard(0xe23b3b); // red — game over
     this.armDeathRestart();
   }
 
