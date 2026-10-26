@@ -13,7 +13,7 @@
  *   - A khukuri swing whose hitbox overlaps it CUTS it: it plays a quick fall-apart tween,
  *     awards points, and is removed so the path opens. This is the core new verb.
  *
- * All art is 100% original, drawn procedurally in code (no external files). See CREDITS.md.
+ * All art is 100% original, drawn procedurally in code (no external files).
  */
 import Phaser from 'phaser';
 

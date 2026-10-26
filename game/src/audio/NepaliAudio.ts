@@ -1,7 +1,7 @@
 /**
  * NepaliAudio.ts — 100% ORIGINAL, procedurally-synthesised audio for Cloud Yatra.
  *
- * There are NO audio files anywhere in this project (see CREDITS.md): every sound is
+ * There are NO audio files anywhere in this project: every sound is
  * generated live in the browser with the Web Audio API. The music is an ORIGINAL,
  * anthem-style theme for the fictional kingdom "Himal Rajya" — a proud, march-like
  * melody (NOT Nepal's real national anthem, which we must never copy) over Nepali-folk
@@ -72,7 +72,7 @@ interface RegionMusic {
  * — while staying in the same D pentatonic scale as the rest of the game's audio so it
  * sits naturally with the SFX. All three regions share this ONE recognisable theme (so
  * it reads as the kingdom's anthem throughout the climb) and differ only in tempo,
- * timbre and octave. 100% original — see CREDITS.md.
+ * timbre and octave. 100% original.
  *
  * Scale index reference: 0=D3 1=E3 2=F#3 3=A3 4=B3 5=D4 6=E4 7=F#4 8=A4 9=B4 10=D5.
  */

@@ -15,7 +15,7 @@
  *    Yatri; while it is active the scene can query `getAttackHitbox()` to cut obstacles.
  *  - TELEMETRY-READY: the Yatri never touches the network. It calls an optional `onEvent`
  *    callback for meaningful moments (jump, land, damaged, died, respawn, attack).
- *  - ART: 100% original, drawn in code (no external files). See CREDITS.md.
+ *  - ART: 100% original, drawn in code (no external files).
  */
 import Phaser from 'phaser';
 import { PLAYER, type YatriState } from '../config/playerConfig';

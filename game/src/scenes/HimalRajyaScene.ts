@@ -18,7 +18,7 @@
  * Completing level 3 is the finale → submits the final score and opens the Leaderboard.
  * Dying restarts the pilgrimage from level 1.
  *
- * All art is ORIGINAL, drawn procedurally (see CREDITS.md).
+ * All art is ORIGINAL, drawn procedurally.
  */
 import Phaser from 'phaser';
 import { VIEW_WIDTH, VIEW_HEIGHT } from '../config/constants';
