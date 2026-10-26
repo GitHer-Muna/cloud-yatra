@@ -50,6 +50,7 @@ jobs:
           VITE_FARO_URL: ${{ vars.VITE_FARO_URL }}
           VITE_FARO_APP_KEY: ${{ vars.VITE_FARO_APP_KEY }}
           VITE_GRAFANA_DASHBOARD_URL: ${{ vars.VITE_GRAFANA_DASHBOARD_URL }}
+          VITE_GRAFANA_GRAND_URL: ${{ vars.VITE_GRAFANA_GRAND_URL }}
         run: npm run build
 
       # Wrangler v4 no longer auto-creates the Pages project on first deploy, so ensure it
