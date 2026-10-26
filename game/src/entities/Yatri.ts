@@ -19,6 +19,7 @@
  */
 import Phaser from 'phaser';
 import { PLAYER, type YatriState } from '../config/playerConfig';
+import { resolveJump } from '../config/jumpLogic';
 import type { Region } from '../config/levels';
 
 export interface YatriEvent {
@@ -190,16 +191,39 @@ export class Yatri extends Phaser.Physics.Arcade.Sprite {
 
     const left = Boolean(cursors.left?.isDown || alt?.left?.isDown);
     const right = Boolean(cursors.right?.isDown || alt?.right?.isDown);
-    const speed = PLAYER.moveSpeed * (onGround ? 1 : PLAYER.airControl);
+    // Smooth movement: ramp horizontal velocity toward a target instead of snapping to it.
+    // This removes the over-sensitive "instant full speed / instant stop" feel while
+    // staying responsive. Air uses a gentler accel for controllable jump arcs.
+    const topSpeed = PLAYER.moveSpeed * (onGround ? 1 : PLAYER.airControl);
+    const dt = Math.min(deltaMs, 50) / 1000; // clamp dt so a stutter frame can't over-step
+    const vx = body.velocity.x;
+    let targetVx = 0;
     if (left && !right) {
-      this.setVelocityX(-speed);
+      targetVx = -topSpeed;
       this.facing = -1;
     } else if (right && !left) {
-      this.setVelocityX(speed);
+      targetVx = topSpeed;
       this.facing = 1;
-    } else {
-      this.setVelocityX(onGround ? 0 : body.velocity.x * 0.98);
     }
+    // Accelerate toward the target when pressing, decelerate toward 0 when not. In the air,
+    // use the gentler air rate for deceleration too, so releasing mid-jump keeps a floaty
+    // arc rather than braking crisply like on the ground.
+    const pressing = targetVx !== 0;
+    const rate = pressing
+      ? onGround
+        ? PLAYER.groundAccel
+        : PLAYER.airAccel
+      : onGround
+        ? PLAYER.groundDecel
+        : PLAYER.airAccel;
+    const step = rate * dt;
+    let newVx;
+    if (Math.abs(targetVx - vx) <= step) {
+      newVx = targetVx;
+    } else {
+      newVx = vx + Math.sign(targetVx - vx) * step;
+    }
+    this.setVelocityX(newVx);
 
     // Khukuri swing (attack key). Manual rising-edge + cooldown so a held key doesn't
     // machine-gun. A swing does not interrupt movement or jumping — she can slash on the go.
@@ -215,19 +239,18 @@ export class Yatri extends Phaser.Physics.Arcade.Sprite {
     if (jumpHeld && !this.jumpWasHeld) this.jumpBufferedAt = now;
     this.jumpWasHeld = jumpHeld;
 
-    const canCoyote = now - this.lastGroundedAt <= PLAYER.coyoteMs;
-    const hasBufferedJump = now - this.jumpBufferedAt <= PLAYER.jumpBufferMs;
-    // First jump: from the ground (or within the coyote-time grace just after leaving it).
-    const canGroundJump = canCoyote && (onGround || body.velocity.y >= 0) && this.jumpsUsed < 1;
-    // Double jump: already airborne with a jump to spare. Allowed whether rising or
-    // falling, so a player can boost up to the next platform layer at any point.
-    const canDoubleJump = !onGround && !canCoyote && this.jumpsUsed >= 1 && this.jumpsUsed < PLAYER.maxJumps;
+    // The ground-jump / double-jump / coyote decision lives in a pure, tested function.
+    const decision = resolveJump({
+      now,
+      lastGroundedAt: this.lastGroundedAt,
+      jumpBufferedAt: this.jumpBufferedAt,
+      jumpsUsed: this.jumpsUsed,
+      onGround,
+      velocityY: body.velocity.y,
+    });
 
-    if (hasBufferedJump && (canGroundJump || canDoubleJump)) {
-      const impulse = canGroundJump
-        ? PLAYER.jumpVelocity
-        : PLAYER.jumpVelocity * PLAYER.doubleJumpFactor;
-      this.setVelocityY(-impulse);
+    if (decision.jump) {
+      this.setVelocityY(-decision.impulse);
       this.isJumpingUp = true;
       this.jumpBufferedAt = -1e9;
       this.lastGroundedAt = -1e9; // consume coyote grace so it can't double-fire
@@ -293,7 +316,10 @@ export class Yatri extends Phaser.Physics.Arcade.Sprite {
   bounceOffStomp(): void {
     this.setVelocityY(-PLAYER.jumpVelocity * 0.72);
     this.isJumpingUp = true;
-    this.jumpsUsed = 0; // a stomp bounce is a fresh launch — refill the air jump
+    // The bounce counts as the "first" jump, leaving exactly one air jump available. (Setting
+    // this to 0 would make BOTH gates fail — canGroundJump needs coyote grace, canDoubleJump
+    // needs jumpsUsed>=1 — so the player couldn't jump at all until landing.)
+    this.jumpsUsed = 1;
     this.emit_('stomp');
   }
 

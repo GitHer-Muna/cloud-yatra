@@ -6,12 +6,19 @@
 
 export const PLAYER = {
   // Movement feel.
-  moveSpeed: 190, // horizontal px/s — tuned down from 250 so movement is controllable, not twitchy
+  moveSpeed: 230, // horizontal px/s top speed. Movement eases in/out via accel/decel below
+  // (not instant), so it no longer feels twitchy even at this speed — and the widest
+  // platform gap (225px) clears with real margin (flight ≈ 276px at JV=600).
+  // How quickly Yatri ramps up to / slows down from top speed (px/s²). A short ramp removes
+  // the "instant snap" that felt over-sensitive, while staying responsive.
+  groundAccel: 2600,
+  groundDecel: 3200, // stronger than accel so stopping feels crisp, not slidey
+  airAccel: 1800, // a touch floatier in the air for controllable jump arcs
   // Jump impulse. Set to 600 so Yatri can CLIMB to the elevated platforms and collect the
   // blooms/bells sitting on them, rather than grabbing them from below. With GRAVITY_Y=1000:
   //   max height = 600²/(2·1000) = 180px  per first jump (clears a full platform layer)
   //   air-time   = 2·600/1000    = 1.2s
-  //   h-flight   = 190·1.2       = 228px  (widest platform gap ≈225px → clears it)
+  //   h-flight   = 230·1.2       = 276px  (widest platform gap ≈225px → clears it, ~18px margin)
   // A single jump reaches the lower/mid ledges directly; the DOUBLE JUMP (below) stacks on
   // top so the HIGHEST layers (tallest platform ≈220px) are reachable with real margin —
   // the player actually jumps UP to the pickup. The levels.test.ts accessibility checks

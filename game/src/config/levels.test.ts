@@ -5,6 +5,11 @@ import { PLAYER } from './playerConfig';
 
 const maxJumpHeight = (PLAYER.jumpVelocity * PLAYER.jumpVelocity) / (2 * GRAVITY_Y);
 const maxHorizontalFlight = PLAYER.moveSpeed * ((2 * PLAYER.jumpVelocity) / GRAVITY_Y);
+// A gap equal to maxHorizontalFlight is only clearable with a frame-perfect jump at the
+// exact peak, which feels broken in practice. Require a safety margin so real players clear
+// it comfortably: usable flight is 88% of the theoretical max.
+const SAFETY = 0.88;
+const usableFlight = maxHorizontalFlight * SAFETY;
 // With the double jump, the reachable ceiling is the first jump's height plus the
 // (slightly softer) mid-air jump's height — so every platform layer is climbable.
 const secondJumpHeight =
@@ -56,7 +61,7 @@ describe('three-region route accessibility', () => {
         const previous = platforms[i - 1];
         const next = platforms[i];
         const horizontalGap = next.x - next.w / 2 - (previous.x + previous.w / 2);
-        expect(horizontalGap).toBeLessThanOrEqual(maxHorizontalFlight);
+        expect(horizontalGap).toBeLessThanOrEqual(usableFlight);
         expect(platformTopRise(previous.dy, next.dy)).toBeLessThanOrEqual(maxJumpHeight);
       }
     }
