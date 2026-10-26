@@ -1,42 +1,4 @@
 {
-  "__requires": [
-    {
-      "type": "grafana",
-      "id": "grafana",
-      "name": "Grafana",
-      "version": "10.4.0"
-    },
-    {
-      "type": "datasource",
-      "id": "loki",
-      "name": "Loki",
-      "version": "1.0.0"
-    },
-    {
-      "type": "datasource",
-      "id": "prometheus",
-      "name": "Prometheus",
-      "version": "1.0.0"
-    },
-    {
-      "type": "datasource",
-      "id": "tempo",
-      "name": "Tempo",
-      "version": "1.0.0"
-    },
-    {
-      "type": "datasource",
-      "id": "yesoreyeram-infinity-datasource",
-      "name": "Infinity",
-      "version": "2.0.0"
-    },
-    {
-      "type": "panel",
-      "id": "innius-video-panel",
-      "name": "Video",
-      "version": ""
-    }
-  ],
   "annotations": {
     "list": [
       {
@@ -57,63 +19,18 @@
   "editable": true,
   "graphTooltip": 1,
   "liveNow": true,
-  "refresh": "5s",
+  "refresh": "30s",
   "schemaVersion": 39,
   "tags": [
     "cloud-yatra",
     "observability",
-    "full-stack",
-    "cloudflare",
-    "worker",
-    "d1",
-    "faro",
-    "prometheus",
-    "loki",
-    "tempo"
+    "nepal"
   ],
   "templating": {
-    "list": [
-      {
-        "current": {
-          "text": "2383",
-          "value": "2383"
-        },
-        "description": "Faro app_id from Frontend Observability (not a secret).",
-        "label": "Faro app_id",
-        "name": "faro_app_id",
-        "options": [],
-        "query": "2383",
-        "type": "textbox"
-      },
-      {
-        "current": {
-          "text": "https://cloud-yatra-api.im-shree03.workers.dev",
-          "value": "https://cloud-yatra-api.im-shree03.workers.dev"
-        },
-        "description": "Base URL of your deployed Cloud Yatra Worker (for the D1 Infinity panels).",
-        "label": "API base URL",
-        "name": "api_base_url",
-        "options": [],
-        "query": "https://cloud-yatra-api.im-shree03.workers.dev",
-        "type": "textbox"
-      },
-      {
-        "type": "textbox",
-        "name": "session",
-        "label": "Your session",
-        "description": "Anonymous per-tab id, set automatically by the game page (var-session). Leave blank to hide the Your Run row.",
-        "query": "",
-        "current": {
-          "text": "",
-          "value": ""
-        },
-        "hide": 0,
-        "skipUrlSync": false
-      }
-    ]
+    "list": []
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {
@@ -134,474 +51,25 @@
     ]
   },
   "timezone": "",
-  "title": "Cloud Yatra · Grand Observatory (preset)",
-  "uid": "cloud-yatra-np-preset",
+  "title": "Cloud Yatra · Live Observatory",
+  "uid": "cloud-yatra",
   "version": 6,
   "panels": [
     {
+      "id": 1000000,
       "type": "text",
-      "id": 52,
-      "transparent": true,
+      "title": "",
       "gridPos": {
-        "h": 4,
+        "h": 3,
         "w": 24,
         "x": 0,
         "y": 0
       },
       "options": {
-        "mode": "markdown",
-        "content": "<div style=\"display:flex;align-items:center;gap:16px;padding:6px 10px;background:linear-gradient(90deg,#0b1020 0%,#20357a 40%,#c0392b 70%,#f6b73c 100%);border-radius:10px;color:#fff;\"><div style=\"font-size:30px;line-height:1\">🏔️</div><div><div style=\"font-size:20px;font-weight:700;letter-spacing:.3px\">Cloud Yatra · Grand Observatory</div><div style=\"opacity:.9;font-size:12px\">Live telemetry from Yatri's climb through Himal Rajya — <b>browser → Faro</b> · <b>Worker → Prometheus / Loki / Tempo</b> · <b>D1 → Infinity</b>. Play at <b>cloud-yatra.pages.dev</b>; your run appears below.</div></div><div style=\"margin-left:auto;text-align:right;font-size:11px;opacity:.85\">🟢 healthy&nbsp;&nbsp;🟡 strained&nbsp;&nbsp;🔴 chaos / danger</div></div>"
-      }
-    },
-    {
-      "type": "row",
-      "id": 66,
-      "collapsed": false,
-      "title": "PLAY CLOUD YATRA · the game runs here; your telemetry streams below",
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 4
+        "mode": "html",
+        "content": "<div style=\"display:flex;align-items:center;gap:16px;padding:10px 16px;background:linear-gradient(90deg,#0b1020 0%,#20357a 38%,#8e2b2b 68%,#f6b73c 100%);border-radius:12px;color:#fff;font-family:system-ui,sans-serif\"><div style=\"font-size:34px;line-height:1\">🏔️</div><div><div style=\"font-size:21px;font-weight:800;letter-spacing:.3px\">Cloud Yatra · Live Observatory</div><div style=\"opacity:.92;font-size:12px;margin-top:2px\">Yatri's climb through Himal Rajya, in real time — browser (Faro RUM) → Cloudflare Worker (metrics · logs · traces) → D1 analytics. Play above; the system responds below.</div></div></div>"
       },
-      "panels": []
-    },
-    {
-      "type": "innius-video-panel",
-      "id": 67,
-      "title": "Cloud Yatra — play here",
-      "description": "The live game embedded via the Video panel (iframe mode). Play a run and watch your own stats and the service telemetry update in the panels below.",
-      "gridPos": {
-        "h": 15,
-        "w": 24,
-        "x": 0,
-        "y": 5
-      },
-      "transparent": false,
-      "options": {
-        "videoType": "iframe",
-        "iframeURL": "https://cloud-yatra.pages.dev/?embed=game-only",
-        "autoPlay": false,
-        "loop": false,
-        "customBackground": false
-      },
-      "datasource": null,
-      "links": [
-        {
-          "title": "Open the game full-screen",
-          "url": "https://cloud-yatra.pages.dev",
-          "targetBlank": true
-        }
-      ]
-    },
-    {
-      "type": "row",
-      "title": "YOUR RUN · live stats for the current session",
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 20
-      },
-      "id": 44,
-      "panels": []
-    },
-    {
-      "type": "stat",
-      "title": "Best score",
-      "description": "Your highest score so far this session (D1).",
-      "datasource": {
-        "type": "yesoreyeram-infinity-datasource",
-        "uid": "grafanacloud-infinity"
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 0,
-        "y": 21
-      },
-      "id": 46,
-      "transparent": true,
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "decimals": 0,
-          "mappings": [],
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "#f6b73c"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "orientation": "auto",
-        "textMode": "value_and_name",
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "type": "json",
-          "source": "url",
-          "format": "table",
-          "url": "${api_base_url}/session?id=${session}",
-          "root_selector": "session",
-          "parser": "backend",
-          "columns": [
-            {
-              "selector": "bestScore",
-              "text": "bestScore",
-              "type": "number"
-            }
-          ],
-          "url_options": {
-            "method": "GET",
-            "data": ""
-          }
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "title": "Progress",
-      "description": "How far up Himal Rajya this session has climbed.",
-      "datasource": {
-        "type": "yesoreyeram-infinity-datasource",
-        "uid": "grafanacloud-infinity"
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 4,
-        "y": 21
-      },
-      "id": 47,
-      "transparent": true,
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "decimals": 0,
-          "mappings": [],
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "#3fb6ff"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "orientation": "auto",
-        "textMode": "value_and_name",
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "type": "json",
-          "source": "url",
-          "format": "table",
-          "url": "${api_base_url}/session?id=${session}",
-          "root_selector": "session",
-          "parser": "backend",
-          "columns": [
-            {
-              "selector": "maxProgress",
-              "text": "maxProgress",
-              "type": "number"
-            }
-          ],
-          "url_options": {
-            "method": "GET",
-            "data": ""
-          }
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "title": "Completions",
-      "description": "Summits reached this session.",
-      "datasource": {
-        "type": "yesoreyeram-infinity-datasource",
-        "uid": "grafanacloud-infinity"
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 8,
-        "y": 21
-      },
-      "id": 48,
-      "transparent": true,
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "decimals": 0,
-          "mappings": [],
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "#73d13d"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "orientation": "auto",
-        "textMode": "value_and_name",
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "type": "json",
-          "source": "url",
-          "format": "table",
-          "url": "${api_base_url}/session?id=${session}",
-          "root_selector": "session",
-          "parser": "backend",
-          "columns": [
-            {
-              "selector": "completed",
-              "text": "completed",
-              "type": "number"
-            }
-          ],
-          "url_options": {
-            "method": "GET",
-            "data": ""
-          }
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "title": "Deaths",
-      "description": "Falls and hazards taken this session.",
-      "datasource": {
-        "type": "yesoreyeram-infinity-datasource",
-        "uid": "grafanacloud-infinity"
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 12,
-        "y": 21
-      },
-      "id": 49,
-      "transparent": true,
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "decimals": 0,
-          "mappings": [],
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "#e0294a"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "orientation": "auto",
-        "textMode": "value_and_name",
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "type": "json",
-          "source": "url",
-          "format": "table",
-          "url": "${api_base_url}/session?id=${session}",
-          "root_selector": "session",
-          "parser": "backend",
-          "columns": [
-            {
-              "selector": "deaths",
-              "text": "deaths",
-              "type": "number"
-            }
-          ],
-          "url_options": {
-            "method": "GET",
-            "data": ""
-          }
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "title": "Jumps",
-      "description": "Jumps made this session.",
-      "datasource": {
-        "type": "yesoreyeram-infinity-datasource",
-        "uid": "grafanacloud-infinity"
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 16,
-        "y": 21
-      },
-      "id": 50,
-      "transparent": true,
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "decimals": 0,
-          "mappings": [],
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "#b388ff"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "orientation": "auto",
-        "textMode": "value_and_name",
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "type": "json",
-          "source": "url",
-          "format": "table",
-          "url": "${api_base_url}/session?id=${session}",
-          "root_selector": "session",
-          "parser": "backend",
-          "columns": [
-            {
-              "selector": "jumps",
-              "text": "jumps",
-              "type": "number"
-            }
-          ],
-          "url_options": {
-            "method": "GET",
-            "data": ""
-          }
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "title": "Collectibles",
-      "description": "Flowers and bells gathered this session.",
-      "datasource": {
-        "type": "yesoreyeram-infinity-datasource",
-        "uid": "grafanacloud-infinity"
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 20,
-        "y": 21
-      },
-      "id": 51,
-      "transparent": true,
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "decimals": 0,
-          "mappings": [],
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "#8ecbff"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "orientation": "auto",
-        "textMode": "value_and_name",
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "type": "json",
-          "source": "url",
-          "format": "table",
-          "url": "${api_base_url}/session?id=${session}",
-          "root_selector": "session",
-          "parser": "backend",
-          "columns": [
-            {
-              "selector": "collects",
-              "text": "collects",
-              "type": "number"
-            }
-          ],
-          "url_options": {
-            "method": "GET",
-            "data": ""
-          }
-        }
-      ]
+      "transparent": true
     },
     {
       "type": "row",
@@ -611,7 +79,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 26
+        "y": 3
       },
       "id": 1,
       "panels": []
@@ -628,7 +96,7 @@
         "h": 6,
         "w": 4,
         "x": 0,
-        "y": 27
+        "y": 4
       },
       "id": 2,
       "transparent": true,
@@ -678,7 +146,7 @@
         "h": 6,
         "w": 4,
         "x": 4,
-        "y": 27
+        "y": 4
       },
       "id": 3,
       "transparent": true,
@@ -728,7 +196,7 @@
         "h": 6,
         "w": 4,
         "x": 8,
-        "y": 27
+        "y": 4
       },
       "id": 4,
       "transparent": true,
@@ -778,7 +246,7 @@
         "h": 6,
         "w": 4,
         "x": 12,
-        "y": 27
+        "y": 4
       },
       "id": 5,
       "transparent": true,
@@ -844,7 +312,7 @@
         "h": 6,
         "w": 4,
         "x": 16,
-        "y": 27
+        "y": 4
       },
       "id": 6,
       "transparent": true,
@@ -910,7 +378,7 @@
         "h": 6,
         "w": 4,
         "x": 20,
-        "y": 27
+        "y": 4
       },
       "id": 7,
       "transparent": true,
@@ -946,7 +414,7 @@
           "type": "json",
           "source": "url",
           "format": "table",
-          "url": "${api_base_url}/stats",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
           "root_selector": "totals",
           "parser": "backend",
           "columns": [
@@ -979,7 +447,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 33
+        "y": 10
       },
       "panels": []
     },
@@ -997,7 +465,7 @@
         "h": 7,
         "w": 6,
         "x": 0,
-        "y": 34
+        "y": 11
       },
       "fieldConfig": {
         "defaults": {
@@ -1062,7 +530,7 @@
         "h": 7,
         "w": 6,
         "x": 6,
-        "y": 34
+        "y": 11
       },
       "fieldConfig": {
         "defaults": {
@@ -1127,7 +595,7 @@
         "h": 7,
         "w": 6,
         "x": 12,
-        "y": 34
+        "y": 11
       },
       "fieldConfig": {
         "defaults": {
@@ -1192,7 +660,7 @@
         "h": 7,
         "w": 6,
         "x": 18,
-        "y": 34
+        "y": 11
       },
       "fieldConfig": {
         "defaults": {
@@ -1251,7 +719,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 41
+        "y": 18
       },
       "id": 8,
       "panels": []
@@ -1268,7 +736,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 42
+        "y": 19
       },
       "id": 9,
       "transparent": true,
@@ -1342,7 +810,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 42
+        "y": 19
       },
       "id": 10,
       "transparent": true,
@@ -1434,7 +902,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 49
+        "y": 26
       },
       "id": 11,
       "transparent": true,
@@ -1569,7 +1037,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 49
+        "y": 26
       },
       "id": 12,
       "transparent": true,
@@ -1677,7 +1145,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 56
+        "y": 33
       },
       "panels": []
     },
@@ -1695,7 +1163,7 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 57
+        "y": 34
       },
       "options": {
         "showTime": true,
@@ -1729,7 +1197,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 66
+        "y": 43
       },
       "fieldConfig": {
         "defaults": {
@@ -1850,7 +1318,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 66
+        "y": 43
       },
       "fieldConfig": {
         "defaults": {
@@ -1960,7 +1428,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 73
+        "y": 50
       },
       "fieldConfig": {
         "defaults": {
@@ -2025,7 +1493,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 73
+        "y": 50
       },
       "fieldConfig": {
         "defaults": {
@@ -2099,7 +1567,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 81
+        "y": 58
       },
       "id": 17,
       "panels": []
@@ -2116,7 +1584,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 82
+        "y": 59
       },
       "id": 18,
       "transparent": true,
@@ -2172,12 +1640,12 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "quantile_over_time(0.95, {kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"web-vitals\" | label_format vital=\"{{ or .value_lcp .lcp }}\" | unwrap vital [$__interval])",
+          "expr": "quantile_over_time(0.95, {kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"web-vitals\" | label_format vital=\"{{ or .value_lcp .lcp }}\" | unwrap vital [$__interval])",
           "legendFormat": "LCP p95"
         },
         {
           "refId": "B",
-          "expr": "quantile_over_time(0.95, {kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"web-vitals\" | label_format vital=\"{{ or .value_inp .inp }}\" | unwrap vital [$__interval])",
+          "expr": "quantile_over_time(0.95, {kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"web-vitals\" | label_format vital=\"{{ or .value_inp .inp }}\" | unwrap vital [$__interval])",
           "legendFormat": "INP p95"
         }
       ],
@@ -2201,7 +1669,7 @@
         "h": 7,
         "w": 8,
         "x": 12,
-        "y": 82
+        "y": 59
       },
       "id": 19,
       "transparent": true,
@@ -2257,17 +1725,17 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"web-vitals\" | label_format vital=\"{{ or .value_cls .cls }}\" | unwrap vital [$__interval])",
+          "expr": "avg_over_time({kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"web-vitals\" | label_format vital=\"{{ or .value_cls .cls }}\" | unwrap vital [$__interval])",
           "legendFormat": "CLS"
         },
         {
           "refId": "B",
-          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"web-vitals\" | label_format vital=\"{{ or .value_ttfb .ttfb }}\" | unwrap vital [$__interval])",
+          "expr": "avg_over_time({kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"web-vitals\" | label_format vital=\"{{ or .value_ttfb .ttfb }}\" | unwrap vital [$__interval])",
           "legendFormat": "TTFB"
         },
         {
           "refId": "C",
-          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"web-vitals\" | label_format vital=\"{{ or .value_fcp .fcp }}\" | unwrap vital [$__interval])",
+          "expr": "avg_over_time({kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"web-vitals\" | label_format vital=\"{{ or .value_fcp .fcp }}\" | unwrap vital [$__interval])",
           "legendFormat": "FCP"
         }
       ]
@@ -2284,7 +1752,7 @@
         "h": 7,
         "w": 4,
         "x": 20,
-        "y": 82
+        "y": 59
       },
       "id": 20,
       "transparent": true,
@@ -2344,7 +1812,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(count_over_time({kind=\"exception\", app_id=\"$faro_app_id\"} [$__interval]))"
+          "expr": "sum(count_over_time({kind=\"exception\", app_id=\"2383\"} [$__interval]))"
         }
       ],
       "links": [
@@ -2363,7 +1831,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 89
+        "y": 66
       },
       "id": 21,
       "panels": []
@@ -2380,7 +1848,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 90
+        "y": 67
       },
       "id": 22,
       "transparent": true,
@@ -2442,7 +1910,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_client_perf\" | unwrap value_fps [$__interval])",
+          "expr": "avg_over_time({kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"game_client_perf\" | unwrap value_fps [$__interval])",
           "legendFormat": "FPS · {{level}}"
         }
       ],
@@ -2466,7 +1934,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 90
+        "y": 67
       },
       "id": 23,
       "transparent": true,
@@ -2492,7 +1960,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_client_perf\" | unwrap value_fps [$__interval])",
+          "expr": "avg_over_time({kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"game_client_perf\" | unwrap value_fps [$__interval])",
           "format": "heatmap",
           "range": true
         }
@@ -2510,7 +1978,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 97
+        "y": 74
       },
       "id": 24,
       "transparent": true,
@@ -2552,7 +2020,7 @@
           "type": "json",
           "source": "url",
           "format": "table",
-          "url": "${api_base_url}/stats",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
           "root_selector": "funnel",
           "parser": "backend",
           "columns": [
@@ -2605,7 +2073,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 103
+        "y": 80
       },
       "fieldConfig": {
         "defaults": {
@@ -2645,7 +2113,7 @@
           "type": "json",
           "source": "url",
           "format": "table",
-          "url": "${api_base_url}/stats",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
           "root_selector": "byLevel",
           "parser": "backend",
           "columns": [
@@ -2675,7 +2143,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 109
+        "y": 86
       },
       "id": 25,
       "panels": []
@@ -2692,7 +2160,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 110
+        "y": 87
       },
       "id": 26,
       "transparent": true,
@@ -2728,7 +2196,7 @@
           "type": "json",
           "source": "url",
           "format": "table",
-          "url": "${api_base_url}/stats",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
           "root_selector": "eventsByType",
           "parser": "backend",
           "columns": [
@@ -2769,7 +2237,7 @@
         "h": 7,
         "w": 6,
         "x": 12,
-        "y": 110
+        "y": 87
       },
       "id": 27,
       "transparent": true,
@@ -2805,7 +2273,7 @@
           "type": "json",
           "source": "url",
           "format": "table",
-          "url": "${api_base_url}/stats",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
           "root_selector": "deathsByCause",
           "parser": "backend",
           "columns": [
@@ -2839,7 +2307,7 @@
         "h": 7,
         "w": 6,
         "x": 18,
-        "y": 110
+        "y": 87
       },
       "id": 28,
       "transparent": true,
@@ -2886,7 +2354,7 @@
           "type": "json",
           "source": "url",
           "format": "table",
-          "url": "${api_base_url}/stats",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
           "root_selector": "collectsByKind",
           "parser": "backend",
           "columns": [
@@ -2920,7 +2388,7 @@
         "h": 7,
         "w": 16,
         "x": 0,
-        "y": 117
+        "y": 94
       },
       "id": 29,
       "transparent": true,
@@ -2957,7 +2425,7 @@
           "type": "json",
           "source": "url",
           "format": "table",
-          "url": "${api_base_url}/stats",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
           "root_selector": "byLevel",
           "parser": "backend",
           "columns": [
@@ -3001,7 +2469,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 117
+        "y": 94
       },
       "id": 30,
       "transparent": true,
@@ -3030,7 +2498,7 @@
           "type": "json",
           "source": "url",
           "format": "table",
-          "url": "${api_base_url}/stats",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
           "root_selector": "funnel",
           "columns": [
             {
@@ -3070,7 +2538,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 124
+        "y": 101
       },
       "id": 31,
       "panels": []
@@ -3087,7 +2555,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 125
+        "y": 102
       },
       "id": 32,
       "transparent": true,
@@ -3176,7 +2644,7 @@
           "type": "json",
           "source": "url",
           "format": "table",
-          "url": "${api_base_url}/leaderboard?limit=15",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/leaderboard?limit=15",
           "root_selector": "entries",
           "columns": [
             {
@@ -3220,7 +2688,7 @@
         "h": 4,
         "w": 4,
         "x": 12,
-        "y": 125
+        "y": 102
       },
       "id": 33,
       "transparent": true,
@@ -3256,7 +2724,7 @@
           "type": "json",
           "source": "url",
           "format": "table",
-          "url": "${api_base_url}/stats",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
           "root_selector": "totals",
           "parser": "backend",
           "columns": [
@@ -3285,7 +2753,7 @@
         "h": 4,
         "w": 4,
         "x": 16,
-        "y": 125
+        "y": 102
       },
       "id": 34,
       "transparent": true,
@@ -3321,7 +2789,7 @@
           "type": "json",
           "source": "url",
           "format": "table",
-          "url": "${api_base_url}/stats",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
           "root_selector": "totals",
           "parser": "backend",
           "columns": [
@@ -3350,7 +2818,7 @@
         "h": 8,
         "w": 4,
         "x": 20,
-        "y": 125
+        "y": 102
       },
       "id": 35,
       "transparent": true,
@@ -3395,7 +2863,7 @@
           "type": "json",
           "source": "url",
           "format": "table",
-          "url": "${api_base_url}/stats",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
           "root_selector": "collectsByKind",
           "parser": "backend",
           "columns": [
@@ -3429,7 +2897,7 @@
         "h": 4,
         "w": 8,
         "x": 12,
-        "y": 133
+        "y": 110
       },
       "id": 36,
       "transparent": true,
@@ -3479,7 +2947,7 @@
           "type": "json",
           "source": "url",
           "format": "table",
-          "url": "${api_base_url}/stats",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
           "root_selector": "",
           "parser": "backend",
           "columns": [
@@ -3504,7 +2972,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 137
+        "y": 114
       },
       "id": 37,
       "panels": []
@@ -3523,7 +2991,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 138
+        "y": 115
       },
       "fieldConfig": {
         "defaults": {
@@ -3606,7 +3074,7 @@
           "type": "json",
           "source": "url",
           "format": "table",
-          "url": "${api_base_url}/stats",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
           "root_selector": "topCountries",
           "parser": "backend",
           "columns": [
@@ -3640,7 +3108,7 @@
         "h": 9,
         "w": 6,
         "x": 12,
-        "y": 138
+        "y": 115
       },
       "id": 38,
       "transparent": true,
@@ -3669,7 +3137,7 @@
           "type": "json",
           "source": "url",
           "format": "table",
-          "url": "${api_base_url}/stats",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
           "root_selector": "topCountries",
           "columns": [
             {
@@ -3703,7 +3171,7 @@
         "h": 9,
         "w": 6,
         "x": 18,
-        "y": 138
+        "y": 115
       },
       "id": 39,
       "transparent": true,
@@ -3732,7 +3200,7 @@
           "type": "json",
           "source": "url",
           "format": "table",
-          "url": "${api_base_url}/stats",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
           "root_selector": "eventsByType",
           "columns": [
             {
@@ -3761,7 +3229,7 @@
         "h": 4,
         "w": 24,
         "x": 0,
-        "y": 147
+        "y": 124
       },
       "id": 40,
       "transparent": true,
@@ -3783,7 +3251,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 151
+        "y": 128
       },
       "id": 41,
       "panels": []
@@ -3801,7 +3269,7 @@
         "h": 6,
         "w": 4,
         "x": 0,
-        "y": 152
+        "y": 129
       },
       "transparent": true,
       "fieldConfig": {
@@ -3876,7 +3344,7 @@
         "h": 6,
         "w": 20,
         "x": 4,
-        "y": 152
+        "y": 129
       },
       "fieldConfig": {
         "defaults": {
@@ -3950,7 +3418,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 158
+        "y": 135
       },
       "fieldConfig": {
         "defaults": {
@@ -3967,7 +3435,7 @@
           "type": "json",
           "source": "url",
           "format": "table",
-          "url": "${api_base_url}/chaos/events",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/chaos/events",
           "url_options": {
             "method": "GET",
             "data": ""

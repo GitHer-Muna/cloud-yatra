@@ -101,7 +101,7 @@ cloud-yatra/
 │   └── src/               Router, DB, event validation, metrics, logger, CORS, chaos
 │
 ├── observability/         Grafana Cloud assets
-│   ├── dashboards/        Grand Observatory (full) and Live Observatory (public) JSON
+│   ├── dashboards/        Observatory source (full) + generated public copy JSON
 │   └── grafana-alerts.yaml  Importable Grafana-managed alert rules
 │
 └── .github/workflows/     CI/CD — deploy Pages and the Worker from main
@@ -149,28 +149,29 @@ secrets. Secrets are set with `wrangler secret put` and are never committed.
 
 ## Observability
 
-Import `observability/dashboards/cloud-yatra-grand-observatory.json` into your own Grafana
-Cloud instance and map its data sources: Faro/Loki (RUM), Prometheus (Worker `/metrics`),
-Loki (backend logs), Tempo (traces), and Infinity (D1 analytics via the Worker's JSON
-endpoints).
+There is one canonical dashboard, kept in two forms:
 
-The grand dashboard is the main surface: the game plays inside it, embedded in a **Video
-panel** (`innius-video-panel`, iframe mode) at the top, with the live telemetry panels
-below. Install the Video panel from **Administration → Plugins and data → Plugins** (search
-"Video" by innius) and the game-in-dashboard panel renders. The game page's CSP allows
-framing by the Grafana Cloud origin for exactly this embed.
+- `observability/dashboards/cloud-yatra-observatory.json` — the **source** dashboard
+  (authenticated import). Rich, every signal, with the game embedded in a **Video panel**
+  (`innius-video-panel`) at the top and a per-session "your run" row. Import it and map five
+  data sources: Faro/Loki (RUM), Prometheus (Worker `/metrics`), Loki (backend logs), Tempo
+  (traces), and Infinity (D1 analytics). Install the Video panel from **Administration →
+  Plugins and data → Plugins** (search "Video" by innius) so the game-in-dashboard panel
+  renders.
+- `observability/dashboards/cloud-yatra-observatory-public.json` — the **public** copy,
+  generated from the source by `observability/build-dashboard.mjs`. No template variables
+  (public dashboards can't use them), datasource refs wired to this stack's names, URLs
+  hardcoded. This is the one shared externally (Share → Share externally) and embedded below
+  the game. Regenerate with `node observability/build-dashboard.mjs` after editing the
+  source. Rows: Live Now, SLOs & error budget, Backend, Logs & Traces, Player Experience,
+  Game Performance, Yatri's Journey, Scores, World, Chaos.
 
-Ready-to-import **preset** copies — `cloud-yatra-grand-observatory-preset.json` and
-`cloud-yatra-live-observatory-public-preset.json` — are wired to the standard Grafana Cloud
-datasource names, so they import with no "map your datasources" screen. A trimmed,
-variable-free `cloud-yatra-live-observatory-public.json` is included for public sharing
-(Share → Share externally).
-
-Below the game, the standalone page links to the real Grafana dashboard (opens in a new tab
-via `VITE_GRAFANA_GRAND_URL`, falling back to `VITE_GRAFANA_DASHBOARD_URL`). Grafana Cloud
-dashboards send CSP `frame-ancestors 'none'`, so they can't be iframed on another origin —
-hence the link-out, and hence the game-in-dashboard layout above, which embeds the game in
-Grafana rather than the reverse.
+The public dashboard is embedded **inline below the game** on the standalone page. Grafana
+Cloud sends CSP `frame-ancestors 'none'`, so the dashboard can't be iframed on another
+origin directly; the Cloudflare Worker reverse-proxies it under `/dash` + the Grafana SPA
+paths (`/api`, `/public`, `/public-dashboards`, `/bootdata`, …) from its own origin, with
+the frame-blocking headers stripped, so the iframe renders. Per-player "your run" stats live
+in the game itself (the page knows the session); public dashboards can't filter per viewer.
 
 `observability/grafana-alerts.yaml` holds importable Grafana-managed alert rules; set your
 Prometheus data source UID before importing.
