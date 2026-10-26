@@ -434,7 +434,10 @@
       const publicUrl = (import.meta.env.VITE_GRAFANA_DASHBOARD_URL || '').trim();
 
       // Build the proxied embed URL from the public-dashboard token, if we have both the
-      // Worker API base and a /public-dashboards/<token> URL.
+      // Worker API base and a /public-dashboards/<token> URL. The Worker proxies the
+      // /public-dashboards path at its ROOT (not under /dash) so the Grafana SPA sees
+      // window.location.pathname === "/public-dashboards/<token>", which its boot script
+      // requires — otherwise it shows "Error loading Grafana".
       function buildProxyEmbedUrl() {
         if (!apiBase || !publicUrl) return '';
         try {
@@ -445,7 +448,7 @@
           params.set('kiosk', '1');
           params.set('theme', 'dark');
           if (!params.has('refresh')) params.set('refresh', '30s');
-          return `${apiBase}/dash${u.pathname}?${params.toString()}`;
+          return `${apiBase}${u.pathname}?${params.toString()}`;
         } catch {
           return '';
         }

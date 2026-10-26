@@ -33,10 +33,13 @@ const PREFIX = '/dash';
 
 // Grafana SPA root-absolute prefixes. The public-dashboard app issues fetch('/api/...'),
 // which ignores <base href> and hits the Worker ROOT — so we must proxy these prefixes at
-// the root too, or every panel query 404s and the dashboard renders blank. These never
-// collide with this API's own routes (/healthz, /metrics, /stats, /leaderboard, /session,
-// /score, /event, /events, /chaos/*), which use entirely different path names.
-const GRAFANA_ROOT_PREFIXES = ['/api/', '/public/', '/avatar/'];
+// the root too, or every panel query 404s and the dashboard renders blank. We ALSO serve
+// the dashboard HTML at /public-dashboards/<token> (NOT under /dash): the Grafana boot
+// script matches window.location.pathname against /public-dashboards/.* to derive its
+// public context, so a /dash prefix breaks it and yields "Error loading Grafana". None of
+// these collide with this API's own routes (/healthz, /metrics, /stats, /leaderboard,
+// /session, /score, /event, /events, /chaos/*), which use entirely different path names.
+const GRAFANA_ROOT_PREFIXES = ['/api/', '/public/', '/avatar/', '/public-dashboards/'];
 
 /** True when the Worker should handle this request as a dashboard-proxy request. */
 export function isProxyRequest(pathname: string): boolean {
