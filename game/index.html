@@ -116,61 +116,57 @@
       #cy-observatory code {
         color: #f3c623;
       }
-      /* Embedded Grafana dashboard (shown only when VITE_GRAFANA_DASHBOARD_URL is a
-         framable public-dashboard URL; otherwise this stays hidden and the live tiles
-         below act as the fallback). */
-      #cy-grafana-embed[hidden] {
-        display: none !important;
-      }
-      #cy-grafana-embed {
+      /* Live-dashboard call-to-action banner. Grafana Cloud blocks iframe embedding (CSP
+         frame-ancestors 'none'), so instead of a broken frame we present a clear, handsome
+         button to open the real dashboard in a new tab. */
+      #cy-dash-cta {
+        display: flex;
+        align-items: center;
+        gap: 16px;
         margin-top: 8px;
-        border: 1px solid rgba(142, 203, 255, 0.18);
-        border-radius: 12px;
-        overflow: hidden;
-        background: rgba(12, 24, 41, 0.9);
-      }
-      #cy-grafana-embed iframe {
-        display: block;
-        width: 100%;
-        height: 70vh;
-        min-height: 480px;
-        border: 0;
-      }
-      /* Shown only when the Grafana public-dashboard iframe is refused (CSP frame-ancestors).
-         A tidy card with a new-tab link, so the page never shows a broken/blank frame. */
-      #cy-embed-fallback {
-        margin-top: 8px;
-        padding: 20px 18px;
-        text-align: center;
-        border: 1px solid rgba(142, 203, 255, 0.25);
-        border-radius: 12px;
-        background: linear-gradient(145deg, rgba(40, 53, 122, 0.25), rgba(12, 24, 41, 0.5));
-      }
-      #cy-embed-fallback .cy-embed-fallback-title {
-        margin: 0;
-        font-size: 15px;
-        font-weight: 700;
-        color: #eaf4ff;
-      }
-      #cy-embed-fallback .cy-embed-fallback-sub {
-        margin: 6px auto 14px;
-        max-width: 520px;
-        font-size: 12.5px;
-        line-height: 1.5;
-        color: #9ec7e8;
-      }
-      #cy-embed-fallback .cy-embed-fallback-btn {
-        display: inline-block;
-        font-size: 13px;
-        font-weight: 700;
-        color: #0c1829;
-        background: #f6b73c;
-        border-radius: 8px;
-        padding: 8px 18px;
+        padding: 18px 20px;
+        border-radius: 14px;
+        border: 1px solid rgba(243, 198, 35, 0.4);
+        background: linear-gradient(135deg, rgba(40, 53, 122, 0.4), rgba(12, 24, 41, 0.55));
         text-decoration: none;
+        transition: border-color 0.2s ease, transform 0.2s ease;
       }
-      #cy-embed-fallback .cy-embed-fallback-btn:hover {
-        background: #ffcb5a;
+      #cy-dash-cta:hover {
+        border-color: rgba(246, 183, 60, 0.85);
+        transform: translateY(-1px);
+      }
+      #cy-dash-cta[hidden] {
+        display: none;
+      }
+      #cy-dash-cta .cy-dash-cta-icon {
+        font-size: 30px;
+        line-height: 1;
+        flex: 0 0 auto;
+      }
+      #cy-dash-cta .cy-dash-cta-text {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        flex: 1 1 auto;
+      }
+      #cy-dash-cta .cy-dash-cta-title {
+        font-size: 16px;
+        font-weight: 800;
+        color: #f6b73c;
+      }
+      #cy-dash-cta .cy-dash-cta-sub {
+        font-size: 12.5px;
+        line-height: 1.45;
+        color: #c6dcf0;
+      }
+      #cy-dash-cta .cy-dash-cta-arrow {
+        font-size: 22px;
+        color: #8ecbff;
+        flex: 0 0 auto;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #cy-dash-cta { transition: none; }
+        #cy-dash-cta:hover { transform: none; }
       }
       /* Native live "mini-observatory" tiles — real D1 data fetched on the same page.
          These are the FALLBACK when no framable Grafana public-dashboard URL is set (a
@@ -705,19 +701,26 @@
       <div class="cy-observatory-heading">
         <div>
           <h2 id="cy-observatory-title">Cloud Yatra · Live Observatory</h2>
-          <p>Live data from the backend as you and other pilgrims play — read straight from Cloudflare D1 via the Worker's public API, refreshed about every 30 seconds.</p>
+          <p>The full Grafana dashboard opens in its own tab (button below). These tiles mirror the same live data — read straight from Cloudflare D1 via the Worker's public API, refreshed about every 30 seconds — plus your own latest run, which public dashboards can't show.</p>
         </div>
         <span class="cy-observatory-status" id="cy-observatory-status" aria-live="polite" role="status">connecting…</span>
       </div>
       <div class="cy-observatory-empty" id="cy-observatory-empty" hidden>
         Backend not configured — the game still plays fully; live stats appear when a backend is connected.
       </div>
-      <!-- Full Grafana dashboard, embedded directly below the game. Only appears when a
-           framable Grafana *public dashboard* URL is configured (VITE_GRAFANA_DASHBOARD_URL). -->
-      <!-- Grafana public-dashboard iframe mounts here. The URL comes from the build-time
-           VITE_GRAFANA_DASHBOARD_URL variable; if it's unset or not framable, the native
-           Live Observatory tiles below stand in automatically. -->
-      <div id="cy-grafana-embed" hidden></div>
+
+      <!-- Live Grafana dashboard call-to-action. Grafana Cloud sends CSP frame-ancestors
+           'none' on dashboards, so they cannot be embedded in an iframe. Rather than show a
+           broken frame, we present a clear button to open the real dashboard in a new tab,
+           with the live native tiles below as an always-on, framable companion view. -->
+      <a id="cy-dash-cta" href="#" target="_blank" rel="noopener" hidden>
+        <span class="cy-dash-cta-icon" aria-hidden="true">📊</span>
+        <span class="cy-dash-cta-text">
+          <span class="cy-dash-cta-title">Open the live Grafana dashboard</span>
+          <span class="cy-dash-cta-sub">Metrics, logs, traces, SLOs and RUM — updating in real time as people play.</span>
+        </span>
+        <span class="cy-dash-cta-arrow" aria-hidden="true">↗</span>
+      </a>
 
       <!-- Your latest run: this browser's own session, read live from D1 via /session.
            Public Grafana dashboards can't filter by a per-player variable, so this
@@ -743,11 +746,6 @@
       </div>
 
       <div id="cy-obs-grid"></div>
-      <p style="margin-top:14px;font-size:12px;color:#7fa8c7">
-        Want the full-stack Grafana view (metrics, logs, traces, SLOs)?
-        <a id="cy-obs-grafana-link" href="#" target="_blank" rel="noopener"
-           style="color:#8ecbff;display:none">Open the Grand Observatory →</a>
-      </p>
     </section>
     <div id="cy-rotate" role="dialog" aria-modal="true" aria-label="Please rotate your device to landscape to play Cloud Yatra">
       <div class="cy-phone" aria-hidden="true"></div>
@@ -806,7 +804,6 @@
       const grid = document.getElementById('cy-obs-grid');
       const empty = document.getElementById('cy-observatory-empty');
       const status = document.getElementById('cy-observatory-status');
-      const gLink = document.getElementById('cy-obs-grafana-link');
 
       // Your-latest-run elements + the anonymous per-tab session id (same sessionStorage
       // key the telemetry pipeline uses in src/telemetry/ids.ts), so this page can ask the
@@ -881,80 +878,18 @@
 
       showSessionId();
 
-      if (grafanaUrl && gLink) {
-        gLink.href = grafanaUrl;
-        gLink.style.display = 'inline';
+      // Live-dashboard call-to-action. Grafana Cloud dashboards send CSP frame-ancestors
+      // 'none' and cannot be embedded in an iframe, so we point a clear button at the real
+      // dashboard (opens in a new tab) instead of ever rendering a broken frame. The native
+      // live tiles below mirror the same data on-page. Hidden in game-only embed mode and
+      // when no dashboard URL is configured.
+      if (!gameOnly && grafanaUrl) {
+        const cta = document.getElementById('cy-dash-cta');
+        if (cta) {
+          cta.href = grafanaUrl;
+          cta.hidden = false;
+        }
       }
-
-      // Embed the real Grafana dashboard right below the game — but ONLY when the configured
-      // URL is a Grafana "public dashboard" (/public-dashboards/<token>). Regular dashboard
-      // URLs set `frame-ancestors 'none'` and are refused in an iframe, so for those we keep
-      // the embed hidden and let the native live tiles below stand in.
-      (function mountGrafanaEmbed() {
-        if (gameOnly) return; // no Grafana iframe inside the Grafana Video panel
-        const host = document.getElementById('cy-grafana-embed');
-        if (!host || !grafanaUrl) return;
-        let isPublic = false;
-        try {
-          isPublic = new URL(grafanaUrl).pathname.includes('/public-dashboards/');
-        } catch {
-          return; // not a valid URL — skip embedding
-        }
-        if (!isPublic) return;
-
-        // Present it cleanly: `kiosk` hides Grafana's chrome so it reads as a panel grid,
-        // a dark theme matches the page, and a short refresh keeps it live. URLSearchParams
-        // preserves any params already on the public-dashboard URL (e.g. a default range).
-        let src = grafanaUrl;
-        try {
-          const u = new URL(grafanaUrl);
-          if (!u.searchParams.has('theme')) u.searchParams.set('theme', 'dark');
-          if (!u.searchParams.has('refresh')) u.searchParams.set('refresh', '10s');
-          // `kiosk` is a valueless flag Grafana expects as-is; append it separately.
-          src = u.toString() + (u.search.includes('kiosk') ? '' : (u.search ? '&' : '?') + 'kiosk');
-        } catch {
-          return;
-        }
-        const iframe = document.createElement('iframe');
-        iframe.src = src;
-        iframe.title = 'Cloud Yatra — Grafana Live Observatory';
-        iframe.loading = 'eager';
-        iframe.referrerPolicy = 'no-referrer-when-downgrade';
-        iframe.setAttribute('allowfullscreen', '');
-
-        // Refusal detection. Some Grafana public-dashboard shares send CSP
-        // `frame-ancestors 'none'`, so the browser refuses to render them in an iframe
-        // ("refused to connect"). A blocked cross-origin frame never fires `load`, so if we
-        // don't see a load within a short window we treat it as refused: hide the frame and
-        // show a tidy "open in a new tab" card. The native D1 tiles below still stand in, so
-        // the page never looks broken. If it DOES load, we cancel the fallback.
-        let settled = false;
-        const showFallback = () => {
-          if (settled) return;
-          settled = true;
-          host.hidden = true;
-          const card = document.createElement('div');
-          card.id = 'cy-embed-fallback';
-          card.innerHTML =
-            '<p class="cy-embed-fallback-title">The live Grafana dashboard opens in its own tab</p>' +
-            '<p class="cy-embed-fallback-sub">This share can\u2019t be embedded here, so the real-time tiles below stand in. Open the full dashboard for the complete view.</p>' +
-            '<a class="cy-embed-fallback-btn" target="_blank" rel="noopener">Open the live dashboard \u2197</a>';
-          const link = card.querySelector('a');
-          if (link) link.href = grafanaUrl;
-          host.parentNode?.insertBefore(card, host.nextSibling);
-        };
-        const settleOk = () => {
-          if (settled) return;
-          settled = true;
-          clearTimeout(timer);
-          host.hidden = false;
-        };
-        iframe.addEventListener('load', settleOk);
-        const timer = setTimeout(showFallback, 4000);
-
-        host.appendChild(iframe);
-        host.hidden = false;
-      })();
 
       const esc = (s) =>
         String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
