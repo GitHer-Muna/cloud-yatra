@@ -69,6 +69,16 @@ async function cachedStats(env: Env): Promise<Awaited<ReturnType<typeof stats>>>
   return value;
 }
 
+/**
+ * Test-only hook: clear the in-isolate /stats cache so each test observes fresh D1 state.
+ * The cache deliberately survives across requests within one isolate (that is the whole
+ * point — it throttles D1 reads), but tests share one long-lived isolate, so without this
+ * reset a test could read a prior test's cached aggregates.
+ */
+export function __resetStatsCache(): void {
+  statsCache = null;
+}
+
 export default {
   async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(req.url);

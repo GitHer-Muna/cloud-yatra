@@ -3,10 +3,13 @@
  *
  * Writes: ingest() persists one validated event, promotes bounded dimensions to columns
  * for fast grouping, and incrementally updates the per-session rollup, the cross-player
- * leaderboard (on level_completed), and the daily rollup. Everything is idempotent on the
- * client-supplied event_id so a retried batch never double-counts.
+ * leaderboard (on level_completed), the daily rollup, and the small aggregate rollup tables
+ * (agg_type/agg_cause/agg_kind/agg_level). Everything is idempotent on the client-supplied
+ * event_id so a retried batch never double-counts.
  *
  * Reads: leaderboard(), stats() power the shared board and the dashboard's /stats panels.
+ * stats() reads the tiny rollup/aggregate tables (not the growing events table) so it stays
+ * well inside D1's free-tier row-read budget even under frequent dashboard polling.
  */
 import type { Env } from './env';
 import { num, str, type EventEnvelope } from './events';
@@ -78,7 +81,62 @@ export async function ingest(
 
   await updateSession(env, ev, meta.receivedAt, meta.country);
   await updateDaily(env, ev, meta.receivedAt);
+  await updateAggregates(env, ev);
   return { inserted: true };
+}
+
+/**
+ * Incrementally maintain the small aggregate rollup tables (migration 0002) so /stats can
+ * read them instead of scanning the append-only `events` table. Only called for newly
+ * inserted (non-duplicate) events, keeping the counts exactly in step with `events`.
+ *
+ * Mirrors the GROUP BY classification the old full-scan stats() used:
+ *   agg_type  — every event, keyed by type
+ *   agg_cause — player_died events, keyed by COALESCE(cause,'unknown')
+ *   agg_kind  — collectible_collected events, keyed by COALESCE(kind,'unknown')
+ *   agg_level — every event, keyed by COALESCE(level_id,'unknown'), with death/completion
+ *               sub-counts
+ */
+async function updateAggregates(env: Env, ev: EventEnvelope): Promise<void> {
+  const a = ev.attrs;
+  const level = ev.levelId ?? 'unknown';
+  const isDeath = ev.type === 'player_died' ? 1 : 0;
+  const isComplete = ev.type === 'level_completed' ? 1 : 0;
+
+  await env.DB.prepare(
+    `INSERT INTO agg_type (type, count) VALUES (?, 1)
+     ON CONFLICT(type) DO UPDATE SET count = count + 1`,
+  )
+    .bind(ev.type)
+    .run();
+
+  await env.DB.prepare(
+    `INSERT INTO agg_level (level, events, deaths, completions) VALUES (?, 1, ?, ?)
+     ON CONFLICT(level) DO UPDATE SET
+       events      = agg_level.events + 1,
+       deaths      = agg_level.deaths + excluded.deaths,
+       completions = agg_level.completions + excluded.completions`,
+  )
+    .bind(level, isDeath, isComplete)
+    .run();
+
+  if (ev.type === 'player_died') {
+    await env.DB.prepare(
+      `INSERT INTO agg_cause (cause, count) VALUES (?, 1)
+       ON CONFLICT(cause) DO UPDATE SET count = count + 1`,
+    )
+      .bind(str(a, 'cause', 32) ?? 'unknown')
+      .run();
+  }
+
+  if (ev.type === 'collectible_collected') {
+    await env.DB.prepare(
+      `INSERT INTO agg_kind (kind, count) VALUES (?, 1)
+       ON CONFLICT(kind) DO UPDATE SET count = count + 1`,
+    )
+      .bind(str(a, 'kind', 32) ?? 'unknown')
+      .run();
+  }
 }
 
 async function updateSession(
@@ -102,28 +160,34 @@ async function updateSession(
   const score = num(a, 'score') ?? 0;
   const progress = num(a, 'progressPct') ?? 0;
   const inputMode = str(a, 'inputMode', 16);
+  // Funnel flags: a session "reached" a region the first time it emits any event tagged
+  // with that level_id (matches the old `WHERE level_id=...` COUNT(DISTINCT) semantics).
+  const reachedHills = ev.levelId === 'hills' ? 1 : 0;
+  const reachedHimal = ev.levelId === 'himal' ? 1 : 0;
 
   await env.DB.prepare(
     `INSERT INTO sessions
        (session_id, first_seen, last_seen, country, input_mode,
         started, completed, deaths, jumps, cuts, collects, bells, flags,
-        best_score, max_progress, event_count)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)
+        best_score, max_progress, event_count, reached_hills, reached_himal)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,?,?)
      ON CONFLICT(session_id) DO UPDATE SET
-       last_seen    = excluded.last_seen,
-       country      = COALESCE(sessions.country, excluded.country),
-       input_mode   = COALESCE(sessions.input_mode, excluded.input_mode),
-       started      = sessions.started + excluded.started,
-       completed    = sessions.completed + excluded.completed,
-       deaths       = sessions.deaths + excluded.deaths,
-       jumps        = sessions.jumps + excluded.jumps,
-       cuts         = sessions.cuts + excluded.cuts,
-       collects     = sessions.collects + excluded.collects,
-       bells        = sessions.bells + excluded.bells,
-       flags        = sessions.flags + excluded.flags,
-       best_score   = MAX(sessions.best_score, excluded.best_score),
-       max_progress = MAX(sessions.max_progress, excluded.max_progress),
-       event_count  = sessions.event_count + 1`,
+       last_seen     = excluded.last_seen,
+       country       = COALESCE(sessions.country, excluded.country),
+       input_mode    = COALESCE(sessions.input_mode, excluded.input_mode),
+       started       = sessions.started + excluded.started,
+       completed     = sessions.completed + excluded.completed,
+       deaths        = sessions.deaths + excluded.deaths,
+       jumps         = sessions.jumps + excluded.jumps,
+       cuts          = sessions.cuts + excluded.cuts,
+       collects      = sessions.collects + excluded.collects,
+       bells         = sessions.bells + excluded.bells,
+       flags         = sessions.flags + excluded.flags,
+       best_score    = MAX(sessions.best_score, excluded.best_score),
+       max_progress  = MAX(sessions.max_progress, excluded.max_progress),
+       event_count   = sessions.event_count + 1,
+       reached_hills = MAX(sessions.reached_hills, excluded.reached_hills),
+       reached_himal = MAX(sessions.reached_himal, excluded.reached_himal)`,
   )
     .bind(
       ev.sessionId,
@@ -141,6 +205,8 @@ async function updateSession(
       isFlag,
       score,
       progress,
+      reachedHills,
+      reachedHimal,
     )
     .run();
 }
@@ -305,7 +371,20 @@ export interface Stats {
   avgFps: number | null;
 }
 
-/** Aggregate dashboard stats computed directly from D1. */
+/**
+ * Aggregate dashboard stats, read from the small incremental rollup tables (migration
+ * 0002) instead of scanning the append-only `events` table.
+ *
+ * Why: the previous implementation ran ~16 queries per call, most of them full-table scans
+ * or GROUP BYs over `events` (whose row count only grows), plus four COUNT(DISTINCT
+ * session_id) funnel scans. The in-page mini-observatory and the Grafana panels poll /stats
+ * from every open tab, so on Cloudflare D1's free tier those reads blew the daily row-read
+ * cap (error 7500) and blanked the dashboard mid-demo. Now every figure below reads either a
+ * tiny keyed aggregate table (agg_type/agg_cause/agg_kind/agg_level — bounded by the number
+ * of distinct low-cardinality values) or the small per-session `sessions` table. The only
+ * query that still touches `events` is avgFps, which is time-bounded to the last hour and
+ * served by the (type, received_at) index, so it reads just the recent perf rows.
+ */
 export async function stats(env: Env): Promise<Stats> {
   const now = Date.now();
   const fiveMinAgo = now - 5 * 60 * 1000;
@@ -325,43 +404,38 @@ export async function stats(env: Env): Promise<Stats> {
       day,
     )) ?? { sessions: 0, events: 0, completions: 0, deaths: 0, top: 0 };
 
-  const totalsEvents = (await one<{ c: number }>(`SELECT COUNT(*) c FROM events`))?.c ?? 0;
-  const totalsCompletions =
-    (await one<{ c: number }>(`SELECT COUNT(*) c FROM events WHERE type='level_completed'`))?.c ?? 0;
-  const totalsDeaths =
-    (await one<{ c: number }>(`SELECT COUNT(*) c FROM events WHERE type='player_died'`))?.c ?? 0;
-
+  // eventsByType IS the agg_type table (one small row per type). Totals derive from it so we
+  // never COUNT(*) the events table: total events = sum of per-type counts; completions and
+  // deaths are the two relevant rows.
   const eventsByType =
     (
-      await env.DB.prepare(
-        `SELECT type, COUNT(*) AS count FROM events GROUP BY type ORDER BY count DESC`,
-      ).all<{ type: string; count: number }>()
+      await env.DB.prepare(`SELECT type, count FROM agg_type ORDER BY count DESC`).all<{
+        type: string;
+        count: number;
+      }>()
     ).results ?? [];
+  const totalsEvents = eventsByType.reduce((sum, r) => sum + (r.count ?? 0), 0);
+  const totalsCompletions = eventsByType.find((r) => r.type === 'level_completed')?.count ?? 0;
+  const totalsDeaths = eventsByType.find((r) => r.type === 'player_died')?.count ?? 0;
 
   const deathsByCause =
     (
       await env.DB.prepare(
-        `SELECT COALESCE(cause,'unknown') AS cause, COUNT(*) AS count
-           FROM events WHERE type='player_died' GROUP BY cause ORDER BY count DESC`,
+        `SELECT cause, count FROM agg_cause ORDER BY count DESC`,
       ).all<{ cause: string; count: number }>()
     ).results ?? [];
 
   const collectsByKind =
     (
       await env.DB.prepare(
-        `SELECT COALESCE(kind,'unknown') AS kind, COUNT(*) AS count
-           FROM events WHERE type='collectible_collected' GROUP BY kind ORDER BY count DESC`,
+        `SELECT kind, count FROM agg_kind ORDER BY count DESC`,
       ).all<{ kind: string; count: number }>()
     ).results ?? [];
 
   const byLevel =
     (
       await env.DB.prepare(
-        `SELECT COALESCE(level_id,'unknown') AS level,
-                COUNT(*) AS events,
-                SUM(CASE WHEN type='player_died' THEN 1 ELSE 0 END) AS deaths,
-                SUM(CASE WHEN type='level_completed' THEN 1 ELSE 0 END) AS completions
-           FROM events GROUP BY level_id ORDER BY events DESC`,
+        `SELECT level, events, deaths, completions FROM agg_level ORDER BY events DESC`,
       ).all<{ level: string; events: number; deaths: number; completions: number }>()
     ).results ?? [];
 
@@ -373,19 +447,18 @@ export async function stats(env: Env): Promise<Stats> {
       ).all<{ country: string; sessions: number }>()
     ).results ?? [];
 
-  const started =
-    (await one<{ c: number }>(`SELECT COUNT(DISTINCT session_id) c FROM events WHERE type='game_started'`))
-      ?.c ?? 0;
-  const reachedHills =
-    (await one<{ c: number }>(`SELECT COUNT(DISTINCT session_id) c FROM events WHERE level_id='hills'`))
-      ?.c ?? 0;
-  const reachedHimal =
-    (await one<{ c: number }>(`SELECT COUNT(DISTINCT session_id) c FROM events WHERE level_id='himal'`))
-      ?.c ?? 0;
-  const completedSessions =
-    (await one<{ c: number }>(
-      `SELECT COUNT(DISTINCT session_id) c FROM events WHERE type='level_completed'`,
-    ))?.c ?? 0;
+  // Funnel from the small sessions table (per-session flags), not DISTINCT scans of events.
+  // started/completed are ">0" because those columns count the respective events per session,
+  // so ">0" is equivalent to the old COUNT(DISTINCT session_id WHERE type=...).
+  const funnelRow =
+    (await one<{ started: number; hills: number; himal: number; completed: number }>(
+      `SELECT
+         SUM(CASE WHEN started > 0 THEN 1 ELSE 0 END)   AS started,
+         SUM(reached_hills)                             AS hills,
+         SUM(reached_himal)                             AS himal,
+         SUM(CASE WHEN completed > 0 THEN 1 ELSE 0 END) AS completed
+       FROM sessions`,
+    )) ?? { started: 0, hills: 0, himal: 0, completed: 0 };
 
   const avgFpsRow = await one<{ v: number | null }>(
     `SELECT AVG(avg_fps) v FROM events WHERE type='client_perf' AND received_at >= ?`,
@@ -408,7 +481,12 @@ export async function stats(env: Env): Promise<Stats> {
     collectsByKind,
     byLevel,
     topCountries,
-    funnel: { started, reachedHills, reachedHimal, completed: completedSessions },
+    funnel: {
+      started: funnelRow.started ?? 0,
+      reachedHills: funnelRow.hills ?? 0,
+      reachedHimal: funnelRow.himal ?? 0,
+      completed: funnelRow.completed ?? 0,
+    },
     avgFps: avgFpsRow?.v ?? null,
   };
 }

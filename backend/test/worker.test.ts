@@ -4,7 +4,7 @@
  */
 import { env, createExecutionContext, waitOnExecutionContext } from 'cloudflare:test';
 import { beforeEach, describe, expect, it } from 'vitest';
-import worker from '../src/index';
+import worker, { __resetStatsCache } from '../src/index';
 import { migrate } from './apply-migrations';
 import { __resetChaos } from '../src/chaos';
 
@@ -48,8 +48,18 @@ async function call(method: string, path: string, body?: unknown): Promise<Respo
 
 beforeEach(async () => {
   await migrate();
+  __resetStatsCache();
   // Clean tables so each test is isolated (migrations are idempotent across the suite).
-  for (const t of ['events', 'sessions', 'scores', 'daily_rollup']) {
+  for (const t of [
+    'events',
+    'sessions',
+    'scores',
+    'daily_rollup',
+    'agg_type',
+    'agg_cause',
+    'agg_kind',
+    'agg_level',
+  ]) {
     await env.DB.prepare(`DELETE FROM ${t}`).run();
   }
 });
@@ -248,6 +258,69 @@ describe('/stats', () => {
     expect(s.funnel.started).toBe(1);
     expect(s.funnel.reachedHimal).toBe(1);
     expect(s.funnel.completed).toBe(1);
+  });
+
+  it('serves byType/byLevel/byKind/funnel from the incremental rollups across sessions', async () => {
+    // Two distinct sessions crossing multiple regions. This exercises the aggregate tables
+    // (agg_type/agg_cause/agg_kind/agg_level) + the per-session funnel flags, and asserts
+    // the values match what the old events-table GROUP BY/COUNT(DISTINCT) produced.
+    await call('POST', '/events', [
+      // Session A: terai → hills → himal, dies twice, completes, collects a flower + a bell.
+      makeEvent({ type: 'game_started', sessionId: 'sess-a-0001', levelId: 'terai', tMs: 1 }),
+      makeEvent({ type: 'collectible_collected', sessionId: 'sess-a-0001', levelId: 'terai', tMs: 2, attrs: { kind: 'marigold' } }),
+      makeEvent({ type: 'player_died', sessionId: 'sess-a-0001', levelId: 'hills', tMs: 3, attrs: { cause: 'rockfall' } }),
+      makeEvent({ type: 'collectible_collected', sessionId: 'sess-a-0001', levelId: 'himal', tMs: 4, attrs: { kind: 'prayer_bell' } }),
+      makeEvent({ type: 'player_died', sessionId: 'sess-a-0001', levelId: 'himal', tMs: 5, attrs: { cause: 'eagle' } }),
+      makeEvent({ type: 'level_completed', sessionId: 'sess-a-0001', levelId: 'himal', tMs: 6, attrs: { score: 1000 } }),
+      // Session B: only starts in terai and dies to an eagle — never reaches hills/himal.
+      makeEvent({ type: 'game_started', sessionId: 'sess-b-0002', levelId: 'terai', tMs: 1 }),
+      makeEvent({ type: 'player_died', sessionId: 'sess-b-0002', levelId: 'terai', tMs: 2, attrs: { cause: 'eagle' } }),
+    ]);
+
+    const s = (await call('GET', '/stats').then((r) => r.json())) as any;
+
+    // Totals derived from agg_type (sum / specific rows), not a COUNT(*) scan of events.
+    expect(s.totals.events).toBe(8);
+    expect(s.totals.deaths).toBe(3);
+    expect(s.totals.completions).toBe(1);
+
+    const byType = Object.fromEntries(s.eventsByType.map((r: any) => [r.type, r.count]));
+    expect(byType.game_started).toBe(2);
+    expect(byType.player_died).toBe(3);
+    expect(byType.collectible_collected).toBe(2);
+    expect(byType.level_completed).toBe(1);
+
+    const byCause = Object.fromEntries(s.deathsByCause.map((r: any) => [r.cause, r.count]));
+    expect(byCause.eagle).toBe(2);
+    expect(byCause.rockfall).toBe(1);
+
+    // collectsByKind includes bells, exactly as the old grouping by the `kind` column did.
+    const byKind = Object.fromEntries(s.collectsByKind.map((r: any) => [r.kind, r.count]));
+    expect(byKind.marigold).toBe(1);
+    expect(byKind.prayer_bell).toBe(1);
+
+    const byLevel = Object.fromEntries(
+      s.byLevel.map((r: any) => [r.level, { events: r.events, deaths: r.deaths, completions: r.completions }]),
+    );
+    expect(byLevel.terai).toEqual({ events: 4, deaths: 1, completions: 0 });
+    expect(byLevel.hills).toEqual({ events: 1, deaths: 1, completions: 0 });
+    expect(byLevel.himal).toEqual({ events: 3, deaths: 1, completions: 1 });
+
+    // Funnel from the sessions table: 2 started, 1 reached each of hills/himal, 1 completed.
+    expect(s.funnel).toEqual({ started: 2, reachedHills: 1, reachedHimal: 1, completed: 1 });
+  });
+
+  it('keeps aggregates in step with events on idempotent replay', async () => {
+    const ev = makeEvent({ type: 'player_died', sessionId: 'sess-dupe-01', levelId: 'hills', tMs: 9, attrs: { cause: 'mist' } });
+    await call('POST', '/event', ev);
+    await call('POST', '/event', ev); // replay — must not double-count
+
+    const s = (await call('GET', '/stats').then((r) => r.json())) as any;
+    expect(s.totals.events).toBe(1);
+    expect(s.totals.deaths).toBe(1);
+    expect(Object.fromEntries(s.deathsByCause.map((r: any) => [r.cause, r.count])).mist).toBe(1);
+    const events = await env.DB.prepare('SELECT COUNT(*) c FROM events').first<{ c: number }>();
+    expect(events?.c).toBe(1);
   });
 });
 
