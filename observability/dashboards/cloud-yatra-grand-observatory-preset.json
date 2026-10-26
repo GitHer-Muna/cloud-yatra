@@ -213,7 +213,7 @@
       "description": "Your highest score so far this session (D1).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 5,
@@ -279,7 +279,7 @@
       "description": "How far up Himal Rajya this session has climbed.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 5,
@@ -345,7 +345,7 @@
       "description": "Summits reached this session.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 5,
@@ -411,7 +411,7 @@
       "description": "Falls and hazards taken this session.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 5,
@@ -477,7 +477,7 @@
       "description": "Jumps made this session.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 5,
@@ -543,7 +543,7 @@
       "description": "Flowers and bells gathered this session.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 5,
@@ -622,7 +622,7 @@
       "description": "Distinct game sessions seen by the backend in the last 5 minutes (D1).",
       "datasource": {
         "type": "prometheus",
-        "uid": "grafanacloud-prometheus"
+        "uid": "grafanacloud-curioushalibut2108-prom"
       },
       "gridPos": {
         "h": 6,
@@ -672,7 +672,7 @@
       "description": "Worker request rate across all routes (Prometheus).",
       "datasource": {
         "type": "prometheus",
-        "uid": "grafanacloud-prometheus"
+        "uid": "grafanacloud-curioushalibut2108-prom"
       },
       "gridPos": {
         "h": 6,
@@ -722,7 +722,7 @@
       "description": "Gameplay events accepted into D1 per minute (Prometheus).",
       "datasource": {
         "type": "prometheus",
-        "uid": "grafanacloud-prometheus"
+        "uid": "grafanacloud-curioushalibut2108-prom"
       },
       "gridPos": {
         "h": 6,
@@ -772,7 +772,7 @@
       "description": "95th-percentile request duration (Prometheus histogram).",
       "datasource": {
         "type": "prometheus",
-        "uid": "grafanacloud-prometheus"
+        "uid": "grafanacloud-curioushalibut2108-prom"
       },
       "gridPos": {
         "h": 6,
@@ -838,7 +838,7 @@
       "description": "Share of 5xx responses from the backend (Prometheus).",
       "datasource": {
         "type": "prometheus",
-        "uid": "grafanacloud-prometheus"
+        "uid": "grafanacloud-curioushalibut2108-prom"
       },
       "gridPos": {
         "h": 6,
@@ -904,7 +904,7 @@
       "description": "Total gameplay events persisted in D1.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 6,
@@ -991,7 +991,7 @@
       "description": "Non-5xx responses over the selected window. Target: 99%.",
       "datasource": {
         "type": "prometheus",
-        "uid": "grafanacloud-prometheus"
+        "uid": "grafanacloud-curioushalibut2108-prom"
       },
       "gridPos": {
         "h": 7,
@@ -1056,7 +1056,7 @@
       "description": "Fraction of the 1% error budget still unspent against the 99% availability SLO.",
       "datasource": {
         "type": "prometheus",
-        "uid": "grafanacloud-prometheus"
+        "uid": "grafanacloud-curioushalibut2108-prom"
       },
       "gridPos": {
         "h": 7,
@@ -1121,7 +1121,7 @@
       "description": "Requests served under 500 ms. Target: 95%.",
       "datasource": {
         "type": "prometheus",
-        "uid": "grafanacloud-prometheus"
+        "uid": "grafanacloud-curioushalibut2108-prom"
       },
       "gridPos": {
         "h": 7,
@@ -1186,7 +1186,7 @@
       "description": "Budget burn rate over the last hour. 1.0 is on-pace; above 14 warrants paging.",
       "datasource": {
         "type": "prometheus",
-        "uid": "grafanacloud-prometheus"
+        "uid": "grafanacloud-curioushalibut2108-prom"
       },
       "gridPos": {
         "h": 7,
@@ -1262,7 +1262,7 @@
       "description": "Request throughput per route served by the Worker.",
       "datasource": {
         "type": "prometheus",
-        "uid": "grafanacloud-prometheus"
+        "uid": "grafanacloud-curioushalibut2108-prom"
       },
       "gridPos": {
         "h": 7,
@@ -1336,7 +1336,7 @@
       "description": "Request duration percentiles from the Prometheus histogram. Each bucket also carries a trace exemplar, so a latency spike can link straight to its trace in Tempo.",
       "datasource": {
         "type": "prometheus",
-        "uid": "grafanacloud-prometheus"
+        "uid": "grafanacloud-curioushalibut2108-prom"
       },
       "gridPos": {
         "h": 7,
@@ -1428,7 +1428,7 @@
       "description": "2xx / 4xx / 5xx response mix — the core backend reliability signal.",
       "datasource": {
         "type": "prometheus",
-        "uid": "grafanacloud-prometheus"
+        "uid": "grafanacloud-curioushalibut2108-prom"
       },
       "gridPos": {
         "h": 7,
@@ -1563,7 +1563,7 @@
       "description": "Validation outcome at the ingest boundary; rejections grouped by reason.",
       "datasource": {
         "type": "prometheus",
-        "uid": "grafanacloud-prometheus"
+        "uid": "grafanacloud-curioushalibut2108-prom"
       },
       "gridPos": {
         "h": 7,
@@ -1688,7 +1688,7 @@
       "description": "One structured JSON log per request from the Worker, shipped to Loki. Each line carries a correlationId, route, status, and duration.",
       "datasource": {
         "type": "loki",
-        "uid": "grafanacloud-logs"
+        "uid": "grafanacloud-curioushalibut2108-logs"
       },
       "transparent": true,
       "gridPos": {
@@ -1722,7 +1722,7 @@
       "description": "Backend log lines per interval by severity. Rising warn and error bars are the first sign the backend is under stress.",
       "datasource": {
         "type": "loki",
-        "uid": "grafanacloud-logs"
+        "uid": "grafanacloud-curioushalibut2108-logs"
       },
       "transparent": true,
       "gridPos": {
@@ -1843,7 +1843,7 @@
       "description": "Rate of warn- and error-level backend logs. Pairs with the 5xx panel: the metric shows that errors happened, the logs show which requests and why.",
       "datasource": {
         "type": "loki",
-        "uid": "grafanacloud-logs"
+        "uid": "grafanacloud-curioushalibut2108-logs"
       },
       "transparent": true,
       "gridPos": {
@@ -1953,7 +1953,7 @@
       "description": "Per-request spans shipped to Tempo from the Worker. Open a row to see the full trace.",
       "datasource": {
         "type": "tempo",
-        "uid": "grafanacloud-traces"
+        "uid": "grafanacloud-curioushalibut2108-traces"
       },
       "transparent": true,
       "gridPos": {
@@ -1991,7 +1991,7 @@
           "refId": "A",
           "datasource": {
             "type": "tempo",
-            "uid": "grafanacloud-traces"
+            "uid": "grafanacloud-curioushalibut2108-traces"
           },
           "queryType": "traceqlSearch",
           "limit": 20,
@@ -2018,7 +2018,7 @@
       "description": "Request-span throughput from Tempo, split by span status. Mirrors backend request rate and confirms traces are arriving.",
       "datasource": {
         "type": "tempo",
-        "uid": "grafanacloud-traces"
+        "uid": "grafanacloud-curioushalibut2108-traces"
       },
       "transparent": true,
       "gridPos": {
@@ -2082,7 +2082,7 @@
           "refId": "A",
           "datasource": {
             "type": "tempo",
-            "uid": "grafanacloud-traces"
+            "uid": "grafanacloud-curioushalibut2108-traces"
           },
           "queryType": "traceql",
           "query": "{resource.service.name=\"cloud-yatra-api\"} | rate() by (status)",
@@ -2110,7 +2110,7 @@
       "description": "Real-user loading and interaction latency from Faro web vitals.",
       "datasource": {
         "type": "loki",
-        "uid": "grafanacloud-logs"
+        "uid": "grafanacloud-curioushalibut2108-logs"
       },
       "gridPos": {
         "h": 7,
@@ -2195,7 +2195,7 @@
       "description": "Layout stability and first-byte / first-paint timing (Faro).",
       "datasource": {
         "type": "loki",
-        "uid": "grafanacloud-logs"
+        "uid": "grafanacloud-curioushalibut2108-logs"
       },
       "gridPos": {
         "h": 7,
@@ -2278,7 +2278,7 @@
       "description": "JavaScript errors and unhandled rejections captured by Faro.",
       "datasource": {
         "type": "loki",
-        "uid": "grafanacloud-logs"
+        "uid": "grafanacloud-curioushalibut2108-logs"
       },
       "gridPos": {
         "h": 7,
@@ -2374,7 +2374,7 @@
       "description": "Average FPS sampled roughly every 2 seconds (never per-frame), split by region.",
       "datasource": {
         "type": "loki",
-        "uid": "grafanacloud-logs"
+        "uid": "grafanacloud-curioushalibut2108-logs"
       },
       "gridPos": {
         "h": 7,
@@ -2460,7 +2460,7 @@
       "description": "FPS distribution across all players and devices.",
       "datasource": {
         "type": "loki",
-        "uid": "grafanacloud-logs"
+        "uid": "grafanacloud-curioushalibut2108-logs"
       },
       "gridPos": {
         "h": 7,
@@ -2504,7 +2504,7 @@
       "description": "Distinct sessions reaching each stage (D1).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 6,
@@ -2599,7 +2599,7 @@
       "description": "Activity across Terai, Hills, and Himal (D1).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 6,
@@ -2686,7 +2686,7 @@
       "description": "Every gameplay signal by type (D1).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 7,
@@ -2763,7 +2763,7 @@
       "description": "Where the trail is hardest, computed from D1.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 7,
@@ -2833,7 +2833,7 @@
       "description": "Mix of blooms and prayer bells gathered (D1).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 7,
@@ -2914,7 +2914,7 @@
       "description": "How each region of Himal Rajya plays out (D1).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 7,
@@ -2995,7 +2995,7 @@
       "description": "Distinct sessions reaching each stage (D1).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 7,
@@ -3081,7 +3081,7 @@
       "description": "The cross-player leaderboard, served by the Worker from D1.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 8,
@@ -3214,7 +3214,7 @@
       "description": "Level and summit completions persisted in D1.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 4,
@@ -3279,7 +3279,7 @@
       "description": "All gameplay events persisted in D1.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 4,
@@ -3344,7 +3344,7 @@
       "description": "Rhododendron blooms versus prayer bells collected (D1).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 8,
@@ -3423,7 +3423,7 @@
       "description": "Average sampled client FPS recorded in D1.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 4,
@@ -3517,7 +3517,7 @@
       "description": "Where players connect from, by Cloudflare edge country (D1). No IP addresses are stored.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 9,
@@ -3634,7 +3634,7 @@
       "description": "Edge country of sessions (D1). No IP addresses are stored.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 9,
@@ -3697,7 +3697,7 @@
       "description": "Full breakdown of every persisted gameplay signal (D1).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 9,
@@ -3795,7 +3795,7 @@
       "description": "1 while a chaos window is injecting faults into the gameplay routes (cy_chaos_active).",
       "datasource": {
         "type": "prometheus",
-        "uid": "grafanacloud-prometheus"
+        "uid": "grafanacloud-curioushalibut2108-prom"
       },
       "gridPos": {
         "h": 6,
@@ -3870,7 +3870,7 @@
       "description": "Rate of gameplay requests perturbed by injected latency or synthetic 503s (cy_chaos_injected_total).",
       "datasource": {
         "type": "prometheus",
-        "uid": "grafanacloud-prometheus"
+        "uid": "grafanacloud-curioushalibut2108-prom"
       },
       "gridPos": {
         "h": 6,
@@ -3944,7 +3944,7 @@
       "description": "Start, stop, and expiry markers from the Worker's chaos feed.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 7,

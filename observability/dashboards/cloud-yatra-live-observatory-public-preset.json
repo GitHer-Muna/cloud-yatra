@@ -110,7 +110,7 @@
       "description": "Distinct sessions reaching each stage.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 6,
@@ -199,7 +199,7 @@
       "description": "Activity across Terai, Hills, and Himal.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 6,
@@ -273,7 +273,7 @@
       "description": "Every gameplay signal, by type.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 7,
@@ -344,7 +344,7 @@
       "description": "Where the trail is hardest for players.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 7,
@@ -414,7 +414,7 @@
       "description": "The mix of blooms and prayer bells gathered.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 7,
@@ -495,7 +495,7 @@
       "description": "How each region of Himal Rajya plays out.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 7,
@@ -576,7 +576,7 @@
       "description": "The cross-player leaderboard.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 8,
@@ -709,7 +709,7 @@
       "description": "Level and summit completions recorded.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 4,
@@ -774,7 +774,7 @@
       "description": "All gameplay events recorded.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 4,
@@ -839,7 +839,7 @@
       "description": "Rhododendron blooms versus prayer bells collected.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 8,
@@ -918,7 +918,7 @@
       "description": "Average sampled client frame rate.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 4,
@@ -999,7 +999,7 @@
       "description": "Where players connect from, by edge country. No IP addresses are stored.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 9,
@@ -1116,7 +1116,7 @@
       "description": "Edge country of sessions. No IP addresses are stored.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 9,
@@ -1179,7 +1179,7 @@
       "description": "Full breakdown of every gameplay signal.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "Infinity"
+        "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 9,

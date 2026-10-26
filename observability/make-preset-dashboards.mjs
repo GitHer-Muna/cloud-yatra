@@ -34,13 +34,15 @@ const args = Object.fromEntries(
   }),
 );
 
-// Standard Grafana Cloud datasource NAMES (override via flags if your stack differs).
+// Grafana stack datasource NAMES. Defaults are THIS project's stack (curioushalibut2108),
+// as recorded in the project state. Override via flags for a different stack, e.g.:
+//   node make-preset-dashboards.mjs --prom=grafanacloud-myx-prom --infinity="My Infinity"
 const NAMES = {
-  prom: args.prom || 'grafanacloud-prometheus',
-  faro: args.faro || 'grafanacloud-logs', // Faro logs land in the stack's Loki
-  backendLogs: args['backend-logs'] || 'grafanacloud-logs',
-  tempo: args.tempo || 'grafanacloud-traces',
-  infinity: args.infinity || 'Infinity',
+  prom: args.prom || 'grafanacloud-curioushalibut2108-prom',
+  faro: args.faro || 'grafanacloud-curioushalibut2108-logs', // Faro logs land in the stack's Loki
+  backendLogs: args['backend-logs'] || 'grafanacloud-curioushalibut2108-logs',
+  tempo: args.tempo || 'grafanacloud-curioushalibut2108-traces',
+  infinity: args.infinity || 'grafanacloud-infinity',
 };
 
 // Map each ${DS_*} placeholder uid to its concrete datasource name.
