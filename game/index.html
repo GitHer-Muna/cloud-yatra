@@ -33,6 +33,11 @@
         background: #0e1726;
         font-family: system-ui, sans-serif;
         color: #e9f6ff;
+        /* Never allow a horizontal scrollbar on mobile: `100vw`-based widths can slightly
+           exceed the visible width when a vertical scrollbar is present, which otherwise
+           shows a faint sideways scroll. Belt-and-braces with the min()/calc() widths. */
+        overflow-x: hidden;
+        max-width: 100%;
         /* Stop the browser from treating in-game touches as scroll/zoom gestures, which
            otherwise "eat" the on-screen control presses on phones/tablets. The page body
            still allows normal scrolling (manipulation); only the game canvas below locks
