@@ -136,6 +136,42 @@
         min-height: 480px;
         border: 0;
       }
+      /* Shown only when the Grafana public-dashboard iframe is refused (CSP frame-ancestors).
+         A tidy card with a new-tab link, so the page never shows a broken/blank frame. */
+      #cy-embed-fallback {
+        margin-top: 8px;
+        padding: 20px 18px;
+        text-align: center;
+        border: 1px solid rgba(142, 203, 255, 0.25);
+        border-radius: 12px;
+        background: linear-gradient(145deg, rgba(40, 53, 122, 0.25), rgba(12, 24, 41, 0.5));
+      }
+      #cy-embed-fallback .cy-embed-fallback-title {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 700;
+        color: #eaf4ff;
+      }
+      #cy-embed-fallback .cy-embed-fallback-sub {
+        margin: 6px auto 14px;
+        max-width: 520px;
+        font-size: 12.5px;
+        line-height: 1.5;
+        color: #9ec7e8;
+      }
+      #cy-embed-fallback .cy-embed-fallback-btn {
+        display: inline-block;
+        font-size: 13px;
+        font-weight: 700;
+        color: #0c1829;
+        background: #f6b73c;
+        border-radius: 8px;
+        padding: 8px 18px;
+        text-decoration: none;
+      }
+      #cy-embed-fallback .cy-embed-fallback-btn:hover {
+        background: #ffcb5a;
+      }
       /* Native live "mini-observatory" tiles — real D1 data fetched on the same page.
          These are the FALLBACK when no framable Grafana public-dashboard URL is set (a
          regular /d/ dashboard URL is refused in an iframe), and they also complement the
@@ -882,9 +918,40 @@
         const iframe = document.createElement('iframe');
         iframe.src = src;
         iframe.title = 'Cloud Yatra — Grafana Live Observatory';
-        iframe.loading = 'lazy';
+        iframe.loading = 'eager';
         iframe.referrerPolicy = 'no-referrer-when-downgrade';
         iframe.setAttribute('allowfullscreen', '');
+
+        // Refusal detection. Some Grafana public-dashboard shares send CSP
+        // `frame-ancestors 'none'`, so the browser refuses to render them in an iframe
+        // ("refused to connect"). A blocked cross-origin frame never fires `load`, so if we
+        // don't see a load within a short window we treat it as refused: hide the frame and
+        // show a tidy "open in a new tab" card. The native D1 tiles below still stand in, so
+        // the page never looks broken. If it DOES load, we cancel the fallback.
+        let settled = false;
+        const showFallback = () => {
+          if (settled) return;
+          settled = true;
+          host.hidden = true;
+          const card = document.createElement('div');
+          card.id = 'cy-embed-fallback';
+          card.innerHTML =
+            '<p class="cy-embed-fallback-title">The live Grafana dashboard opens in its own tab</p>' +
+            '<p class="cy-embed-fallback-sub">This share can\u2019t be embedded here, so the real-time tiles below stand in. Open the full dashboard for the complete view.</p>' +
+            '<a class="cy-embed-fallback-btn" target="_blank" rel="noopener">Open the live dashboard \u2197</a>';
+          const link = card.querySelector('a');
+          if (link) link.href = grafanaUrl;
+          host.parentNode?.insertBefore(card, host.nextSibling);
+        };
+        const settleOk = () => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          host.hidden = false;
+        };
+        iframe.addEventListener('load', settleOk);
+        const timer = setTimeout(showFallback, 4000);
+
         host.appendChild(iframe);
         host.hidden = false;
       })();

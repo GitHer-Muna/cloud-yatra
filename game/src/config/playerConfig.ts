@@ -6,24 +6,24 @@
 
 export const PLAYER = {
   // Movement feel.
-  moveSpeed: 250, // horizontal px/s
-  // Jump impulse. Set to 520 so the lower platforms are COMFORTABLY reachable from the
-  // ground (not a pixel-perfect max jump). With GRAVITY_Y=1000 this gives:
-  //   max height = 520²/(2·1000) = 135.2px  per jump
-  //   air-time   = 2·520/1000    = 1.04s
-  //   h-flight   = 250·1.04      = 260px     (widest platform gap ≈225px → clears it)
-  // A single jump reaches the lower ledges directly; the DOUBLE JUMP (below) lets Yatri
-  // climb to the higher platform layers to collect blooms/bells placed up there, and hop
-  // from a mid platform up to the next layer. The levels.test.ts accessibility checks
+  moveSpeed: 190, // horizontal px/s — tuned down from 250 so movement is controllable, not twitchy
+  // Jump impulse. Set to 600 so Yatri can CLIMB to the elevated platforms and collect the
+  // blooms/bells sitting on them, rather than grabbing them from below. With GRAVITY_Y=1000:
+  //   max height = 600²/(2·1000) = 180px  per first jump (clears a full platform layer)
+  //   air-time   = 2·600/1000    = 1.2s
+  //   h-flight   = 190·1.2       = 228px  (widest platform gap ≈225px → clears it)
+  // A single jump reaches the lower/mid ledges directly; the DOUBLE JUMP (below) stacks on
+  // top so the HIGHEST layers (tallest platform ≈220px) are reachable with real margin —
+  // the player actually jumps UP to the pickup. The levels.test.ts accessibility checks
   // derive their bounds from these values so no gap/rise exceeds what the jumps can clear.
-  jumpVelocity: 520, // upward impulse for the first (ground) jump (bigger = higher)
+  jumpVelocity: 600, // upward impulse for the first (ground) jump (bigger = higher)
   airControl: 0.9,
 
-  // Double jump: Yatri can jump once more while airborne, so higher platform layers (and
-  // the collectibles on them) are reachable from the ground or from a lower platform.
-  // maxJumps=2 means ground jump + one mid-air jump. The mid-air jump is a touch softer so
-  // it still feels like a boost, not a free second full leap.
-  //   second-jump height ≈ (520·0.92)²/(2·1000) ≈ 114px  (stacked well above one layer)
+  // Double jump: Yatri can jump once more while airborne, so the higher platform layers (and
+  // the collectibles on them) are reachable by climbing. maxJumps=2 means ground jump + one
+  // mid-air jump. The mid-air jump is a touch softer so it still feels like a boost.
+  //   second-jump height ≈ (600·0.92)²/(2·1000) ≈ 152px
+  //   double-jump ceiling ≈ 180 + 152 = 332px  (well above the tallest 220px platform)
   maxJumps: 2,
   doubleJumpFactor: 0.92, // mid-air jump impulse = jumpVelocity × this
 

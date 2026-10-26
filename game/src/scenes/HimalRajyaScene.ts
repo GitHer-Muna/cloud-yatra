@@ -1168,6 +1168,24 @@ export class HimalRajyaScene extends Phaser.Scene {
    * Call AFTER setting the text + making it visible so getBounds() reflects the final size.
    */
   private styleStatusCard(accent: number): void {
+    // Reposition vertically so even a tall end-of-run card stays within a safe band and
+    // never overlaps Guru Megh's bottom dock (~y352) or the touch-control bar (~y452).
+    // Short cards stay centred; tall cards are nudged up and, if needed, top-anchored.
+    const cardH = this.statusText.getBounds().height;
+    const TOP_MARGIN = 14;
+    const BOTTOM_SAFE = 344; // keep the card bottom above Guru Megh's bottom dock
+    const availableH = BOTTOM_SAFE - TOP_MARGIN;
+    let centreY = VIEW_HEIGHT * 0.5;
+    if (cardH >= availableH) {
+      centreY = TOP_MARGIN + cardH / 2; // top-anchor the tallest cards
+    } else {
+      // Clamp the centre so the card sits fully inside [TOP_MARGIN, BOTTOM_SAFE].
+      const minCentre = TOP_MARGIN + cardH / 2;
+      const maxCentre = BOTTOM_SAFE - cardH / 2;
+      centreY = Phaser.Math.Clamp(centreY, minCentre, maxCentre);
+    }
+    this.statusText.setY(centreY);
+
     const b = this.statusText.getBounds();
     const pad = 4;
     const x = b.x - pad;
@@ -2131,10 +2149,12 @@ export class HimalRajyaScene extends Phaser.Scene {
     heightAboveGround: number,
   ): void {
     if (heightAboveGround <= 20) return; // ground-level — leave the tidy walk-through box
-    // Reach down to within ~18px of the ground so the full gap under the ledge is covered
-    // (a double jump easily enters this zone), without quite touching the ground path.
-    const GROUND_CLEARANCE = 18;
-    pickup.extendPickupDownward(Math.max(0, heightAboveGround - GROUND_CLEARANCE));
+    // Extend the hitbox only a SMALL amount below the pickup (not down to the ground), so the
+    // player must actually jump UP to the ledge to collect it — the jump arc catching the box
+    // just under the bloom/bell counts, but you can't grab it from the ground below. Now that
+    // the jump height lets Yatri climb to these ledges, this stays a fair "reach it" pickup.
+    const REACH_BELOW = 26; // px of grab zone beneath the pickup
+    pickup.extendPickupDownward(Math.min(heightAboveGround, REACH_BELOW));
   }
 
   private createGroundAndPlatforms(): Phaser.Physics.Arcade.StaticGroup {
