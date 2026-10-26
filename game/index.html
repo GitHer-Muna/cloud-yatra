@@ -260,8 +260,8 @@
         border-radius: 4px;
       }
 
-      /* ── Hero header: title, pitch, and a 3-step flow so first-time visitors instantly
-         understand this is a game that generates real, live observability data. ── */
+      /* ── Hero header: a single understated line above the game. Minimal by design —
+         the game box carries the "Cloud Yatra" title itself. ── */
       #cy-hero {
         width: min(960px, 92vw);
         margin: 22px auto 0;
@@ -272,17 +272,7 @@
         letter-spacing: 0.22em;
         text-transform: uppercase;
         color: #8ecbff;
-        margin: 0 0 6px;
-      }
-      #cy-hero h1 {
         margin: 0;
-        font-size: clamp(28px, 5.4vw, 46px);
-        font-weight: 800;
-        line-height: 1.05;
-        background: linear-gradient(95deg, #f6b73c 0%, #ff8a5c 42%, #8ecbff 100%);
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
       }
       /* In the Grafana Video panel (game-only), show ONLY the game — no hero, no tour. */
       .cy-embed-game-only #cy-hero,
@@ -341,7 +331,6 @@
     <!-- Hero: what this is, in one glance. Hidden inside the Grafana Video panel. -->
     <header id="cy-hero">
       <p class="cy-hero-kicker">A live full-stack observability demo</p>
-      <h1>Cloud Yatra</h1>
     </header>
 
     <!-- Phaser injects its <canvas> here (see src/main.ts), replacing the loader. -->
