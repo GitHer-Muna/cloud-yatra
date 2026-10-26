@@ -102,9 +102,11 @@ cloud-yatra/
 │
 ├── observability/         Grafana Cloud assets
 │   ├── dashboards/        Observatory source (full) + generated public copy JSON
+│   ├── build-dashboard.mjs  Generates the public dashboard from the source
 │   └── grafana-alerts.yaml  Importable Grafana-managed alert rules
 │
-└── .github/workflows/     CI/CD — deploy Pages and the Worker from main
+└── .github/workflows/     CI/CD — deploy Pages, deploy the Worker, and a manual
+                           leaderboard-reset, all from main
 ```
 
 ## Running locally
