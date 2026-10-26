@@ -31,9 +31,17 @@ import type { Env } from './env';
 
 const PREFIX = '/dash';
 
+// Grafana SPA root-absolute prefixes. The public-dashboard app issues fetch('/api/...'),
+// which ignores <base href> and hits the Worker ROOT — so we must proxy these prefixes at
+// the root too, or every panel query 404s and the dashboard renders blank. These never
+// collide with this API's own routes (/healthz, /metrics, /stats, /leaderboard, /session,
+// /score, /event, /events, /chaos/*), which use entirely different path names.
+const GRAFANA_ROOT_PREFIXES = ['/api/', '/public/', '/avatar/'];
+
 /** True when the Worker should handle this request as a dashboard-proxy request. */
 export function isProxyRequest(pathname: string): boolean {
-  return pathname === PREFIX || pathname.startsWith(`${PREFIX}/`);
+  if (pathname === PREFIX || pathname.startsWith(`${PREFIX}/`)) return true;
+  return GRAFANA_ROOT_PREFIXES.some((p) => pathname.startsWith(p));
 }
 
 /** Frame/CSP headers that would block embedding — stripped from every proxied response. */
@@ -62,11 +70,17 @@ export async function handleProxy(req: Request, env: Env): Promise<Response> {
   }
 
   const url = new URL(req.url);
-  // Map /dash/<rest> → <grafanaBase>/<rest>. Bare /dash or /dash/ → the public dashboard is
-  // supplied by the caller via ?d=<path> on first load; afterwards the SPA uses absolute
-  // (rewritten) /dash/ paths. We accept any path so the SPA's /api and /public calls work.
-  const rest = url.pathname.slice(PREFIX.length); // keeps a leading '/' or ''
-  const target = `${base}${rest || '/'}${url.search}`;
+  // Two shapes reach here:
+  //   1) /dash/<rest>        → the dashboard HTML entry (and anything anchor-relative).
+  //   2) /api|/public|/avatar → the SPA's ROOT-absolute fetches (panel queries, settings,
+  //      assets) that ignore <base href>. Pass these straight through to Grafana.
+  // In both cases the upstream path is the request path minus an optional /dash prefix.
+  const path = url.pathname.startsWith(`${PREFIX}/`)
+    ? url.pathname.slice(PREFIX.length) // '/dash/api/..' → '/api/..'
+    : url.pathname === PREFIX
+      ? '/'
+      : url.pathname; // already root-absolute (/api, /public, /avatar)
+  const target = `${base}${path}${url.search}`;
 
   // Forward the request. Only a minimal, safe header set is passed upstream; no cookies.
   const upstreamHeaders = new Headers();
@@ -88,16 +102,8 @@ export async function handleProxy(req: Request, env: Env): Promise<Response> {
   // doesn't need this, but it's harmless and future-proofs programmatic reads).
   resHeaders.set('Access-Control-Allow-Origin', '*');
 
-  const contentType = upstream.headers.get('Content-Type') ?? '';
-
-  // For the dashboard HTML document, rewrite <base href="/"> → <base href="/dash/"> so the
-  // SPA's relative /api and /public requests resolve back through this proxy.
-  if (contentType.includes('text/html')) {
-    let html = await upstream.text();
-    html = html.replace(/<base\s+href="\/"\s*\/?>/i, `<base href="${PREFIX}/" />`);
-    resHeaders.delete('Content-Length'); // body length changed
-    return new Response(html, { status: upstream.status, headers: resHeaders });
-  }
-
+  // The SPA fetches with ROOT-absolute paths (/api, /public, /avatar) which we proxy at the
+  // Worker root, and its static assets load from Grafana's absolute CDN. So the document can
+  // be served as-is; no <base href> rewrite is needed. We only strip the frame headers.
   return new Response(upstream.body, { status: upstream.status, headers: resHeaders });
 }
