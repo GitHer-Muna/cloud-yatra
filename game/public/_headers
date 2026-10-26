@@ -3,10 +3,17 @@
 
 # Sensible, privacy-friendly security headers for a purely static game (no secrets,
 # no inline user data). Kept minimal so it never breaks the WebGL canvas or Faro RUM.
+#
+# Framing: the game is embedded INSIDE a Grafana dashboard via the Video panel plugin
+# (the "game-in-dashboard" layout). X-Frame-Options can't express an allowlist (only
+# SAMEORIGIN/DENY), so we DROP it and use CSP `frame-ancestors` instead, which permits
+# framing only by this site and the Grafana Cloud instance — keeping clickjacking
+# protection while allowing the dashboard embed. Update the grafana.net origin if the
+# Grafana stack changes.
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
-  X-Frame-Options: SAMEORIGIN
+  Content-Security-Policy: frame-ancestors 'self' https://curioushalibut2108.grafana.net https://*.grafana.net
   Permissions-Policy: geolocation=(), microphone=(), camera=()
 
 # Fingerprinted build assets are immutable — cache them hard for fast repeat visits.
