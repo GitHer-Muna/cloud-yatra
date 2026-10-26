@@ -214,6 +214,21 @@
       #cy-session button:hover {
         background: #ffcb5a;
       }
+      #cy-session .cy-session-open {
+        font-size: 12px;
+        font-weight: 700;
+        color: #8ecbff;
+        text-decoration: none;
+        border: 1px solid rgba(142, 203, 255, 0.4);
+        border-radius: 7px;
+        padding: 4px 11px;
+      }
+      #cy-session .cy-session-open:hover {
+        background: rgba(142, 203, 255, 0.12);
+      }
+      #cy-session .cy-session-open[hidden] {
+        display: none;
+      }
       #cy-session .cy-session-hint {
         flex-basis: 100%;
         font-size: 11px;
@@ -680,6 +695,7 @@
           <span class="cy-session-label">Your session</span>
           <code id="cy-session-id"></code>
           <button id="cy-session-copy" type="button">Copy</button>
+          <a id="cy-session-open" class="cy-session-open" href="#" target="_blank" rel="noopener" hidden>Open my run in Grafana →</a>
           <p class="cy-session-hint">
             Paste this into the Grand Observatory's “Your session” box to see this run alongside
             the live telemetry.
@@ -763,6 +779,11 @@
       const sessionBox = document.getElementById('cy-session');
       const sessionIdEl = document.getElementById('cy-session-id');
       const sessionCopyBtn = document.getElementById('cy-session-copy');
+      const sessionOpenLink = document.getElementById('cy-session-open');
+      // Optional: the AUTHENTICATED Grand Observatory URL (a normal /d/<uid>/ link, NOT the
+      // public-dashboard embed). When set, we offer a one-click "Open my run" link that
+      // pre-fills the dashboard's `session` variable so the viewer lands straight on THIS run.
+      const grandUrl = (import.meta.env.VITE_GRAFANA_GRAND_URL || '').trim();
       let sessionId = '';
       try {
         sessionId = globalThis.sessionStorage?.getItem('cloud-yatra.sessionId') || '';
@@ -777,6 +798,18 @@
         if (!sessionId || !sessionBox || !sessionIdEl) return;
         if (sessionIdEl.textContent !== sessionId) sessionIdEl.textContent = sessionId;
         sessionBox.hidden = false;
+        // Build the one-click "Open my run" link: <grandUrl>?var-session=<id>, preserving any
+        // query already on the configured URL. Shown only when VITE_GRAFANA_GRAND_URL is set.
+        if (grandUrl && sessionOpenLink) {
+          try {
+            const u = new URL(grandUrl);
+            u.searchParams.set('var-session', sessionId);
+            sessionOpenLink.href = u.toString();
+            sessionOpenLink.hidden = false;
+          } catch {
+            sessionOpenLink.hidden = true; // not a valid URL — keep the copy-paste path only
+          }
+        }
       }
 
       if (sessionCopyBtn) {
