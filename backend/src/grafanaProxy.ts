@@ -16,16 +16,17 @@
  *  - PUBLIC dashboards only. There is no authentication to forward — the proxy never sees
  *    or needs a Grafana cookie, token, or credential. It cannot reach anything that isn't
  *    already public at the `/public-dashboards/<token>` + `/api/public/...` endpoints.
- *  - Method-limited to GET/HEAD/POST (the public panel-query endpoint uses POST). No other
- *    verbs are proxied.
- *  - Path-limited to the Grafana paths a public dashboard actually uses: the public
- *    dashboard page and the `/api/...` + `/public/...` the SPA calls. Static JS/CSS/img are
- *    served by Grafana's absolute CDN (grafana-assets.grafana.net) and load directly, so
- *    they are NOT proxied.
- *  - The dashboard HTML uses `<base href="/">`, which would make its relative `/api/...`
- *    calls resolve at the Worker ROOT. We rewrite the base to `/dash/` so every relative
- *    sub-request routes back through this proxy (and thus stays same-origin, avoiding the
- *    CORS wall — the public API sends no Access-Control-Allow-Origin).
+ *  - Method-limited to GET/HEAD/POST (the public panel-query endpoint uses POST).
+ *  - Path-limited to the Grafana paths a public dashboard actually uses. The SPA fetches
+ *    with ROOT-absolute paths (/api, /public, /avatar, /public-dashboards) that ignore
+ *    <base href>, so we proxy those prefixes at the Worker ROOT. Static JS/CSS/img load
+ *    from Grafana's absolute CDN (grafana-assets.grafana.net) and are NOT proxied.
+ *  - The dashboard HTML is served at /public-dashboards/<token> (root, not under /dash)
+ *    because the Grafana boot script matches window.location.pathname against
+ *    /public-dashboards/.* to derive its public context.
+ *  - Upstream Content-Encoding/Content-Length are stripped: the Workers runtime auto-
+ *    decompresses the body, so forwarding those headers would make the browser try to
+ *    decode already-decoded bytes.
  */
 import type { Env } from './env';
 
@@ -101,6 +102,14 @@ export async function handleProxy(req: Request, env: Env): Promise<Response> {
 
   const resHeaders = new Headers(upstream.headers);
   stripFrameHeaders(resHeaders);
+  // The Workers runtime transparently DECOMPRESSES the upstream body when we read/stream it,
+  // but the upstream's `Content-Encoding` (gzip/br) + `Content-Length` headers describe the
+  // ORIGINAL compressed bytes. Forwarding them tells the browser to decode an already-
+  // decoded body → garbage → the Grafana app can't parse its JS and shows "Error loading
+  // Grafana". Strip both so the browser reads the body as-is (Cloudflare re-applies its own
+  // content-encoding on the way out).
+  resHeaders.delete('Content-Encoding');
+  resHeaders.delete('Content-Length');
   // Let the game origin read proxied responses if ever fetched via XHR (the iframe itself
   // doesn't need this, but it's harmless and future-proofs programmatic reads).
   resHeaders.set('Access-Control-Allow-Origin', '*');
