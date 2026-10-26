@@ -105,6 +105,18 @@
       /* Live-dashboard call-to-action banner. Grafana Cloud blocks iframe embedding (CSP
          frame-ancestors 'none'), so instead of a broken frame we present a clear, handsome
          button to open the real dashboard in a new tab. */
+      #cy-dash-frame {
+        width: 100%;
+        height: 80vh;
+        min-height: 520px;
+        margin-top: 8px;
+        border: 1px solid rgba(243, 198, 35, 0.35);
+        border-radius: 12px;
+        background: #0b1420;
+      }
+      #cy-dash-frame[hidden] {
+        display: none;
+      }
       #cy-dash-cta {
         display: flex;
         align-items: center;
@@ -499,14 +511,25 @@
       <div class="cy-observatory-heading">
         <div>
           <h2 id="cy-observatory-title">Cloud Yatra · Live Observatory</h2>
-          <p>The real Grafana dashboard — the game embedded at the top with live metrics, logs, traces, SLOs and RUM below, all updating in real time as people play. It opens in its own tab (Grafana Cloud dashboards can't be shown in a frame on another site).</p>
+          <p>The real Grafana dashboard, live below the game — metrics, logs, traces, SLOs and RUM, updating in near-real time as people play.</p>
         </div>
       </div>
 
-      <!-- The real dashboard. Grafana Cloud sends CSP frame-ancestors 'none' on its
-           dashboards, so they cannot be iframed on this origin. We open the real thing in a
-           new tab instead. This is the mentor-style "game-in-dashboard" grand dashboard:
-           the game plays inside a Video panel at the top, telemetry panels below. -->
+      <!-- The real Grafana dashboard, embedded inline. Grafana Cloud sends CSP
+           frame-ancestors 'none', so it can't be framed directly; we iframe it through the
+           Worker's same-origin reverse proxy (/dash/*), which strips the frame-blocking
+           headers. If the proxy/iframe fails for any reason, the open-in-new-tab button
+           below is revealed as a fallback. -->
+      <iframe
+        id="cy-dash-frame"
+        title="Cloud Yatra live Grafana dashboard"
+        loading="lazy"
+        referrerpolicy="no-referrer"
+        hidden
+      ></iframe>
+
+      <!-- Fallback: open the real dashboard in a new tab (shown if the inline embed can't
+           load, or when only an un-proxied dashboard URL is configured). -->
       <a id="cy-dash-cta" href="#" target="_blank" rel="noopener" hidden>
         <span class="cy-dash-cta-icon" aria-hidden="true">📊</span>
         <span class="cy-dash-cta-text">
@@ -558,21 +581,64 @@
         );
       }
 
-      // Live Observatory below the game. The real demo surface is the Grafana dashboard
-      // itself (the mentor-style "game-in-dashboard" grand dashboard: the game embedded in
-      // a Video panel at the top, telemetry panels below). Grafana Cloud sends CSP
-      // `frame-ancestors 'none'` on its dashboards, so it cannot be iframed on this origin —
-      // we open the real thing in a new tab via a clear call-to-action. Prefer the grand
-      // dashboard URL; fall back to the public-dashboard URL if only that is set. Hidden in
-      // game-only embed mode (inside the Video panel) and when no dashboard URL exists.
+      // Live Observatory below the game — the REAL Grafana dashboard, inline. Grafana
+      // Cloud sends CSP `frame-ancestors 'none'`, so the dashboard can't be iframed from
+      // this origin directly. Instead we iframe it through the Worker's same-origin reverse
+      // proxy at `${API}/dash/public-dashboards/<token>`, which strips the frame-blocking
+      // headers. We need the API base (the Worker) and a PUBLIC-dashboard URL (so there's a
+      // token to proxy). If either is missing, or the frame errors, we fall back to the
+      // open-in-new-tab button. Hidden entirely in game-only embed mode (inside the Video
+      // panel), where the page is already the game.
+      const apiBase = (import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/$/, '');
       const grandUrl = (import.meta.env.VITE_GRAFANA_GRAND_URL || '').trim();
       const publicUrl = (import.meta.env.VITE_GRAFANA_DASHBOARD_URL || '').trim();
-      const dashboardUrl = grandUrl || publicUrl;
 
-      if (!gameOnly && dashboardUrl) {
+      // Build the proxied embed URL from the public-dashboard token, if we have both the
+      // Worker API base and a /public-dashboards/<token> URL.
+      function buildProxyEmbedUrl() {
+        if (!apiBase || !publicUrl) return '';
+        try {
+          const u = new URL(publicUrl);
+          if (!u.pathname.includes('/public-dashboards/')) return '';
+          // Serve kiosk (chromeless) + dark theme + periodic refresh inside the frame.
+          const params = new URLSearchParams(u.search);
+          params.set('kiosk', '1');
+          params.set('theme', 'dark');
+          if (!params.has('refresh')) params.set('refresh', '30s');
+          return `${apiBase}/dash${u.pathname}?${params.toString()}`;
+        } catch {
+          return '';
+        }
+      }
+
+      if (!gameOnly) {
+        const frame = document.getElementById('cy-dash-frame');
         const cta = document.getElementById('cy-dash-cta');
-        if (cta) {
-          cta.href = dashboardUrl;
+        const proxyUrl = buildProxyEmbedUrl();
+        // The fallback button always points at the real dashboard (grand if set, else public).
+        const openUrl = grandUrl || publicUrl;
+        if (cta && openUrl) cta.href = openUrl;
+
+        if (frame && proxyUrl) {
+          // Reveal the CTA fallback only if the frame fails to load within a grace window.
+          let loaded = false;
+          frame.addEventListener('load', () => {
+            loaded = true;
+            frame.hidden = false;
+            if (cta) cta.hidden = true;
+          });
+          frame.addEventListener('error', () => {
+            if (cta && openUrl) cta.hidden = false;
+          });
+          frame.src = proxyUrl;
+          frame.hidden = false;
+          // Safety net: if the embed hasn't loaded after 6s (proxy/browser refused it),
+          // surface the open-in-new-tab button so the dashboard is always reachable.
+          setTimeout(() => {
+            if (!loaded && cta && openUrl) cta.hidden = false;
+          }, 6000);
+        } else if (cta && openUrl) {
+          // No proxy available (no API base or no public token) — link out instead.
           cta.hidden = false;
         }
       }
