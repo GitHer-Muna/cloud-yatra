@@ -749,7 +749,7 @@
     {
       "type": "table",
       "title": "Shared leaderboard · top pilgrims",
-      "description": "The cross-player leaderboard, served by the Worker from D1.",
+      "description": "Best score per pilgrim, from a completed climb to the Himalayan summit. Fills in as players finish a run.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "grafanacloud-infinity"
@@ -770,7 +770,8 @@
               "type": "auto"
             },
             "filterable": true
-          }
+          },
+          "noValue": "No summit finishes yet — be the first to plant the pennant at the top!"
         },
         "overrides": [
           {
@@ -1463,7 +1464,7 @@
       "type": "table",
       "title": "Recent chaos episodes",
       "id": 45,
-      "description": "Start, stop, and expiry markers from the Worker's chaos feed.",
+      "description": "Start/stop markers for admin-triggered Chaos Mode windows (~60s of injected latency + synthetic 503s). Populates live when chaos runs.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "grafanacloud-infinity"
@@ -1476,7 +1477,8 @@
       },
       "fieldConfig": {
         "defaults": {
-          "custom": {}
+          "custom": {},
+          "noValue": "All calm — no chaos windows yet. Trigger one with Shift+C in the game to watch the backend wobble and recover here."
         },
         "overrides": []
       },
