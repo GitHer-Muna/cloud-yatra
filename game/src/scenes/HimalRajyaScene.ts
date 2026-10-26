@@ -1122,7 +1122,32 @@ export class HimalRajyaScene extends Phaser.Scene {
       `\u2500\u2500 your run \u2500\u2500\n` +
       `Reached: ${region}  (${depth}% up)\n` +
       `\uD83C\uDF38 ${blooms} blooms   \uD83D\uDD14 ${bells} bells   \uD83D\uDCFF ${garlands} garlands\n` +
-      `Best combo: ${combo}   \u00b7   Falls: ${falls}   \u00b7   Time: ${secs}s`
+      `Best combo: ${combo}   \u00b7   Falls: ${falls}   \u00b7   Time: ${secs}s\n` +
+      this.sessionIdFooter()
+    );
+  }
+
+  /**
+   * A footer line for the end-of-run card that surfaces this run's anonymous session id, so a
+   * player can tie THIS run to the Grand Observatory's per-session "Your run" panels. The id
+   * can't be click-copied off the Phaser canvas, so we copy it to the clipboard once (best
+   * effort) and point the player at the on-page "Your latest run" panel, which shows the same
+   * id with a Copy button. Pure presentation + a harmless clipboard attempt; never throws.
+   */
+  private sessionIdFooter(): string {
+    const id = this.telemetry.getSessionId();
+    const short = id.length > 8 ? `${id.slice(0, 8)}…` : id;
+    // Best-effort auto-copy of the FULL id. Guarded: the Clipboard API is unavailable on
+    // insecure origins or when permissions are denied — failure is silent and non-blocking.
+    try {
+      (globalThis as { navigator?: Navigator }).navigator?.clipboard?.writeText(id).catch(() => {
+        /* clipboard blocked — the id is still shown on the page below with a Copy button */
+      });
+    } catch {
+      /* no navigator/clipboard (e.g. tests) — ignore */
+    }
+    return (
+      `\nSession ${short} (copied) \u00b7 full id + Copy in “Your latest run” below`
     );
   }
 

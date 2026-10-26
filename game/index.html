@@ -171,6 +171,55 @@
         font-size: 12px;
         color: #8ecbff;
       }
+      /* Session-id helper: lets a player copy their anonymous per-tab id and paste it into
+         the Grand Observatory's "Your session" dashboard variable to light up its YOUR RUN
+         row (public dashboards can't filter per-player, so the id is pasted by hand). */
+      #cy-session {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+        font-size: 12px;
+        color: #9ec7e8;
+      }
+      #cy-session .cy-session-label {
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-size: 11px;
+        color: #7fa8c7;
+      }
+      #cy-session code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+        color: #eaf4ff;
+        background: rgba(12, 24, 41, 0.75);
+        border: 1px solid rgba(142, 203, 255, 0.2);
+        border-radius: 7px;
+        padding: 3px 8px;
+        user-select: all;
+        word-break: break-all;
+      }
+      #cy-session button {
+        font: inherit;
+        font-size: 12px;
+        color: #0c1829;
+        background: #f6b73c;
+        border: 0;
+        border-radius: 7px;
+        padding: 4px 11px;
+        cursor: pointer;
+        font-weight: 700;
+      }
+      #cy-session button:hover {
+        background: #ffcb5a;
+      }
+      #cy-session .cy-session-hint {
+        flex-basis: 100%;
+        font-size: 11px;
+        color: #6f97b6;
+        margin: 0;
+      }
       #cy-yourrun-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -386,6 +435,15 @@
         <p id="cy-yourrun-empty" class="cy-tile-sub" style="margin:4px 2px 0">
           Play a run and your own stats appear here within a few seconds.
         </p>
+        <div id="cy-session" hidden>
+          <span class="cy-session-label">Your session</span>
+          <code id="cy-session-id"></code>
+          <button id="cy-session-copy" type="button">Copy</button>
+          <p class="cy-session-hint">
+            Paste this into the Grand Observatory's “Your session” box to see this run alongside
+            the live telemetry.
+          </p>
+        </div>
       </div>
 
       <div id="cy-obs-grid"></div>
@@ -427,12 +485,55 @@
       const yourRunBox = document.getElementById('cy-yourrun');
       const yourRunGrid = document.getElementById('cy-yourrun-grid');
       const yourRunEmpty = document.getElementById('cy-yourrun-empty');
+      // Session-id copy helper elements.
+      const sessionBox = document.getElementById('cy-session');
+      const sessionIdEl = document.getElementById('cy-session-id');
+      const sessionCopyBtn = document.getElementById('cy-session-copy');
       let sessionId = '';
       try {
         sessionId = globalThis.sessionStorage?.getItem('cloud-yatra.sessionId') || '';
       } catch {
         /* sessionStorage blocked — the your-run section simply stays hidden */
       }
+
+      // Reveal + populate the "Your session" copy row once a session id exists. Called on
+      // load and on each your-run tick (the id is created on first play, which may be after
+      // this page loaded). Idempotent: only writes the DOM when the id actually changes.
+      function showSessionId() {
+        if (!sessionId || !sessionBox || !sessionIdEl) return;
+        if (sessionIdEl.textContent !== sessionId) sessionIdEl.textContent = sessionId;
+        sessionBox.hidden = false;
+      }
+
+      if (sessionCopyBtn) {
+        sessionCopyBtn.addEventListener('click', async () => {
+          if (!sessionId) return;
+          let copied = false;
+          try {
+            await navigator.clipboard?.writeText(sessionId);
+            copied = true;
+          } catch {
+            // Clipboard API blocked (no https / permissions) → fall back to a manual select.
+            try {
+              const range = document.createRange();
+              range.selectNodeContents(sessionIdEl);
+              const sel = globalThis.getSelection();
+              sel?.removeAllRanges();
+              sel?.addRange(range);
+              copied = document.execCommand?.('copy') ?? false;
+            } catch {
+              /* give up silently — the id is still selectable by hand */
+            }
+          }
+          const original = 'Copy';
+          sessionCopyBtn.textContent = copied ? 'Copied ✓' : 'Select it';
+          setTimeout(() => {
+            sessionCopyBtn.textContent = original;
+          }, 1600);
+        });
+      }
+
+      showSessionId();
 
       if (grafanaUrl && gLink) {
         gLink.href = grafanaUrl;
@@ -526,6 +627,7 @@
           }
         }
         if (!sessionId) return;
+        showSessionId();
         try {
           const res = await fetch(`${apiBase}/session?id=${encodeURIComponent(sessionId)}`, {
             headers: { Accept: 'application/json' },
