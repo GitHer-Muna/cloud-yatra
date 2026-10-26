@@ -483,27 +483,47 @@ export class MenuScene extends Phaser.Scene {
 
   private drawControlsLine(): void {
     const cx = VIEW_WIDTH / 2;
-    const y = PANEL_BOTTOM - 34;
+    const wrapW = PANEL_W - 48; // keep text comfortably inside the panel's rounded box
     const controls = isTouchDevice()
-      ? 'Move  ◀ ▶   ·   Jump  ⤒  (tap again in the air to double-jump)   ·   Khukuri  🗡'
-      : 'Move  ← →   ·   Jump  ↑  (press again in the air to double-jump)   ·   Khukuri  F';
-    this.add
-      .text(cx, y, controls, {
+      ? 'Move  ◀ ▶     Jump  ⤒  (tap again in the air to double-jump)     Khukuri  🗡'
+      : 'Move  ← →     Jump  ↑  (press again in the air to double-jump)     Khukuri  F';
+
+    // The controls string is longer than the panel is wide, so it MUST wrap — otherwise it
+    // spills outside the box. Word-wrap to the panel width and center each line. We anchor
+    // the block by its TOP (origin y=0) and compute its height so the second line (the
+    // flowers/bells hint) sits just below it, with both kept inside PANEL_BOTTOM.
+    const controlsText = this.add
+      .text(cx, 0, controls, {
         fontFamily: 'system-ui, sans-serif',
         fontSize: '14px',
         color: '#ffffff',
         fontStyle: 'bold',
+        align: 'center',
+        wordWrap: { width: wrapW, useAdvancedWrap: true },
       })
-      .setOrigin(0.5)
+      .setOrigin(0.5, 0)
       .setDepth(11);
-    this.add
-      .text(cx, y + 20, '🌸 collect flowers & 🔔 bells for extra lives', {
+
+    const hintText = this.add
+      .text(cx, 0, '🌸 collect flowers & 🔔 bells for extra lives', {
         fontFamily: 'system-ui, sans-serif',
         fontSize: '12px',
         color: '#bfe3ff',
+        align: 'center',
+        wordWrap: { width: wrapW, useAdvancedWrap: true },
       })
-      .setOrigin(0.5)
+      .setOrigin(0.5, 0)
       .setDepth(11);
+
+    // Stack the two blocks bottom-aligned inside the panel: the hint sits ~8px above the
+    // panel's bottom edge, the controls block directly above it. This guarantees both stay
+    // within the box regardless of how many lines the controls wrap to.
+    const gap = 6;
+    const bottomPad = 14;
+    const hintY = PANEL_BOTTOM - bottomPad - hintText.height;
+    const controlsY = hintY - gap - controlsText.height;
+    controlsText.setY(controlsY);
+    hintText.setY(hintY);
   }
 
   // ---------------------------------------------------------------- corner extras
