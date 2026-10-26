@@ -13,6 +13,13 @@ export interface Env {
   ENVIRONMENT?: string;
   SERVICE_NAME?: string;
 
+  // Reverse-proxy target for embedding the Grafana public dashboard below the game.
+  // Grafana Cloud sends `frame-ancestors 'none'`, so the dashboard can't be iframed from
+  // the game origin directly. The Worker proxies it under /dash/* from its own origin and
+  // strips the frame-blocking headers, so the game page CAN iframe /dash/. Set to the
+  // Grafana stack origin, e.g. "https://curioushalibut2108.grafana.net". Unset = proxy off.
+  GRAFANA_PROXY_BASE?: string;
+
   // Optional secrets (wrangler secret put ...). Empty/undefined disables the push.
   GRAFANA_LOKI_URL?: string; // e.g. https://logs-prod-xxx.grafana.net/loki/api/v1/push
   GRAFANA_LOKI_USER?: string; // Loki/basic-auth user id (numeric)

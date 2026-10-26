@@ -29,6 +29,7 @@ import { validateEvent, MAX_BATCH, type EventEnvelope } from './events';
 import { ingest, leaderboard, sessionRollup, stats, submitScore } from './db';
 import { inc, observe, renderMetrics, setGauge } from './metrics';
 import { Logger, hexId, pushTrace } from './logger';
+import { isProxyRequest, handleProxy } from './grafanaProxy';
 import {
   decide,
   getStatus,
@@ -95,6 +96,20 @@ export default {
     const log = new Logger(env, ctx, { correlationId, route, method, country: country ?? 'unknown' });
 
     if (method === 'OPTIONS') return preflight(req, env);
+
+    // Grafana public-dashboard reverse proxy (/dash/*). Served from this origin with the
+    // frame-blocking headers stripped so the game page can iframe the real dashboard below
+    // the game. Handled before the metered API routing: these are high-volume SPA
+    // sub-requests, not gameplay API calls, so they skip chaos injection, request metrics,
+    // and per-request logging/tracing.
+    if (isProxyRequest(pathname)) {
+      try {
+        return await handleProxy(req, env);
+      } catch (err) {
+        log.error('proxy_error', { error: err instanceof Error ? err.message : String(err) });
+        return new Response('dashboard proxy error', { status: 502 });
+      }
+    }
 
     // Chaos Mode: on gameplay routes only, inject bounded latency and/or a synthetic 503
     // while an admin-triggered window is active. Control/observability routes are never
