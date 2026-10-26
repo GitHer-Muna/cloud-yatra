@@ -678,6 +678,9 @@
       </div>
       <!-- Full Grafana dashboard, embedded directly below the game. Only appears when a
            framable Grafana *public dashboard* URL is configured (VITE_GRAFANA_DASHBOARD_URL). -->
+      <!-- Grafana public-dashboard iframe mounts here. The URL comes from the build-time
+           VITE_GRAFANA_DASHBOARD_URL variable; if it's unset or not framable, the native
+           Live Observatory tiles below stand in automatically. -->
       <div id="cy-grafana-embed" hidden></div>
 
       <!-- Your latest run: this browser's own session, read live from D1 via /session.
