@@ -402,13 +402,203 @@
         outline-offset: 2px;
         border-radius: 4px;
       }
+
+      /* ── Hero header: title, pitch, and a 3-step flow so first-time visitors instantly
+         understand this is a game that generates real, live observability data. ── */
+      #cy-hero {
+        width: min(960px, 92vw);
+        margin: 22px auto 0;
+        text-align: center;
+      }
+      #cy-hero .cy-hero-kicker {
+        font-size: 12px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: #8ecbff;
+        margin: 0 0 6px;
+      }
+      #cy-hero h1 {
+        margin: 0;
+        font-size: clamp(28px, 5.4vw, 46px);
+        font-weight: 800;
+        line-height: 1.05;
+        background: linear-gradient(95deg, #f6b73c 0%, #ff8a5c 42%, #8ecbff 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      #cy-hero .cy-hero-sub {
+        margin: 10px auto 0;
+        max-width: 640px;
+        font-size: clamp(14px, 2.4vw, 16px);
+        line-height: 1.55;
+        color: #c6dcf0;
+      }
+      #cy-hero .cy-hero-sub strong {
+        color: #f6b73c;
+        font-weight: 700;
+      }
+      /* The flow: Play → Telemetry → Grafana. Chips with arrows between. */
+      #cy-flow {
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 16px auto 4px;
+      }
+      #cy-flow .cy-flow-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        min-width: 120px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(142, 203, 255, 0.22);
+        background: linear-gradient(145deg, rgba(23, 46, 77, 0.65), rgba(12, 24, 41, 0.6));
+      }
+      #cy-flow .cy-flow-emoji {
+        font-size: 20px;
+        line-height: 1;
+      }
+      #cy-flow .cy-flow-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #eaf4ff;
+      }
+      #cy-flow .cy-flow-note {
+        font-size: 11px;
+        color: #8fb3d0;
+      }
+      #cy-flow .cy-flow-arrow {
+        align-self: center;
+        color: #f6b73c;
+        font-size: 18px;
+        line-height: 1;
+      }
+      @media (max-width: 520px) {
+        #cy-flow .cy-flow-arrow {
+          transform: rotate(90deg);
+        }
+      }
+
+      /* ── Signals strip: one line per telemetry signal, so the page reads as a guided tour
+         of what the dashboard below shows. ── */
+      #cy-signals {
+        width: min(960px, 92vw);
+        margin: 18px auto 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 10px;
+      }
+      #cy-signals .cy-sig {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 11px 13px;
+        border-radius: 12px;
+        border: 1px solid rgba(142, 203, 255, 0.16);
+        background: rgba(16, 35, 59, 0.5);
+      }
+      #cy-signals .cy-sig-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-top: 4px;
+        flex: 0 0 auto;
+      }
+      #cy-signals .cy-sig-body h3 {
+        margin: 0;
+        font-size: 13px;
+        color: #eaf4ff;
+      }
+      #cy-signals .cy-sig-body p {
+        margin: 2px 0 0;
+        font-size: 11.5px;
+        line-height: 1.45;
+        color: #9ec7e8;
+      }
+
+      /* In the Grafana Video panel (game-only), show ONLY the game — no hero, no tour. */
+      .cy-embed-game-only #cy-hero,
+      .cy-embed-game-only #cy-signals,
+      .cy-embed-game-only #cy-observatory {
+        display: none !important;
+      }
+      .cy-embed-game-only #game-root {
+        margin-top: 0;
+      }
     </style>
   </head>
   <body>
+    <!-- Hero: what this is, in one glance. Hidden inside the Grafana Video panel. -->
+    <header id="cy-hero">
+      <p class="cy-hero-kicker">A live full-stack observability demo</p>
+      <h1>Cloud Yatra</h1>
+      <p class="cy-hero-sub">
+        Play <strong>Yatri</strong> climbing from the Terai jungle to the Himalayan summit.
+        Every jump, bloom, and fall becomes <strong>real telemetry</strong> that flows to a
+        live Grafana dashboard below — watch the system react as you play.
+      </p>
+      <div id="cy-flow" aria-label="How it works: play the game, it emits telemetry, Grafana visualises it live">
+        <div class="cy-flow-step">
+          <span class="cy-flow-emoji" aria-hidden="true">🎮</span>
+          <span class="cy-flow-title">Play</span>
+          <span class="cy-flow-note">in your browser</span>
+        </div>
+        <span class="cy-flow-arrow" aria-hidden="true">→</span>
+        <div class="cy-flow-step">
+          <span class="cy-flow-emoji" aria-hidden="true">📡</span>
+          <span class="cy-flow-title">Telemetry</span>
+          <span class="cy-flow-note">metrics · logs · traces · RUM</span>
+        </div>
+        <span class="cy-flow-arrow" aria-hidden="true">→</span>
+        <div class="cy-flow-step">
+          <span class="cy-flow-emoji" aria-hidden="true">📊</span>
+          <span class="cy-flow-title">Grafana</span>
+          <span class="cy-flow-note">live, below the game</span>
+        </div>
+      </div>
+    </header>
+
     <!-- Phaser injects its <canvas> here (see src/main.ts), replacing the loader. -->
     <div id="game-root" role="application" aria-label="Cloud Yatra — a Nepali platformer game. Use arrow keys or WASD to move, up or space to jump, F to use the khukuri. On touch devices, on-screen buttons appear.">
       <div id="cy-loading">Loading Cloud Yatra…</div>
     </div>
+
+    <!-- Signals tour: one line per telemetry signal shown in the dashboard below. -->
+    <section id="cy-signals" aria-label="What the dashboard below shows: the four telemetry signals">
+      <div class="cy-sig">
+        <span class="cy-sig-dot" style="background:#f6b73c" aria-hidden="true"></span>
+        <div class="cy-sig-body">
+          <h3>Metrics</h3>
+          <p>Request rate, errors, and latency percentiles from the Worker's Prometheus endpoint.</p>
+        </div>
+      </div>
+      <div class="cy-sig">
+        <span class="cy-sig-dot" style="background:#8ecbff" aria-hidden="true"></span>
+        <div class="cy-sig-body">
+          <h3>Logs</h3>
+          <p>One structured JSON line per request, each tagged with a correlation id, shipped to Loki.</p>
+        </div>
+      </div>
+      <div class="cy-sig">
+        <span class="cy-sig-dot" style="background:#9b8cff" aria-hidden="true"></span>
+        <div class="cy-sig-body">
+          <h3>Traces</h3>
+          <p>A per-request span to Tempo; latency buckets carry exemplars that jump to the trace.</p>
+        </div>
+      </div>
+      <div class="cy-sig">
+        <span class="cy-sig-dot" style="background:#5ad19a" aria-hidden="true"></span>
+        <div class="cy-sig-body">
+          <h3>Real-user monitoring</h3>
+          <p>Web vitals, errors, FPS, and custom gameplay events from the browser via Grafana Faro.</p>
+        </div>
+      </div>
+    </section>
+
     <section id="cy-observatory" aria-labelledby="cy-observatory-title">
       <div class="cy-observatory-heading">
         <div>
