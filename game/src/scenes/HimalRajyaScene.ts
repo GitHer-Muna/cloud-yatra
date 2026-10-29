@@ -95,6 +95,9 @@ export class HimalRajyaScene extends Phaser.Scene {
   private levelTransitionStarted = false;
   private graceUsed = false;
   private levelStartTime = 0;
+  // Set once we've banked a run to the shared leaderboard on page-hide, so leaving and
+  // returning (or multiple visibilitychange events) can't submit the same run repeatedly.
+  private bankedOnHide = false;
 
   // Continuation across levels: cumulative score is carried forward; best is persisted.
   private cumulativeScore = 0;
@@ -340,6 +343,35 @@ export class HimalRajyaScene extends Phaser.Scene {
         release();
       });
     }
+
+    // Safety net so real play ALWAYS reaches the shared leaderboard: most visitors clear a
+    // level or two and then close/switch the tab without ever dying or reaching the summit.
+    // When the page is hidden (tab switch, navigation, mobile home button) we bank the run
+    // once via a sendBeacon-backed submit, so even a partial climb shows up. Guarded by
+    // bankedOnHide; dedups to the player's best per name on the backend. Only submits a
+    // meaningful (> 0) score, and never during an already-finished run (handled elsewhere).
+    const bankOnHide = (): void => {
+      if (this.bankedOnHide) return;
+      const runTotal = this.cumulativeScore + (this.gameOver || this.levelComplete ? 0 : this.score);
+      if (runTotal <= 0) return;
+      this.bankedOnHide = true;
+      submitRemoteScore(
+        runTotal,
+        this.playerName || undefined,
+        this.telemetry.sinceStartMs(),
+        this.level.id,
+        this.telemetry.getSessionId(),
+      );
+    };
+    const onVisibility = (): void => {
+      if (document.visibilityState === 'hidden') bankOnHide();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    globalThis.addEventListener('pagehide', bankOnHide);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      globalThis.removeEventListener('pagehide', bankOnHide);
+    });
 
     // Touch controls for phones/tablets (keyboard-only otherwise). Enable extra pointers
     // so multi-touch (e.g. hold RIGHT + tap JUMP) works. Only drawn on touch devices.
@@ -1049,6 +1081,19 @@ export class HimalRajyaScene extends Phaser.Scene {
     // is counted exactly once.
     if (!isFinale) {
       this.telemetry.record({ type: 'level_completed', score: runScore, timeMs });
+      // Also bank the run to the shared leaderboard at EVERY level completion, not only the
+      // summit. Most players clear a level or two and then stop or close the tab without
+      // ever dying or reaching the top — if we only submitted on death/summit, their run
+      // (and the whole leaderboard) would stay empty despite real play. submitRemoteScore
+      // dedups to the player's best per name, so banking progressively is safe and simply
+      // keeps the highest cumulative score reached. Offline-safe, fire-and-forget.
+      submitRemoteScore(
+        this.cumulativeScore,
+        this.playerName || undefined,
+        this.telemetry.sinceStartMs(),
+        this.level.id,
+        this.telemetry.getSessionId(),
+      );
     }
 
     if (isFinale) this.finaleCelebration();
