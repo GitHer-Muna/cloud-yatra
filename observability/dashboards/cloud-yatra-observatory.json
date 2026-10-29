@@ -3297,6 +3297,148 @@
       ]
     },
     {
+      "type": "table",
+      "title": "Recent pilgrims · who's climbing now",
+      "description": "The latest runs, newest first — a live feed of individual climbs (from /recent). Updates as people play, so you can watch real traffic arrive even before anyone tops the leaderboard.",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 133
+      },
+      "id": 68,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": false
+          },
+          "noValue": "No runs yet — play a round and watch your climb appear here live."
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Pilgrim"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 200
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Region"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "center"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Country"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "center"
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "When"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              },
+              {
+                "id": "custom.align",
+                "value": "center"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "sortBy": [
+          {
+            "displayName": "When",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "${api_base_url}/recent?limit=12",
+          "root_selector": "entries",
+          "columns": [
+            {
+              "selector": "name",
+              "text": "Pilgrim",
+              "type": "string"
+            },
+            {
+              "selector": "score",
+              "text": "Score",
+              "type": "number"
+            },
+            {
+              "selector": "levelId",
+              "text": "Region",
+              "type": "string"
+            },
+            {
+              "selector": "country",
+              "text": "Country",
+              "type": "string"
+            },
+            {
+              "selector": "updatedAt",
+              "text": "When",
+              "type": "number"
+            }
+          ],
+          "parser": "backend",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          }
+        }
+      ]
+    },
+    {
       "type": "stat",
       "title": "Total completions",
       "description": "Level and summit completions persisted in D1.",
