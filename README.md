@@ -126,6 +126,7 @@ Other scripts, run in `game/`:
 ```bash
 npm run build      # type-check and build to dist/
 npm run typecheck  # tsc --noEmit
+npm run lint       # eslint
 npm test           # vitest
 ```
 
@@ -136,6 +137,7 @@ The game is fully playable without the backend. To run it locally:
 ```bash
 cd backend
 npm install
+npm run lint                # eslint
 npm test                    # vitest in the workerd runtime with in-memory D1
 npx wrangler dev --local    # local Worker + local SQLite
 ```
