@@ -88,9 +88,10 @@
       }
       #cy-observatory .cy-observatory-heading {
         display: flex;
-        align-items: baseline;
+        align-items: center;
         justify-content: space-between;
-        gap: 16px;
+        flex-wrap: wrap;
+        gap: 12px 16px;
         margin-bottom: 14px;
       }
       #cy-observatory h2 {
@@ -104,13 +105,53 @@
         font-size: 13px;
         line-height: 1.5;
       }
+      /* Always-visible "open the full dashboard" button in the section header. The inline
+         embed below is compact (you scroll inside it), so this gives a one-click path to
+         the full-size dashboard in its own tab. It sits to the right of the title and wraps
+         below it on narrow screens (the heading is flex with wrap). */
+      #cy-dash-open {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex: 0 0 auto;
+        white-space: nowrap;
+        font-size: 13.5px;
+        font-weight: 700;
+        color: #0e1726;
+        background: linear-gradient(135deg, #f6b73c, #f3c623);
+        border: 1px solid rgba(243, 198, 35, 0.9);
+        border-radius: 999px;
+        padding: 9px 18px;
+        text-decoration: none;
+        box-shadow: 0 6px 18px rgba(243, 198, 35, 0.18);
+        transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+      }
+      #cy-dash-open:hover {
+        transform: translateY(-1px);
+        filter: brightness(1.05);
+        box-shadow: 0 9px 24px rgba(243, 198, 35, 0.28);
+      }
+      #cy-dash-open:focus-visible {
+        outline: 3px solid #8ecbff;
+        outline-offset: 2px;
+      }
+      #cy-dash-open[hidden] {
+        display: none;
+      }
+      #cy-dash-open .cy-dash-open-arrow {
+        font-size: 15px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #cy-dash-open { transition: none; }
+        #cy-dash-open:hover { transform: none; }
+      }
       /* Live-dashboard call-to-action banner. Grafana Cloud blocks iframe embedding (CSP
          frame-ancestors 'none'), so instead of a broken frame we present a clear, handsome
          button to open the real dashboard in a new tab. */
       #cy-dash-frame {
         width: 100%;
-        height: min(80vh, 900px);
-        min-height: 420px;
+        height: min(92vh, 1400px);
+        min-height: 560px;
         margin-top: 8px;
         border: 1px solid rgba(243, 198, 35, 0.35);
         border-radius: 12px;
@@ -122,7 +163,7 @@
       /* On phones the embedded dashboard is dense; give it a sensible height and let the
          page scroll it rather than forcing a tall viewport block. */
       @media (max-width: 640px) {
-        #cy-dash-frame { height: 70vh; min-height: 340px; }
+        #cy-dash-frame { height: 80vh; min-height: 420px; }
         #cy-observatory { padding: 14px; }
       }
       #cy-dash-cta {
@@ -361,6 +402,13 @@
           <h2 id="cy-observatory-title">Cloud Yatra · Live Observatory</h2>
           <p>The real Grafana dashboard, live below the game — metrics, logs, traces, SLOs and RUM, updating in near-real time as people play.</p>
         </div>
+        <!-- Always-on affordance: the inline embed below is compact (you scroll within it),
+             so this opens the full-size dashboard in a new tab. Populated with the real URL
+             by the script; stays hidden only if no dashboard URL is configured at all. -->
+        <a id="cy-dash-open" class="cy-dash-open" href="#" target="_blank" rel="noopener" hidden>
+          <span>Open full dashboard</span>
+          <span class="cy-dash-open-arrow" aria-hidden="true">↗</span>
+        </a>
       </div>
 
       <!-- The real Grafana dashboard, embedded inline. Grafana Cloud sends CSP
@@ -465,10 +513,22 @@
       if (!gameOnly) {
         const frame = document.getElementById('cy-dash-frame');
         const cta = document.getElementById('cy-dash-cta');
+        const openBtn = document.getElementById('cy-dash-open');
         const proxyUrl = buildProxyEmbedUrl();
         // The fallback button always points at the real dashboard (grand if set, else public).
         const openUrl = grandUrl || publicUrl;
         if (cta && openUrl) cta.href = openUrl;
+        // Always-on header button: opens the full-size dashboard in a new tab. Prefer the
+        // PUBLIC dashboard URL so anyone (unauthenticated) can view it; fall back to the
+        // authenticated "grand" URL only if no public URL is set. Revealed whenever we have
+        // any dashboard URL at all — independent of whether the inline embed loads.
+        if (openBtn) {
+          const fullUrl = publicUrl || grandUrl;
+          if (fullUrl) {
+            openBtn.href = fullUrl;
+            openBtn.hidden = false;
+          }
+        }
 
         if (frame && proxyUrl) {
           // Reveal the CTA fallback only if the frame fails to load within a grace window.
