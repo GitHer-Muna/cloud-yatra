@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: 'Type RESET to confirm wiping the leaderboard'
+        description: 'Type RESET to confirm wiping the leaderboard (any casing)'
         required: true
         default: ''
 
@@ -26,10 +26,18 @@ jobs:
 
       - name: Guard — require the confirmation word
         run: |
-          if [ "${{ github.event.inputs.confirm }}" != "RESET" ]; then
-            echo "Confirmation word not provided (expected RESET). Aborting."
+          # Accept the confirmation word in any casing, with surrounding whitespace
+          # trimmed, so "RESET", "reset", or " Reset " all work. The manual trigger +
+          # typing the word is already the deliberate "are you sure?" speed bump; we don't
+          # also need an exact-case match (which previously aborted a genuine "reset").
+          raw="${{ github.event.inputs.confirm }}"
+          trimmed="$(echo "$raw" | xargs)"           # trim leading/trailing whitespace
+          upper="$(echo "$trimmed" | tr '[:lower:]' '[:upper:]')"
+          if [ "$upper" != "RESET" ]; then
+            echo "::error::Confirmation word was '$raw'. Type RESET (any casing) to confirm wiping the leaderboard. Aborting — nothing was changed."
             exit 1
           fi
+          echo "Confirmation accepted — proceeding to wipe the scores table."
 
       - uses: actions/setup-node@v4
         with:
