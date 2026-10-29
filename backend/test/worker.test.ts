@@ -237,6 +237,39 @@ describe('/score + /leaderboard', () => {
   });
 });
 
+describe('/recent', () => {
+  it('returns the latest runs newest-first with level, country and timestamp', async () => {
+    await call('POST', '/score', { name: 'First', score: 100, levelId: 'terai' });
+    await call('POST', '/score', { name: 'Second', score: 200, levelId: 'hills' });
+    await call('POST', '/score', { name: 'Third', score: 300, levelId: 'himal' });
+    const res = await call('GET', '/recent?limit=10');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      entries: Array<{ name: string; score: number; levelId: string | null; updatedAt: number }>;
+    };
+    // Newest submission first (ordered by updated_at DESC), regardless of score.
+    expect(body.entries.map((e) => e.name)).toEqual(['Third', 'Second', 'First']);
+    expect(body.entries[0].levelId).toBe('himal');
+    expect(typeof body.entries[0].updatedAt).toBe('number');
+  });
+
+  it('honours the limit and bounds it', async () => {
+    for (let i = 0; i < 5; i += 1) {
+      await call('POST', '/score', { name: `P${i}`, score: 10 + i });
+    }
+    const res = await call('GET', '/recent?limit=2');
+    const body = (await res.json()) as { entries: unknown[] };
+    expect(body.entries).toHaveLength(2);
+  });
+
+  it('is empty (not an error) when no runs exist yet', async () => {
+    const res = await call('GET', '/recent');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { entries: unknown[] };
+    expect(body.entries).toEqual([]);
+  });
+});
+
 describe('/stats', () => {
   it('aggregates events, deaths by cause, and the funnel', async () => {
     const sid = 'sess-stats-1';

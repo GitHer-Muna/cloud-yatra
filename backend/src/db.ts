@@ -287,6 +287,35 @@ export async function leaderboard(env: Env, limit = 20): Promise<LeaderboardRow[
   return res.results ?? [];
 }
 
+export interface RecentRow {
+  name: string;
+  score: number;
+  timeMs: number | null;
+  levelId: string | null;
+  country: string | null;
+  updatedAt: number;
+}
+
+/**
+ * The most RECENTLY active N runs, newest first — a live "who's climbing right now" feed
+ * for the public dashboard (liveness the top-scores leaderboard can't show on its own).
+ *
+ * Reads the small `scores` table (best-per-name), ordered by updated_at DESC, so it stays
+ * cheap on D1's free tier and never scans the events table. Privacy-safe: name is a
+ * self-chosen handle or an anonymous "Pilgrim-xxxx", country is the coarse CF edge country;
+ * no session id, no PII. Bounded to 1..50 rows.
+ */
+export async function recent(env: Env, limit = 10): Promise<RecentRow[]> {
+  const n = Math.min(Math.max(1, Math.floor(limit)), 50);
+  const res = await env.DB.prepare(
+    `SELECT name, score, time_ms AS timeMs, level_id AS levelId, country, updated_at AS updatedAt
+       FROM scores ORDER BY updated_at DESC LIMIT ?`,
+  )
+    .bind(n)
+    .all<RecentRow>();
+  return res.results ?? [];
+}
+
 /**
  * Per-session rollup for the "Your Run" dashboard row. Returns the single session's row
  * from the `sessions` table (the same anonymous per-tab rollup used for engagement),

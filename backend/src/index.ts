@@ -11,6 +11,7 @@
  *   GET  /metrics       → Prometheus text (isolate-lifetime counters/histograms)
  *   GET  /stats         → aggregate dashboard stats from D1 (JSON)
  *   GET  /leaderboard   → top scores from D1 (JSON)
+ *   GET  /recent        → the latest N runs, newest first (JSON, live "recent pilgrims" feed)
  *   GET  /session?id=   → per-session "Your Run" rollup from D1 (JSON)
  *   POST /score         → submit a completed run (best-per-name)
  *   POST /event         → ingest a single telemetry event
@@ -26,7 +27,7 @@
 import type { Env } from './env';
 import { corsHeaders, preflight } from './cors';
 import { validateEvent, MAX_BATCH, type EventEnvelope } from './events';
-import { ingest, leaderboard, sessionRollup, stats, submitScore } from './db';
+import { ingest, leaderboard, recent, sessionRollup, stats, submitScore } from './db';
 import { inc, observe, renderMetrics, setGauge } from './metrics';
 import { Logger, hexId, pushTrace } from './logger';
 import { isProxyRequest, handleProxy } from './grafanaProxy';
@@ -174,6 +175,7 @@ function routeLabel(pathname: string): string {
     '/stats',
     '/session',
     '/leaderboard',
+    '/recent',
     '/score',
     '/event',
     '/events',
@@ -259,6 +261,15 @@ async function handle(req: Request, env: Env, c: Ctx): Promise<Response> {
   if (pathname === '/leaderboard' && method === 'GET') {
     const limit = Number(new URL(req.url).searchParams.get('limit') ?? '20');
     const rows = await leaderboard(env, Number.isFinite(limit) ? limit : 20);
+    return json({ entries: rows }, 200, req, env);
+  }
+
+  if (pathname === '/recent' && method === 'GET') {
+    // Live "who's climbing now" feed — the latest runs, newest first. Powers the public
+    // dashboard's "Recent pilgrims" panel so viewers see individual-run activity (not just
+    // the all-time top scores). Bounded + privacy-safe (see db.recent).
+    const limit = Number(new URL(req.url).searchParams.get('limit') ?? '10');
+    const rows = await recent(env, Number.isFinite(limit) ? limit : 10);
     return json({ entries: rows }, 200, req, env);
   }
 
