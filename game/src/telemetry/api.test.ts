@@ -12,7 +12,7 @@
  * URL and a mocked fetch.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { apiBase, hasBackend, fetchLeaderboard, __setApiBaseEnvReader } from './api';
+import { apiBase, hasBackend, fetchLeaderboard, submitScore, __setApiBaseEnvReader } from './api';
 import { getChaosStatus, startChaos, stopChaos } from './api';
 import { HttpBatchSink } from './sinks';
 import type { TelemetryEvent } from './events';
@@ -50,6 +50,49 @@ describe('fetchLeaderboard', () => {
     // Local board always has the seeded legends, so it is never empty.
     expect(Array.isArray(board)).toBe(true);
     expect(board.length).toBeGreaterThan(0);
+  });
+});
+
+describe('submitScore', () => {
+  let fetchMock: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    fetchMock = vi.fn(async () => new Response('{"ok":true}', { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('navigator', {}); // force the fetch path (no sendBeacon)
+    __setApiBaseEnvReader(() => 'https://api.test');
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    __setApiBaseEnvReader(() => undefined);
+  });
+
+  it('submits an anonymous run with a per-session friendly name (does not drop it)', async () => {
+    submitScore(1234, undefined, 5000, 'terai', 'sess-a3f9beef');
+    await Promise.resolve();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, opts] = fetchMock.mock.calls[0];
+    expect(url).toBe('https://api.test/score');
+    const body = JSON.parse((opts as RequestInit).body as string);
+    // No name given → a stable "Pilgrim-<id prefix>" name is derived from the session id,
+    // so the shared board fills up instead of silently dropping nameless runs.
+    expect(body.name).toBe('Pilgrim-sess');
+    expect(body.score).toBe(1234);
+  });
+
+  it('uses the player-entered name verbatim when provided', async () => {
+    submitScore(999, 'Tenzing', 4200, 'hills', 'sess-xyz1');
+    await Promise.resolve();
+    const body = JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string);
+    expect(body.name).toBe('Tenzing');
+  });
+
+  it('never submits remotely when no backend is configured (offline-safe)', async () => {
+    __setApiBaseEnvReader(() => undefined);
+    submitScore(500, undefined, 1000, 'terai', 'sess-abcd');
+    await Promise.resolve();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 

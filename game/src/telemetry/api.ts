@@ -95,7 +95,20 @@ export async function fetchLeaderboard(limit = 20, timeoutMs = 2500): Promise<Ra
  * Submit a completed run to the backend (best-per-name) AND always record it locally so
  * the player's run persists offline. Fire-and-forget to the network; never blocks or
  * throws into gameplay.
+ *
+ * Anonymous runs ARE submitted: if the player didn't type a name, we derive a friendly,
+ * per-session name like "Pilgrim-a3f9" from the session id. This keeps the shared board
+ * lively (like arcade leaderboards) instead of empty, while the backend's best-per-name
+ * dedup means one anonymous player maps to one stable row (not a flood). A missing session
+ * id falls back to a random suffix so we never collapse every anon run into a single row.
  */
+function anonPilgrimName(sessionId?: string | null): string {
+  const raw = (sessionId ?? '').replace(/[^a-z0-9]/gi, '');
+  // 4 hex-ish chars from the session id give a stable, readable, low-collision suffix.
+  const suffix = raw.length >= 4 ? raw.slice(0, 4) : Math.random().toString(16).slice(2, 6);
+  return `Pilgrim-${suffix}`;
+}
+
 export function submitScore(
   score: number,
   name?: string,
@@ -107,9 +120,12 @@ export function submitScore(
   recordLocalScore(score, name, timeMs);
 
   const base = apiBase();
-  if (!base || !name) return;
+  if (!base) return;
+  // Submit even when the player stayed anonymous — default to a per-session friendly name
+  // so the shared leaderboard fills up instead of silently dropping nameless runs.
+  const submitName = (name && name.trim()) || anonPilgrimName(sessionId);
 
-  const payload = JSON.stringify({ name, score, timeMs, levelId, sessionId });
+  const payload = JSON.stringify({ name: submitName, score, timeMs, levelId, sessionId });
   // Prefer sendBeacon so the submit survives the scene transition / page hide.
   try {
     if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
