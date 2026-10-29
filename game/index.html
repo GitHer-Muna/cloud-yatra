@@ -33,11 +33,6 @@
         background: #0e1726;
         font-family: system-ui, sans-serif;
         color: #e9f6ff;
-        /* Never allow a horizontal scrollbar on mobile: `100vw`-based widths can slightly
-           exceed the visible width when a vertical scrollbar is present, which otherwise
-           shows a faint sideways scroll. Belt-and-braces with the min()/calc() widths. */
-        overflow-x: hidden;
-        max-width: 100%;
         /* Stop the browser from treating in-game touches as scroll/zoom gestures, which
            otherwise "eat" the on-screen control presses on phones/tablets. The page body
            still allows normal scrolling (manipulation); only the game canvas below locks
@@ -46,6 +41,18 @@
         overscroll-behavior: none;
         -webkit-user-select: none;
         user-select: none;
+      }
+      /* Never allow a horizontal scrollbar: `100vw`-based widths can slightly exceed the
+         visible width when a vertical scrollbar is present, which otherwise shows a faint
+         sideways scroll. Apply this to the ROOT only — NOT to <body> as well. Setting
+         `overflow-x: hidden` on both <html> and <body> makes the body a second scroll
+         container (its `overflow-y` computes to `auto`) with `min-height: 100%`, which
+         traps/clips the page's own vertical scroll so you can't reach the dashboard below
+         the game. Scoping it to <html> keeps horizontal locked while vertical scroll flows
+         normally through the viewport. */
+      html {
+        overflow-x: hidden;
+        max-width: 100%;
       }
       /* Desktop / large screens: a centered, bordered 16:9 stage (a Grafana dashboard can
          later sit BELOW it on the same page). */
