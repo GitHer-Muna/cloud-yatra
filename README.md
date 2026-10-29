@@ -61,7 +61,7 @@ Browser (Phaser game, Cloudflare Pages)            Cloudflare Worker (cloud-yatr
   • custom gameplay events  ───────► Faro             • structured JSON log  ───────► Loki
                                       │               • OTLP trace span      ───────► Tempo
                                       ▼               • Cloudflare D1 (SQLite)
-                                Grafana Cloud  ◄── Infinity ◄── /stats, /leaderboard, /session
+                                Grafana Cloud  ◄── Infinity ◄── /stats, /leaderboard, /recent, /session
                                       │
                        Dashboards (versioned JSON) + SLOs + alert rules
 ```
@@ -74,7 +74,7 @@ The project covers the four telemetry signals plus reliability tooling:
 | Logs | Worker → Loki | One structured JSON log per request, each with a `correlationId` |
 | Traces | Worker → Tempo | A per-request OTLP span; latency buckets carry trace exemplars |
 | RUM | Browser → Faro | Web vitals, JS errors, sessions, custom gameplay events, sampled FPS |
-| Analytics | D1 → Infinity | Leaderboard, progression funnel, per-player stats, country geomap |
+| Analytics | D1 → Infinity | Leaderboard, a live recent-runs feed, progression funnel, per-player stats, country geomap |
 | Reliability | Prometheus + dashboard | Availability and latency SLOs, error-budget burn, and alert rules |
 
 Labels are deliberately low-cardinality (`route`, `status_class`, `type`, `cause`, region).
@@ -105,8 +105,8 @@ cloud-yatra/
 │   ├── build-dashboard.mjs  Generates the public dashboard from the source
 │   └── grafana-alerts.yaml  Importable Grafana-managed alert rules
 │
-└── .github/workflows/     CI/CD — deploy Pages, deploy the Worker, and a manual
-                           leaderboard-reset, all from main
+└── .github/workflows/     CI/CD — a CI quality gate (lint, type-check, tests) plus deploy
+                           Pages, deploy the Worker, and a manual leaderboard-reset, from main
 ```
 
 ## Running locally
@@ -144,8 +144,8 @@ npx wrangler dev --local    # local Worker + local SQLite
 
 Routes:
 
-- `GET` — `/healthz`, `/metrics`, `/stats`, `/leaderboard`, `/session`, `/chaos/status`,
-  `/chaos/events`
+- `GET` — `/healthz`, `/metrics`, `/stats`, `/leaderboard`, `/recent`, `/session`,
+  `/chaos/status`, `/chaos/events`
 - `POST` — `/event`, `/events`, `/score`, `/chaos/start`, `/chaos/stop`
 
 See `backend/wrangler.toml` for the D1 binding and the optional Grafana push and Chaos Mode

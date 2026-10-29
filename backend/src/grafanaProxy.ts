@@ -42,7 +42,7 @@ const PREFIX = '/dash';
 // against /public-dashboards/.* to derive its public context). `/bootdata` is the initial
 // boot-data fetch (__grafana_boot_data_promise); `/apis/` is the newer resource API. None
 // of these collide with this API's own routes (/healthz, /metrics, /stats, /leaderboard,
-// /session, /score, /event, /events, /chaos/*), which use entirely different path names.
+// /recent, /session, /score, /event, /events, /chaos/*), which use entirely different path names.
 const GRAFANA_ROOT_PREFIXES = [
   '/api/',
   '/apis/',
