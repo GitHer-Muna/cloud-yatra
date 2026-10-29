@@ -1140,25 +1140,35 @@ export class HimalRajyaScene extends Phaser.Scene {
 
   /**
    * A footer line for the end-of-run card that surfaces this run's anonymous session id, so a
-   * player can tie THIS run to the Grand Observatory's per-session "Your run" panels. The id
+   * player can tie THIS run to the Grand Observatory's per-session "Your run" panels (paste it
+   * into the dashboard's "Your session" box / append var-session=<id> to the URL). The id
    * can't be click-copied off the Phaser canvas, so we copy it to the clipboard once (best
-   * effort) and point the player at the on-page "Your latest run" panel, which shows the same
-   * id with a Copy button. Pure presentation + a harmless clipboard attempt; never throws.
+   * effort) AND print the full id on the card so it's usable even when the clipboard is
+   * blocked. Pure presentation + a harmless clipboard attempt; never throws.
    */
   private sessionIdFooter(): string {
     const id = this.telemetry.getSessionId();
-    const short = id.length > 8 ? `${id.slice(0, 8)}…` : id;
-    // Best-effort auto-copy of the FULL id. Guarded: the Clipboard API is unavailable on
+    // Best-effort auto-copy of the full id. Guarded: the Clipboard API is unavailable on
     // insecure origins or when permissions are denied — failure is silent and non-blocking.
+    // We signal whether the copy was attempted so the card never promises "(copied)" falsely.
+    let copied = false;
     try {
-      (globalThis as { navigator?: Navigator }).navigator?.clipboard?.writeText(id).catch(() => {
-        /* clipboard blocked — the id is still shown on the page below with a Copy button */
-      });
+      const clip = (globalThis as { navigator?: Navigator }).navigator?.clipboard;
+      if (clip?.writeText) {
+        copied = true;
+        clip.writeText(id).catch(() => {
+          /* clipboard blocked at write time — the full id is printed below regardless */
+        });
+      }
     } catch {
       /* no navigator/clipboard (e.g. tests) — ignore */
     }
+    // Print the FULL id (no panel to defer to) so the player can read or paste it into the
+    // Grand Observatory's "Your session" box to light up the per-session "Your run" panels.
     return (
-      `\nSession ${short} (copied) \u00b7 full id + Copy in “Your latest run” below`
+      `\n\u2500\u2500 your session \u2500\u2500\n` +
+      `${id}${copied ? '  (copied)' : ''}\n` +
+      `Paste into the dashboard's “Your session” box to see this run.`
     );
   }
 
