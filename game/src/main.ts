@@ -100,17 +100,23 @@ const config: Phaser.Types.Core.GameConfig = {
 const game = new Phaser.Game(config);
 game.registry.set('reducedMotion', prefersReducedMotion);
 
-// Remove the DOM loading placeholder and make the canvas keyboard-focusable so arrow/space
-// go to the game (not the page) as soon as it is clicked/tapped.
+// Make the canvas keyboard-focusable and gate the game's key capture on focus, so the
+// game and the embedding page can coexist on ONE scrollable page:
+//   • The page scrolls normally with arrows / Space / PageUp-Down / touchpad UNTIL the
+//     player clicks or taps the game. (We do NOT auto-focus on load — that previously
+//     trapped the keyboard in the game immediately and made the page feel unscrollable.)
+//   • Clicking/tapping the game focuses it; while focused, the scene captures the movement
+//     keys (see HimalRajyaScene) so arrows/Space drive Yatri, not the page.
+//   • Clicking/tapping anywhere outside the game (e.g. scrolling to the dashboard) blurs
+//     the canvas, releasing capture so the keys scroll the page again.
 game.events.once(Phaser.Core.Events.READY, () => {
   document.getElementById('cy-loading')?.remove();
   const canvas = game.canvas;
-  if (canvas) {
-    canvas.setAttribute('tabindex', '0');
-    canvas.setAttribute('aria-label', 'Cloud Yatra game canvas');
-    canvas.style.outline = 'none';
-    canvas.addEventListener('pointerdown', () => canvas.focus());
-    canvas.focus();
-  }
+  if (!canvas) return;
+  canvas.setAttribute('tabindex', '0');
+  canvas.setAttribute('aria-label', 'Cloud Yatra game canvas');
+  canvas.style.outline = 'none';
+  // Focus the game on interaction only — never automatically on load.
+  canvas.addEventListener('pointerdown', () => canvas.focus());
 });
 

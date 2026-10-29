@@ -312,10 +312,34 @@ export class HimalRajyaScene extends Phaser.Scene {
     const attackAlt = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.J);
     this.attackAltKey = attackAlt;
 
-    // Capture the movement keys so arrows/space never scroll the embedding page (the
-    // game is meant to sit above a Grafana dashboard on one scrollable page). Keeps the
-    // canvas authoritative over directional + jump input while playing.
-    this.input.keyboard?.addCapture(['UP', 'DOWN', 'LEFT', 'RIGHT', 'SPACE', 'W', 'A', 'S', 'D']);
+    // Movement/jump keys must drive Yatri WHILE PLAYING, but the game sits above a Grafana
+    // dashboard on one scrollable page — so arrows / Space must still scroll the page when
+    // the player isn't actively in the game. We therefore capture these keys ONLY while the
+    // game canvas has focus, and release capture when it loses focus. This lets keyboard and
+    // touchpad users scroll down to the dashboard, then click the game to play again.
+    const GAME_KEYS = ['UP', 'DOWN', 'LEFT', 'RIGHT', 'SPACE', 'W', 'A', 'S', 'D'];
+    const kb = this.input.keyboard;
+    const canvas = this.game.canvas;
+    if (kb && canvas) {
+      const grab = (): void => {
+        kb.addCapture(GAME_KEYS);
+      };
+      const release = (): void => {
+        kb.removeCapture(GAME_KEYS);
+      };
+      // If the canvas is already focused (player clicked in before this scene mounted),
+      // capture now; otherwise wait for focus. Always release on blur.
+      if (document.activeElement === canvas) grab();
+      canvas.addEventListener('focus', grab);
+      canvas.addEventListener('blur', release);
+      // Clean up listeners + ensure capture is released when the scene shuts down, so a
+      // backgrounded game never keeps swallowing the page's scroll keys.
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+        canvas.removeEventListener('focus', grab);
+        canvas.removeEventListener('blur', release);
+        release();
+      });
+    }
 
     // Touch controls for phones/tablets (keyboard-only otherwise). Enable extra pointers
     // so multi-touch (e.g. hold RIGHT + tap JUMP) works. Only drawn on touch devices.
@@ -1241,6 +1265,17 @@ export class HimalRajyaScene extends Phaser.Scene {
       score: this.score,
       durationMs: this.telemetry.sinceStartMs(),
     });
+    // Submit this run to the shared leaderboard on EVERY ending, not just the rare full
+    // summit — otherwise the board stays empty because almost no run reaches the top. The
+    // run's total is the banked journey plus this level's score. submitRemoteScore is
+    // offline-safe, fire-and-forget, and defaults a friendly name for anonymous players.
+    submitRemoteScore(
+      this.cumulativeScore + this.score,
+      this.playerName || undefined,
+      this.telemetry.sinceStartMs(),
+      this.level.id,
+      this.telemetry.getSessionId(),
+    );
     const DEATH_LABELS: Record<string, string> = {
       fall: 'lost in the mist below',
       eagle: 'caught by a mountain eagle',
