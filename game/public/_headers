@@ -25,3 +25,4 @@
   Cache-Control: public, max-age=0, must-revalidate
 
 # (rebuild trigger — picks up current VITE_GRAFANA_DASHBOARD_URL)
+# rebuild 2026-10-30: repoint embed to public dashboard token 01ba06ef…
