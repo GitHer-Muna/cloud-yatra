@@ -140,6 +140,9 @@ export function submitScore(
     headers: { 'Content-Type': 'application/json' },
     body: payload,
     keepalive: true,
+    // sendBeacon (above) always sends credentials mode "include"; this fetch fallback does
+    // not need cookies, so omit credentials to keep the CORS contract as simple as possible.
+    credentials: 'omit',
   }).catch(() => undefined);
 }
 

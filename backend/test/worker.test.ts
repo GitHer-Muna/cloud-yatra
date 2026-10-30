@@ -71,6 +71,16 @@ describe('CORS + routing', () => {
     expect(res.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:5173');
   });
 
+  it('allows credentials so sendBeacon (credentials: include) passes preflight', async () => {
+    // navigator.sendBeacon always sends with credentials mode "include"; the preflight
+    // must echo a concrete origin AND Access-Control-Allow-Credentials: true or the
+    // browser blocks the score submit. Regression guard for the empty-leaderboard bug.
+    const res = await call('OPTIONS', '/score');
+    expect(res.status).toBe(204);
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:5173');
+    expect(res.headers.get('Access-Control-Allow-Credentials')).toBe('true');
+  });
+
   it('404s unknown routes', async () => {
     const res = await call('GET', '/nope');
     expect(res.status).toBe(404);

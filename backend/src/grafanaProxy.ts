@@ -46,6 +46,8 @@ const PREFIX = '/dash';
 const GRAFANA_ROOT_PREFIXES = [
   '/api/',
   '/apis/',
+  '/ofrep/', // OpenFeature flag evaluation (POST /ofrep/v1/evaluate/flags) — else the SPA
+  //            logs a 404 and "Failed to initialize OpenFeature provider" on boot.
   '/public/',
   '/avatar/',
   '/public-dashboards/',

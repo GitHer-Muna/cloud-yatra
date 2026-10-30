@@ -23,7 +23,18 @@ export function corsHeaders(req: Request, env: Env): Record<string, string> {
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
   };
-  if (origin) headers['Access-Control-Allow-Origin'] = origin;
+  if (origin) {
+    headers['Access-Control-Allow-Origin'] = origin;
+    // The browser's Beacon API (navigator.sendBeacon) always sends requests in credentials
+    // mode "include". For such a request the preflight must return
+    // Access-Control-Allow-Credentials: true AND a CONCRETE origin (never "*"), or the
+    // browser blocks the request. We submit scores via sendBeacon, so this is required for
+    // the leaderboard to populate from real play. Only set it when we are echoing a single
+    // concrete origin — pairing credentials:true with "*" is invalid and would be rejected.
+    if (origin !== '*') {
+      headers['Access-Control-Allow-Credentials'] = 'true';
+    }
+  }
   return headers;
 }
 
