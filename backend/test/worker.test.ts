@@ -367,6 +367,56 @@ describe('/stats', () => {
   });
 });
 
+describe('/pulse (live service pulse)', () => {
+  it('returns a single-row pulse table with the expected shape', async () => {
+    const res = await call('GET', '/pulse');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any;
+    expect(Array.isArray(body.pulse)).toBe(true);
+    expect(body.pulse).toHaveLength(1);
+    const p = body.pulse[0];
+    for (const k of [
+      'generatedAt',
+      'activePilgrims',
+      'eventsPerMin',
+      'totalEvents',
+      'completionsToday',
+      'deathsToday',
+    ]) {
+      expect(typeof p[k]).toBe('number');
+    }
+  });
+
+  it('reflects durable D1 counts (total events, completions, deaths) from ingested events', async () => {
+    const sid = 'sess-pulse-1';
+    await call('POST', '/events', [
+      makeEvent({ type: 'game_started', sessionId: sid, levelId: 'terai', tMs: 1 }),
+      makeEvent({ type: 'player_died', sessionId: sid, levelId: 'terai', tMs: 2, attrs: { cause: 'eagle' } }),
+      makeEvent({ type: 'level_completed', sessionId: sid, levelId: 'himal', tMs: 3, attrs: { score: 500, timeMs: 1000 } }),
+    ]);
+    const p = (await call('GET', '/pulse').then((r) => r.json())) as any;
+    const row = p.pulse[0];
+    // Three events ingested this test → totalEvents, and the two typed counts, reflect them.
+    expect(row.totalEvents).toBe(3);
+    expect(row.completionsToday).toBe(1);
+    expect(row.deathsToday).toBe(1);
+    // The session was just seen, so it counts as an active pilgrim (last_seen within 5m).
+    expect(row.activePilgrims).toBeGreaterThanOrEqual(1);
+    // Those events arrived in the last 60s, so recent throughput is non-zero.
+    expect(row.eventsPerMin).toBeGreaterThanOrEqual(3);
+  });
+
+  it('returns zeroed-but-valid numbers when there is no data', async () => {
+    const p = (await call('GET', '/pulse').then((r) => r.json())) as any;
+    const row = p.pulse[0];
+    expect(row.totalEvents).toBe(0);
+    expect(row.completionsToday).toBe(0);
+    expect(row.deathsToday).toBe(0);
+    expect(row.activePilgrims).toBe(0);
+    expect(row.eventsPerMin).toBe(0);
+  });
+});
+
 describe('/session (per-player rollup)', () => {
   it('returns the live rollup for a known session', async () => {
     const sid = 'sess-your-run-1';

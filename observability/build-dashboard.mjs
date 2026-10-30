@@ -185,7 +185,7 @@ function buildPublic(grand) {
   // metric/RUM panels were filtered out, so the source titles like "service pulse" or
   // "frame rate" would be misleading on the public copy). Keyed by the source row title.
   const PUBLIC_ROW_TITLES = {
-    'LIVE NOW': 'AT A GLANCE · the climb so far',
+    'LIVE NOW': 'LIVE NOW · service pulse',
     'LIVE GAME PERFORMANCE': 'THE CLIMB · how far pilgrims get',
     "YATRI'S JOURNEY": "YATRI'S JOURNEY · what happens on the trail",
     'SCORES & ENGAGEMENT': 'SCORES · the shared leaderboard',

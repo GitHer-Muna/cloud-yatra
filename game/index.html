@@ -75,6 +75,71 @@
         max-width: 100%;
         max-height: 100%;
       }
+      /* YOUR RUN · live stats — a per-viewer strip above the public dashboard. The public
+         Grafana dashboard can't filter per viewer (no template vars), so this page — which
+         knows THIS tab's anonymous session id — renders the player's own live stats here. */
+      #cy-yourrun {
+        width: min(960px, calc(100vw - 32px));
+        margin: 0 auto 16px;
+        padding: 14px 18px;
+        box-sizing: border-box;
+        border: 1px solid rgba(246, 183, 60, 0.3);
+        border-radius: 14px;
+        background: linear-gradient(135deg, rgba(32, 53, 122, 0.55), rgba(142, 43, 43, 0.4));
+        box-shadow: 0 10px 34px rgba(0, 0, 0, 0.24);
+      }
+      #cy-yourrun .cy-yr-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 4px 12px;
+        margin-bottom: 10px;
+      }
+      #cy-yourrun h2 {
+        margin: 0;
+        color: #f6b73c;
+        font-size: clamp(15px, 2.4vw, 20px);
+        letter-spacing: 0.3px;
+      }
+      #cy-yourrun .cy-yr-sub {
+        margin: 0;
+        color: #d7c08a;
+        font-size: 11.5px;
+      }
+      #cy-yourrun .cy-yr-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 10px;
+      }
+      @media (max-width: 640px) {
+        #cy-yourrun .cy-yr-grid { grid-template-columns: repeat(3, 1fr); }
+      }
+      #cy-yourrun .cy-yr-stat {
+        text-align: center;
+        padding: 8px 4px;
+        border-radius: 10px;
+        background: rgba(10, 20, 35, 0.4);
+      }
+      #cy-yourrun .cy-yr-val {
+        display: block;
+        font-size: clamp(18px, 3.4vw, 26px);
+        font-weight: 800;
+        color: #fff;
+        line-height: 1.1;
+        font-variant-numeric: tabular-nums;
+      }
+      #cy-yourrun .cy-yr-label {
+        display: block;
+        margin-top: 3px;
+        font-size: 10.5px;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        color: #b9d8ed;
+      }
+      /* Hidden in game-only embed mode (inside the Video panel) and until we have data. */
+      .cy-embed-game-only #cy-yourrun { display: none; }
+
       #cy-observatory {
         width: min(960px, calc(100vw - 32px));
         margin: 0 auto 28px;
@@ -396,6 +461,25 @@
     </div>
 
 
+    <!-- YOUR RUN · live stats for THIS session. The public Grafana dashboard can't filter
+         per viewer, so the page (which holds this tab's anonymous session id) renders the
+         player's own live stats here, polling the Worker's /session endpoint. Hidden until
+         there's a backend + a session with data; inert in game-only embed mode. -->
+    <section id="cy-yourrun" aria-labelledby="cy-yourrun-title" hidden>
+      <div class="cy-yr-head">
+        <h2 id="cy-yourrun-title">YOUR RUN · live stats for the current session</h2>
+        <p class="cy-yr-sub">Just this browser tab — updates live as you play. Anonymous, no sign-in.</p>
+      </div>
+      <div class="cy-yr-grid">
+        <div class="cy-yr-stat"><span class="cy-yr-val" id="cy-yr-best">0</span><span class="cy-yr-label">Best score</span></div>
+        <div class="cy-yr-stat"><span class="cy-yr-val" id="cy-yr-progress">0%</span><span class="cy-yr-label">Progress</span></div>
+        <div class="cy-yr-stat"><span class="cy-yr-val" id="cy-yr-completions">0</span><span class="cy-yr-label">Completions</span></div>
+        <div class="cy-yr-stat"><span class="cy-yr-val" id="cy-yr-deaths">0</span><span class="cy-yr-label">Deaths</span></div>
+        <div class="cy-yr-stat"><span class="cy-yr-val" id="cy-yr-jumps">0</span><span class="cy-yr-label">Jumps</span></div>
+        <div class="cy-yr-stat"><span class="cy-yr-val" id="cy-yr-collects">0</span><span class="cy-yr-label">Collectibles</span></div>
+      </div>
+    </section>
+
     <section id="cy-observatory" aria-labelledby="cy-observatory-title">
       <div class="cy-observatory-heading">
         <div>
@@ -552,6 +636,52 @@
           // No proxy available (no API base or no public token) — link out instead.
           cta.hidden = false;
         }
+
+        // YOUR RUN · live stats. The public dashboard can't show per-viewer data, so we do
+        // it here: read THIS tab's anonymous session id (the same sessionStorage key the
+        // game + telemetry use) and poll the Worker's /session rollup, updating the strip
+        // live. Offline-safe: if there's no backend or the fetch fails, the strip stays
+        // hidden and nothing breaks. No PII — the id is an anonymous per-tab UUID.
+        (function wireYourRun() {
+          if (!apiBase) return; // no backend configured → leave the strip hidden
+          const strip = document.getElementById('cy-yourrun');
+          if (!strip) return;
+          const SESSION_KEY = 'cloud-yatra.sessionId';
+          const el = (id) => document.getElementById(id);
+          const nf = new Intl.NumberFormat();
+          let revealed = false;
+
+          function sessionId() {
+            try { return globalThis.sessionStorage?.getItem(SESSION_KEY) || ''; } catch { return ''; }
+          }
+          async function poll() {
+            const id = sessionId();
+            if (!id || id.length < 8) return; // game hasn't created a session yet
+            try {
+              const res = await fetch(`${apiBase}/session?id=${encodeURIComponent(id)}`, {
+                headers: { Accept: 'application/json' },
+              });
+              if (!res.ok) return;
+              const body = await res.json();
+              const r = body && Array.isArray(body.session) ? body.session[0] : null;
+              if (!r) return;
+              // Reveal the strip once the session exists (even at zero) so the player sees
+              // their run take shape from the first event.
+              if (!revealed) { strip.hidden = false; revealed = true; }
+              const pct = Math.max(0, Math.min(100, Math.round(Number(r.maxProgress) || 0)));
+              el('cy-yr-best').textContent = nf.format(Number(r.bestScore) || 0);
+              el('cy-yr-progress').textContent = pct + '%';
+              el('cy-yr-completions').textContent = nf.format(Number(r.completed) || 0);
+              el('cy-yr-deaths').textContent = nf.format(Number(r.deaths) || 0);
+              el('cy-yr-jumps').textContent = nf.format(Number(r.jumps) || 0);
+              el('cy-yr-collects').textContent = nf.format(Number(r.collects) || 0);
+            } catch {
+              /* offline / worker down — leave the strip as-is, never throw into the page */
+            }
+          }
+          poll();
+          setInterval(poll, 5000);
+        })();
       }
     </script>
     <script type="module" src="/src/main.ts"></script>

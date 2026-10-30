@@ -221,7 +221,7 @@
     ]
   },
   "timezone": "",
-  "title": "Cloud Yatra · Grand Observatory",
+  "title": "Cloud Yatra \u00b7 Grand Observatory",
   "uid": "cloud-yatra-np",
   "version": 6,
   "panels": [
@@ -237,14 +237,14 @@
       },
       "options": {
         "mode": "markdown",
-        "content": "<div style=\"display:flex;align-items:center;gap:16px;padding:6px 10px;background:linear-gradient(90deg,#0b1020 0%,#20357a 40%,#c0392b 70%,#f6b73c 100%);border-radius:10px;color:#fff;\"><div style=\"font-size:30px;line-height:1\">🏔️</div><div><div style=\"font-size:20px;font-weight:700;letter-spacing:.3px\">Cloud Yatra · Grand Observatory</div><div style=\"opacity:.9;font-size:12px\">Live telemetry from Yatri's climb through Himal Rajya — <b>browser → Faro</b> · <b>Worker → Prometheus / Loki / Tempo</b> · <b>D1 → Infinity</b>. Play at <b>cloud-yatra.pages.dev</b>; your run appears below.</div></div><div style=\"margin-left:auto;text-align:right;font-size:11px;opacity:.85\">🟢 healthy&nbsp;&nbsp;🟡 strained&nbsp;&nbsp;🔴 chaos / danger</div></div>"
+        "content": "<div style=\"display:flex;align-items:center;gap:16px;padding:6px 10px;background:linear-gradient(90deg,#0b1020 0%,#20357a 40%,#c0392b 70%,#f6b73c 100%);border-radius:10px;color:#fff;\"><div style=\"font-size:30px;line-height:1\">\ud83c\udfd4\ufe0f</div><div><div style=\"font-size:20px;font-weight:700;letter-spacing:.3px\">Cloud Yatra \u00b7 Grand Observatory</div><div style=\"opacity:.9;font-size:12px\">Live telemetry from Yatri's climb through Himal Rajya \u2014 <b>browser \u2192 Faro</b> \u00b7 <b>Worker \u2192 Prometheus / Loki / Tempo</b> \u00b7 <b>D1 \u2192 Infinity</b>. Play at <b>cloud-yatra.pages.dev</b>; your run appears below.</div></div><div style=\"margin-left:auto;text-align:right;font-size:11px;opacity:.85\">\ud83d\udfe2 healthy&nbsp;&nbsp;\ud83d\udfe1 strained&nbsp;&nbsp;\ud83d\udd34 chaos / danger</div></div>"
       }
     },
     {
       "type": "row",
       "id": 66,
       "collapsed": false,
-      "title": "PLAY CLOUD YATRA · the game runs here; your telemetry streams below",
+      "title": "PLAY CLOUD YATRA \u00b7 the game runs here; your telemetry streams below",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -256,7 +256,7 @@
     {
       "type": "innius-video-panel",
       "id": 67,
-      "title": "Cloud Yatra — play here",
+      "title": "Cloud Yatra \u2014 play here",
       "description": "The live game embedded via the Video panel (iframe mode). Play a run and watch your own stats and the service telemetry update in the panels below.",
       "gridPos": {
         "h": 15,
@@ -283,7 +283,7 @@
     },
     {
       "type": "row",
-      "title": "YOUR RUN · live stats for the current session",
+      "title": "YOUR RUN \u00b7 live stats for the current session",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -692,7 +692,7 @@
     },
     {
       "type": "row",
-      "title": "LIVE NOW · service pulse",
+      "title": "LIVE NOW \u00b7 service pulse",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -987,6 +987,266 @@
     },
     {
       "type": "stat",
+      "title": "Active pilgrims (5m)",
+      "description": "Sessions seen in the last 5 minutes (D1, live concurrency).",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 0,
+        "y": 27
+      },
+      "id": 200,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#39d98a"
+          },
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "${api_base_url}/pulse",
+          "root_selector": "pulse",
+          "parser": "backend",
+          "columns": [
+            {
+              "selector": "activePilgrims",
+              "text": "activePilgrims",
+              "type": "number"
+            }
+          ],
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          }
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Events ingested / min",
+      "description": "Telemetry events accepted into D1 in the last 60s (true recent throughput).",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 4,
+        "y": 27
+      },
+      "id": 201,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#4dabf7"
+          },
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "${api_base_url}/pulse",
+          "root_selector": "pulse",
+          "parser": "backend",
+          "columns": [
+            {
+              "selector": "eventsPerMin",
+              "text": "eventsPerMin",
+              "type": "number"
+            }
+          ],
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          }
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Completions today",
+      "description": "Level completions recorded today (D1 daily rollup, UTC).",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 8,
+        "y": 27
+      },
+      "id": 202,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#f6b73c"
+          },
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "${api_base_url}/pulse",
+          "root_selector": "pulse",
+          "parser": "backend",
+          "columns": [
+            {
+              "selector": "completionsToday",
+              "text": "completionsToday",
+              "type": "number"
+            }
+          ],
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          }
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Deaths today",
+      "description": "Player deaths recorded today (D1 daily rollup, UTC).",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "${DS_INFINITY}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 12,
+        "y": 27
+      },
+      "id": 203,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#ff6b6b"
+          },
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "${api_base_url}/pulse",
+          "root_selector": "pulse",
+          "parser": "backend",
+          "columns": [
+            {
+              "selector": "deathsToday",
+              "text": "deathsToday",
+              "type": "number"
+            }
+          ],
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          }
+        }
+      ]
+    },
+    {
+      "type": "stat",
       "title": "Gameplay events (D1 total)",
       "description": "Total gameplay events persisted in D1.",
       "datasource": {
@@ -996,7 +1256,7 @@
       "gridPos": {
         "h": 6,
         "w": 4,
-        "x": 20,
+        "x": 16,
         "y": 27
       },
       "id": 7,
@@ -1061,7 +1321,7 @@
       "type": "row",
       "id": 55,
       "collapsed": false,
-      "title": "SLOs & ERROR BUDGET · service reliability",
+      "title": "SLOs & ERROR BUDGET \u00b7 service reliability",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1204,7 +1464,7 @@
       "type": "gauge",
       "id": 58,
       "transparent": true,
-      "title": "Latency SLO · <500ms",
+      "title": "Latency SLO \u00b7 <500ms",
       "description": "Requests served under 500 ms. Target: 95%.",
       "datasource": {
         "type": "prometheus",
@@ -1260,7 +1520,7 @@
         {
           "refId": "A",
           "expr": "100 * sum(rate(cy_api_request_duration_ms_bucket{le=\"500\"}[$__range])) / clamp_min(sum(rate(cy_api_request_duration_ms_count[$__range])),0.0001)",
-          "legendFormat": "Latency SLO · <500ms (30d)",
+          "legendFormat": "Latency SLO \u00b7 <500ms (30d)",
           "editorMode": "code"
         }
       ]
@@ -1332,7 +1592,7 @@
     },
     {
       "type": "row",
-      "title": "BACKEND · Cloudflare Worker + D1 health",
+      "title": "BACKEND \u00b7 Cloudflare Worker + D1 health",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -1419,7 +1679,7 @@
     },
     {
       "type": "timeseries",
-      "title": "Latency percentiles · p50 / p90 / p99",
+      "title": "Latency percentiles \u00b7 p50 / p90 / p99",
       "description": "Request duration percentiles from the Prometheus histogram. Each bucket also carries a trace exemplar, so a latency spike can link straight to its trace in Tempo.",
       "datasource": {
         "type": "prometheus",
@@ -1512,7 +1772,7 @@
     {
       "type": "timeseries",
       "title": "Responses by status class",
-      "description": "2xx / 4xx / 5xx response mix — the core backend reliability signal.",
+      "description": "2xx / 4xx / 5xx response mix \u2014 the core backend reliability signal.",
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROM}"
@@ -1750,7 +2010,7 @@
         {
           "refId": "B",
           "expr": "sum by (reason) (rate(cy_events_rejected_total[5m])) * 60",
-          "legendFormat": "rejected · {{reason}}",
+          "legendFormat": "rejected \u00b7 {{reason}}",
           "range": true
         }
       ]
@@ -1759,7 +2019,7 @@
       "type": "row",
       "id": 60,
       "collapsed": false,
-      "title": "BACKEND LOGS & TRACES · structured logs and request traces",
+      "title": "BACKEND LOGS & TRACES \u00b7 structured logs and request traces",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -2180,7 +2440,7 @@
     },
     {
       "type": "row",
-      "title": "PLAYER EXPERIENCE · browser real-user monitoring",
+      "title": "PLAYER EXPERIENCE \u00b7 browser real-user monitoring",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -2193,7 +2453,7 @@
     },
     {
       "type": "timeseries",
-      "title": "Web Vitals · LCP / INP (p95)",
+      "title": "Web Vitals \u00b7 LCP / INP (p95)",
       "description": "Real-user loading and interaction latency from Faro web vitals.",
       "datasource": {
         "type": "loki",
@@ -2278,7 +2538,7 @@
     },
     {
       "type": "timeseries",
-      "title": "Web Vitals · CLS / TTFB / FCP",
+      "title": "Web Vitals \u00b7 CLS / TTFB / FCP",
       "description": "Layout stability and first-byte / first-paint timing (Faro).",
       "datasource": {
         "type": "loki",
@@ -2405,7 +2665,7 @@
               "type": "value",
               "options": {
                 "0": {
-                  "text": "None 🎉",
+                  "text": "None \ud83c\udf89",
                   "color": "#73d13d"
                 }
               }
@@ -2444,7 +2704,7 @@
     },
     {
       "type": "row",
-      "title": "LIVE GAME PERFORMANCE · frame rate and smoothness",
+      "title": "LIVE GAME PERFORMANCE \u00b7 frame rate and smoothness",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -2530,7 +2790,7 @@
         {
           "refId": "A",
           "expr": "avg_over_time({kind=\"measurement\", app_id=\"$faro_app_id\"} | logfmt | type=\"game_client_perf\" | unwrap value_fps [$__interval])",
-          "legendFormat": "FPS · {{level}}"
+          "legendFormat": "FPS \u00b7 {{level}}"
         }
       ],
       "links": [
@@ -2587,7 +2847,7 @@
     },
     {
       "type": "bargauge",
-      "title": "Progression funnel · how far pilgrims climb",
+      "title": "Progression funnel \u00b7 how far pilgrims climb",
       "description": "Distinct sessions reaching each stage (D1).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
@@ -2756,7 +3016,7 @@
     },
     {
       "type": "row",
-      "title": "YATRI'S JOURNEY · gameplay analytics",
+      "title": "YATRI'S JOURNEY \u00b7 gameplay analytics",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -2997,7 +3257,7 @@
     },
     {
       "type": "barchart",
-      "title": "Journey by region · events / deaths / completions",
+      "title": "Journey by region \u00b7 events / deaths / completions",
       "description": "How each region of Himal Rajya plays out (D1).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
@@ -3151,7 +3411,7 @@
     },
     {
       "type": "row",
-      "title": "SCORES & ENGAGEMENT · the shared leaderboard",
+      "title": "SCORES & ENGAGEMENT \u00b7 the shared leaderboard",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -3164,7 +3424,7 @@
     },
     {
       "type": "table",
-      "title": "Shared leaderboard · top pilgrims",
+      "title": "Shared leaderboard \u00b7 top pilgrims",
       "description": "Best score per pilgrim, from a completed climb to the Himalayan summit. Fills in as players finish a run.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
@@ -3187,7 +3447,7 @@
             },
             "filterable": true
           },
-          "noValue": "No summit finishes yet — be the first to plant the pennant at the top!"
+          "noValue": "No summit finishes yet \u2014 be the first to plant the pennant at the top!"
         },
         "overrides": [
           {
@@ -3298,8 +3558,8 @@
     },
     {
       "type": "table",
-      "title": "Recent pilgrims · who's climbing now",
-      "description": "The latest runs, newest first — a live feed of individual climbs (from /recent). Updates as people play, so you can watch real traffic arrive even before anyone tops the leaderboard.",
+      "title": "Recent pilgrims \u00b7 who's climbing now",
+      "description": "The latest runs, newest first \u2014 a live feed of individual climbs (from /recent). Updates as people play, so you can watch real traffic arrive even before anyone tops the leaderboard.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "${DS_INFINITY}"
@@ -3321,7 +3581,7 @@
             },
             "filterable": false
           },
-          "noValue": "No runs yet — play a round and watch your climb appear here live."
+          "noValue": "No runs yet \u2014 play a round and watch your climb appear here live."
         },
         "overrides": [
           {
@@ -3649,7 +3909,7 @@
     },
     {
       "type": "stat",
-      "title": "Average FPS · last hour",
+      "title": "Average FPS \u00b7 last hour",
       "description": "Average sampled client FPS recorded in D1.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
@@ -3728,7 +3988,7 @@
     },
     {
       "type": "row",
-      "title": "WORLD & CONTEXT · where the pilgrims play",
+      "title": "WORLD & CONTEXT \u00b7 where the pilgrims play",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -3743,7 +4003,7 @@
       "type": "geomap",
       "id": 54,
       "transparent": true,
-      "title": "Pilgrims around the world · by country",
+      "title": "Pilgrims around the world \u00b7 by country",
       "description": "Where players connect from, by Cloudflare edge country (D1). No IP addresses are stored.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
@@ -3997,7 +4257,7 @@
       "transparent": true,
       "options": {
         "mode": "markdown",
-        "content": "**Browser (Phaser)** → **Cloudflare Pages** — the static game.\n\n**Browser** → **Cloudflare Worker** `cloud-yatra-api` → **Cloudflare D1** (SQLite).\n\n**Signals into Grafana Cloud**\n- Frontend RUM and gameplay events → **Faro** (Loki)\n- Backend request metrics and histograms → **Prometheus** (`/metrics`)\n- Backend structured logs → **Loki**\n- Backend request traces → **Tempo**\n- Database-derived gameplay analytics → **Infinity** (`/stats`, `/leaderboard`)\n\nRuns entirely on free tiers: Cloudflare Pages, Workers, and D1, plus Grafana Cloud free."
+        "content": "**Browser (Phaser)** \u2192 **Cloudflare Pages** \u2014 the static game.\n\n**Browser** \u2192 **Cloudflare Worker** `cloud-yatra-api` \u2192 **Cloudflare D1** (SQLite).\n\n**Signals into Grafana Cloud**\n- Frontend RUM and gameplay events \u2192 **Faro** (Loki)\n- Backend request metrics and histograms \u2192 **Prometheus** (`/metrics`)\n- Backend structured logs \u2192 **Loki**\n- Backend request traces \u2192 **Tempo**\n- Database-derived gameplay analytics \u2192 **Infinity** (`/stats`, `/leaderboard`)\n\nRuns entirely on free tiers: Cloudflare Pages, Workers, and D1, plus Grafana Cloud free."
       },
       "fieldConfig": {
         "defaults": {
@@ -4008,7 +4268,7 @@
     {
       "type": "row",
       "collapsed": false,
-      "title": "CHAOS MODE · fault injection and recovery (admin-triggered, ~60s)",
+      "title": "CHAOS MODE \u00b7 fault injection and recovery (admin-triggered, ~60s)",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -4048,7 +4308,7 @@
                   "color": "#73d13d"
                 },
                 "1": {
-                  "text": "⚡ CHAOS",
+                  "text": "\u26a1 CHAOS",
                   "color": "#e0294a"
                 }
               }
@@ -4185,7 +4445,7 @@
       "fieldConfig": {
         "defaults": {
           "custom": {},
-          "noValue": "All calm — no chaos windows yet. Trigger one with Shift+C in the game to watch the backend wobble and recover here."
+          "noValue": "All calm \u2014 no chaos windows yet. Trigger one with Shift+C in the game to watch the backend wobble and recover here."
         },
         "overrides": []
       },

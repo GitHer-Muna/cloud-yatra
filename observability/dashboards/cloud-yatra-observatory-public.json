@@ -73,7 +73,7 @@
     },
     {
       "type": "row",
-      "title": "AT A GLANCE · the climb so far",
+      "title": "LIVE NOW · service pulse",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -86,6 +86,266 @@
     },
     {
       "type": "stat",
+      "title": "Active pilgrims (5m)",
+      "description": "Sessions seen in the last 5 minutes (D1, live concurrency).",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "grafanacloud-infinity"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 0,
+        "y": 6
+      },
+      "id": 200,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#39d98a"
+          },
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/pulse",
+          "root_selector": "pulse",
+          "parser": "backend",
+          "columns": [
+            {
+              "selector": "activePilgrims",
+              "text": "activePilgrims",
+              "type": "number"
+            }
+          ],
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          }
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Events ingested / min",
+      "description": "Telemetry events accepted into D1 in the last 60s (true recent throughput).",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "grafanacloud-infinity"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 4,
+        "y": 6
+      },
+      "id": 201,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#4dabf7"
+          },
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/pulse",
+          "root_selector": "pulse",
+          "parser": "backend",
+          "columns": [
+            {
+              "selector": "eventsPerMin",
+              "text": "eventsPerMin",
+              "type": "number"
+            }
+          ],
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          }
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Completions today",
+      "description": "Level completions recorded today (D1 daily rollup, UTC).",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "grafanacloud-infinity"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 8,
+        "y": 6
+      },
+      "id": 202,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#f6b73c"
+          },
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/pulse",
+          "root_selector": "pulse",
+          "parser": "backend",
+          "columns": [
+            {
+              "selector": "completionsToday",
+              "text": "completionsToday",
+              "type": "number"
+            }
+          ],
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          }
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Deaths today",
+      "description": "Player deaths recorded today (D1 daily rollup, UTC).",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "grafanacloud-infinity"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 12,
+        "y": 6
+      },
+      "id": 203,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#ff6b6b"
+          },
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "justifyMode": "center",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/pulse",
+          "root_selector": "pulse",
+          "parser": "backend",
+          "columns": [
+            {
+              "selector": "deathsToday",
+              "text": "deathsToday",
+              "type": "number"
+            }
+          ],
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          }
+        }
+      ]
+    },
+    {
+      "type": "stat",
       "title": "Gameplay events (D1 total)",
       "description": "Total gameplay events persisted in D1.",
       "datasource": {
@@ -95,7 +355,7 @@
       "gridPos": {
         "h": 6,
         "w": 4,
-        "x": 20,
+        "x": 16,
         "y": 6
       },
       "id": 7,

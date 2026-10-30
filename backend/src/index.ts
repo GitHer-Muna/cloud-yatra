@@ -13,6 +13,7 @@
  *   GET  /leaderboard   → top scores from D1 (JSON)
  *   GET  /recent        → the latest N runs, newest first (JSON, live "recent pilgrims" feed)
  *   GET  /session?id=   → per-session "Your Run" rollup from D1 (JSON)
+ *   GET  /pulse         → durable live service-pulse metrics from D1 (JSON, LIVE NOW row)
  *   POST /score         → submit a completed run (best-per-name)
  *   POST /event         → ingest a single telemetry event
  *   POST /events        → ingest a batch of telemetry events
@@ -27,7 +28,7 @@
 import type { Env } from './env';
 import { corsHeaders, preflight } from './cors';
 import { validateEvent, MAX_BATCH, type EventEnvelope } from './events';
-import { ingest, leaderboard, recent, sessionRollup, stats, submitScore } from './db';
+import { ingest, leaderboard, pulse, recent, sessionRollup, stats, submitScore } from './db';
 import { inc, observe, renderMetrics, setGauge } from './metrics';
 import { Logger, hexId, pushTrace } from './logger';
 import { isProxyRequest, handleProxy } from './grafanaProxy';
@@ -174,6 +175,7 @@ function routeLabel(pathname: string): string {
     '/metrics',
     '/stats',
     '/session',
+    '/pulse',
     '/leaderboard',
     '/recent',
     '/score',
@@ -256,6 +258,15 @@ async function handle(req: Request, env: Env, c: Ctx): Promise<Response> {
     const row = await sessionRollup(env, id);
     // Shaped as a single-element array so the Infinity datasource reads it as a table.
     return json({ session: [row] }, 200, req, env);
+  }
+
+  // Live "service pulse" for the public LIVE NOW row + the in-game strip. Durable, D1-backed
+  // liveness numbers (active pilgrims, recent throughput, totals) that are accurate across
+  // Worker isolates — unlike the per-isolate Prometheus counters. Public, read-only, no PII.
+  // Returned as a one-element array so the Infinity datasource reads it as a table row.
+  if (pathname === '/pulse' && method === 'GET') {
+    const p = await pulse(env);
+    return json({ pulse: [p] }, 200, req, env);
   }
 
   if (pathname === '/leaderboard' && method === 'GET') {

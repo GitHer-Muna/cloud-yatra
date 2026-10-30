@@ -317,6 +317,68 @@ export async function recent(env: Env, limit = 10): Promise<RecentRow[]> {
 }
 
 /**
+ * Live "service pulse" — a small set of DURABLE, accurate liveness metrics for the public
+ * "LIVE NOW" dashboard row and the in-game strip. Everything here is computed from D1 (the
+ * durable store), NOT from the Worker's per-isolate Prometheus counters, which reset with
+ * each short-lived isolate and would read near-zero on a fresh one. Prometheus-only RED
+ * metrics (p95 latency, error rate) deliberately stay on the authenticated Grand dashboard
+ * where they're aggregated correctly — we never fake them here.
+ *
+ *  - activePilgrims : sessions seen in the last 5 minutes (live concurrency).
+ *  - eventsPerMin   : events ingested in the last 60s (true recent throughput; uses the
+ *                     indexed events.received_at so it stays cheap).
+ *  - totalEvents / completionsToday / deathsToday : durable rollup counts.
+ *
+ * Returned as a single-element array so the Infinity datasource reads it as a table row.
+ */
+export interface PulseRow {
+  generatedAt: number;
+  activePilgrims: number;
+  eventsPerMin: number;
+  totalEvents: number;
+  completionsToday: number;
+  deathsToday: number;
+}
+
+export async function pulse(env: Env): Promise<PulseRow> {
+  const now = Date.now();
+  const fiveMinAgo = now - 5 * 60 * 1000;
+  const oneMinAgo = now - 60 * 1000;
+  const day = utcDay(now);
+
+  const one = async <T>(sql: string, ...bind: unknown[]): Promise<T | null> =>
+    (await env.DB.prepare(sql).bind(...bind).first<T>()) ?? null;
+
+  const activePilgrims =
+    (await one<{ c: number }>(`SELECT COUNT(*) c FROM sessions WHERE last_seen >= ?`, fiveMinAgo))
+      ?.c ?? 0;
+
+  // Events in the last 60s — accurate recent throughput from the indexed events table.
+  const eventsPerMin =
+    (await one<{ c: number }>(`SELECT COUNT(*) c FROM events WHERE received_at >= ?`, oneMinAgo))
+      ?.c ?? 0;
+
+  // Durable totals/today from the small rollup tables (no scan of the events table).
+  const totalEvents =
+    (await one<{ c: number }>(`SELECT COALESCE(SUM(count),0) c FROM agg_type`))?.c ?? 0;
+
+  const today =
+    (await one<{ completions: number; deaths: number }>(
+      `SELECT completions, deaths FROM daily_rollup WHERE day = ?`,
+      day,
+    )) ?? { completions: 0, deaths: 0 };
+
+  return {
+    generatedAt: now,
+    activePilgrims,
+    eventsPerMin,
+    totalEvents,
+    completionsToday: today.completions,
+    deathsToday: today.deaths,
+  };
+}
+
+/**
  * Per-session rollup for the "Your Run" dashboard row. Returns the single session's row
  * from the `sessions` table (the same anonymous per-tab rollup used for engagement),
  * shaped as a one-element array so the Infinity datasource can read it as a table.
