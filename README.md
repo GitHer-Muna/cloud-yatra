@@ -28,8 +28,11 @@ on desktop or with on-screen touch controls on a phone or tablet (use landscape)
 - Run, jump, and swing a *khukuri* to cut through trail obstacles (thorns, bamboo, nettle,
   thatch-grass, creeper vines). Yatri can double-jump to reach higher platforms.
 - Collect region-specific flowers (Terai marigold, hill rhododendron / *lali gurans*, Himal
-  blue poppy). Every 12 blooms completes a garland worth one extra life.
-- Prayer bells are rare and each grants one extra life.
+  blue poppy). Flowers build garlands; completing two garlands (every 24 blooms) grants an
+  extra life, and every garland pays out points.
+- Prayer bells are rare: each grants points, and restores a life when you are running low.
+- Walking into an uncut obstacle is a harmless warning the first time, but repeatedly
+  barging through one (instead of slashing or jumping it) costs a life.
 - Plant the pennant at checkpoints to set your respawn point and bank your score.
 - Hazards are predictable and learnable: drifting mist, swooping eagles, falling rocks, and a
   jungle monkey. Difficulty increases region by region toward the summit.
@@ -61,7 +64,7 @@ Browser (Phaser game, Cloudflare Pages)            Cloudflare Worker (cloud-yatr
   • custom gameplay events  ───────► Faro             • structured JSON log  ───────► Loki
                                       │               • OTLP trace span      ───────► Tempo
                                       ▼               • Cloudflare D1 (SQLite)
-                                Grafana Cloud  ◄── Infinity ◄── /stats, /leaderboard, /recent, /session
+                                Grafana Cloud  ◄── Infinity ◄── /stats, /leaderboard, /recent, /session, /pulse
                                       │
                        Dashboards (versioned JSON) + SLOs + alert rules
 ```
@@ -144,7 +147,7 @@ npx wrangler dev --local    # local Worker + local SQLite
 
 Routes:
 
-- `GET` — `/healthz`, `/metrics`, `/stats`, `/leaderboard`, `/recent`, `/session`,
+- `GET` — `/healthz`, `/metrics`, `/stats`, `/leaderboard`, `/recent`, `/session`, `/pulse`,
   `/chaos/status`, `/chaos/events`
 - `POST` — `/event`, `/events`, `/score`, `/chaos/start`, `/chaos/stop`
 
@@ -174,8 +177,10 @@ The public dashboard is embedded **inline below the game** on the standalone pag
 Cloud sends CSP `frame-ancestors 'none'`, so the dashboard can't be iframed on another
 origin directly; the Cloudflare Worker reverse-proxies it under `/dash` + the Grafana SPA
 paths (`/api`, `/public`, `/public-dashboards`, `/bootdata`, …) from its own origin, with
-the frame-blocking headers stripped, so the iframe renders. Per-player "your run" stats live
-in the game itself (the page knows the session); public dashboards can't filter per viewer.
+the frame-blocking headers stripped, so the iframe renders. A per-session "your run" view is
+not possible on the public dashboard (public dashboards can't use template variables or
+identify a viewer); it lives in the authenticated source dashboard, driven by a `session`
+variable.
 
 `observability/grafana-alerts.yaml` holds importable Grafana-managed alert rules; set your
 Prometheus data source UID before importing.
