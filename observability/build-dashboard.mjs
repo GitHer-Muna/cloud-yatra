@@ -60,6 +60,40 @@ function substituteLiterals(node) {
   return node;
 }
 
+/**
+ * A public (anonymous) viewer must never be handed a link that redirects to a Grafana
+ * login wall. Strip any panel/field `links[]` entry that points at an authenticated
+ * Grafana surface — app plugins (`/a/...`, e.g. the Frontend Observability drill-down
+ * `grafana-kowalski-app`), Explore, or an authenticated dashboard (`/d/`). Genuinely
+ * public links (the game, public-dashboards) are kept. Runs recursively so it covers
+ * both panel-level and fieldConfig.defaults links.
+ */
+function isPrivateGrafanaLink(url) {
+  if (typeof url !== 'string') return false;
+  if (!/grafana\.net/i.test(url)) return false; // external links (the game) are fine
+  // public-dashboards are the one authenticated-origin path that IS public.
+  if (/\/public-dashboards\//i.test(url)) return false;
+  return /\/a\/|grafana-kowalski-app|\/explore|\/d\//i.test(url);
+}
+
+function stripPrivateLinks(node) {
+  if (Array.isArray(node)) return node.map(stripPrivateLinks);
+  if (node && typeof node === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(node)) {
+      if (k === 'links' && Array.isArray(v)) {
+        out.links = v
+          .filter((l) => !isPrivateGrafanaLink(l && l.url))
+          .map(stripPrivateLinks);
+      } else {
+        out[k] = stripPrivateLinks(v);
+      }
+    }
+    return out;
+  }
+  return node;
+}
+
 /** Rewrite datasource.uid placeholders to concrete datasource names. */
 function wireDatasources(node) {
   if (Array.isArray(node)) return node.map(wireDatasources);
@@ -198,8 +232,9 @@ function buildPublic(grand) {
     if (PUBLIC_ROW_TITLES[key]) p.title = PUBLIC_ROW_TITLES[key];
   }
 
-  // Substitute literals (api_base_url, faro_app_id) and wire datasources by name.
-  panels = panels.map((p) => wireDatasources(substituteLiterals(p)));
+  // Substitute literals (api_base_url, faro_app_id) and wire datasources by name, and strip
+  // any links that would bounce a public viewer to a Grafana login wall.
+  panels = panels.map((p) => stripPrivateLinks(wireDatasources(substituteLiterals(p))));
 
   // Reflow the grid top-to-bottom so removed rows/panels leave no gaps. We preserve each
   // panel's width/height and its left-to-right order within a row, just re-stacking rows.

@@ -407,13 +407,6 @@
             "data": ""
           }
         }
-      ],
-      "links": [
-        {
-          "title": "Open Frontend Observability drill-down",
-          "url": "https://curioushalibut2108.grafana.net/a/grafana-kowalski-app/apps/2383",
-          "targetBlank": true
-        }
       ]
     },
     {
@@ -512,13 +505,6 @@
             "method": "GET",
             "data": ""
           }
-        }
-      ],
-      "links": [
-        {
-          "title": "Open Frontend Observability drill-down",
-          "url": "https://curioushalibut2108.grafana.net/a/grafana-kowalski-app/apps/2383",
-          "targetBlank": true
         }
       ]
     },
@@ -678,13 +664,6 @@
             "method": "GET",
             "data": ""
           }
-        }
-      ],
-      "links": [
-        {
-          "title": "Open Frontend Observability drill-down",
-          "url": "https://curioushalibut2108.grafana.net/a/grafana-kowalski-app/apps/2383",
-          "targetBlank": true
         }
       ]
     },
