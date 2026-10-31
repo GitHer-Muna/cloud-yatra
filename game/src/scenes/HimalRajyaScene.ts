@@ -759,10 +759,12 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.bellsCollected += 1;
     this.score += SCORING.bellPoints;
 
-    // A prayer bell is a BLESSING: it grants +1 life — the rare, felt reward that makes
-    // exploring up to the platforms worthwhile. At the life cap it converts to a big
-    // point bonus so the reward is never wasted.
-    const gained = this.yatri.gainLife(SCORING.bellLifeBonus);
+    // A prayer bell is a BLESSING, but not a steady life faucet: it restores a life ONLY
+    // when the player is genuinely low (at or below bellLifeThreshold) — a clutch save that
+    // rewards reaching the platform without refilling an already-healthy run. Otherwise
+    // (healthy, or at the life cap) it converts to a big point bonus so it's never wasted.
+    const low = this.yatri.getLives() <= SCORING.bellLifeThreshold;
+    const gained = low ? this.yatri.gainLife(SCORING.bellLifeBonus) : 0;
     if (gained > 0) {
       this.hud.setLives(this.yatri.getLives());
       this.floatText(bell.x, bell.y, 'Prayer Bell — Blessing! +1 \u2764', '#f3c11b');
@@ -842,21 +844,30 @@ export class HimalRajyaScene extends Phaser.Scene {
     });
   }
 
-  /** A completed rhododendron garland (every garlandSize blooms): +1 life + points. */
+  /**
+   * A completed rhododendron garland (every garlandSize blooms): always points, plus a
+   * life on every SECOND garland only. Granting a life on EVERY garland (12 blooms) made
+   * the life economy runaway — a single level yields a full garland + bells, refilling
+   * faster than hazards drain, so the player never died. Requiring two garlands (24 blooms)
+   * per life keeps collecting rewarding while letting damage actually matter.
+   */
   private awardGarland(): void {
     this.garlandsEarned += 1;
     this.score += SCORING.garlandBonusPoints;
-    const gained = this.yatri.gainLife(1);
+    const grantsLife = this.garlandsEarned % SCORING.garlandsPerLife === 0;
+    const gained = grantsLife ? this.yatri.gainLife(1) : 0;
     if (gained > 0) {
       this.hud.setLives(this.yatri.getLives());
       this.statusBurst('Garland complete!  +1 \u2764  +' + SCORING.garlandBonusPoints);
     } else {
-      this.statusBurst(
-        'Garland complete!  +' +
-          (SCORING.garlandBonusPoints + SCORING.garlandCapConvertPoints) +
-          ' (lives full)',
-      );
+      // Either this garland doesn't grant a life (odd garland), or lives are already full.
       this.score += SCORING.garlandCapConvertPoints;
+      const total = SCORING.garlandBonusPoints + SCORING.garlandCapConvertPoints;
+      this.statusBurst(
+        grantsLife
+          ? `Garland complete!  +${total} (lives full)`
+          : `Garland complete!  +${total}`,
+      );
     }
     this.hud.setScore(this.score);
     this.cameras.main.flash(140, 224, 41, 74, false);
@@ -951,9 +962,13 @@ export class HimalRajyaScene extends Phaser.Scene {
   }
 
   /**
-   * Walking into an un-cut obstacle: a gentle, harmless bump-back (NO life lost) plus a
-   * one-time hint so the player learns to slash (F/J) or jump over it. This keeps the
-   * trail obstacles as fair, learnable blockers rather than a source of lost lives.
+   * Walking into an un-cut obstacle. The FIRST contact with a given tangle is a gentle,
+   * harmless bump-back (no life lost) plus a hint so the player learns to slash (F/J) or
+   * jump over it. But continuing to shove into the SAME uncut obstacle then costs a life
+   * (thorns, nettle and bamboo should hurt if you insist on barging through them) — routed
+   * through hitHazard so invulnerability, Pilgrim's Grace and death all apply normally.
+   * This removes the old "obstacles can never kill you" loophole while staying fair:
+   * ignoring the mechanic is what hurts, not a single accidental touch.
    */
   private bumpBackFromObstacle(obs: CuttableObstacle): void {
     if (this.gameOver || this.levelComplete) return;
@@ -961,10 +976,19 @@ export class HimalRajyaScene extends Phaser.Scene {
     // Push the player back toward the side they came from (away from the obstacle centre).
     const dir = this.yatri.x <= obs.x ? -1 : 1;
     body.setVelocityX(dir * 160);
-    if (!this.cuttableHintShown) {
-      this.cuttableHintShown = true;
-      this.floatText(this.yatri.x, this.yatri.y - 50, 'Press F to slash!  (or jump over)', '#f3c623');
+
+    if (!obs.warned) {
+      // First touch: a free, teaching bump — no damage.
+      obs.warned = true;
+      if (!this.cuttableHintShown) {
+        this.cuttableHintShown = true;
+        this.floatText(this.yatri.x, this.yatri.y - 50, 'Press F to slash!  (or jump over)', '#f3c623');
+      }
+      return;
     }
+    // Already warned and still ramming this tangle: it hurts. hitHazard no-ops while
+    // invulnerable, so a single knockback won't drain multiple lives at once.
+    this.hitHazard(obs.kind);
   }
 
   private hitHazard(cause: string): void {    if (this.gameOver || this.levelComplete) return;

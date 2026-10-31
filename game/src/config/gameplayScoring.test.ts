@@ -105,6 +105,47 @@ describe('reward economy', () => {
   });
 });
 
+describe('life economy is survivable-but-mortal', () => {
+  // The player used to be effectively immortal because every 12-bloom garland AND every
+  // bell granted +1 life, outpacing the sparse, slow hazards. These tests pin the tuned
+  // economy so a regression can't quietly make Yatri unkillable again.
+
+  it('grants a life only every Nth garland, not every one', () => {
+    expect(SCORING.garlandsPerLife).toBeGreaterThanOrEqual(2);
+    // Mirror of awardGarland(): a life is granted when garlandsEarned % garlandsPerLife === 0.
+    const grantsLife = (garlandsEarned: number): boolean =>
+      garlandsEarned % SCORING.garlandsPerLife === 0;
+    expect(grantsLife(1)).toBe(false); // first garland: points only
+    expect(grantsLife(SCORING.garlandsPerLife)).toBe(true); // Nth garland: a life
+  });
+
+  it('keeps the life cap low enough that lives cannot stockpile', () => {
+    // A tight ceiling means refills top up a struggling run without building an
+    // insurmountable buffer against the hazards.
+    expect(PLAYER.maxLives).toBeLessThanOrEqual(4);
+    expect(PLAYER.startingLives).toBeLessThanOrEqual(PLAYER.maxLives);
+  });
+
+  it('only restores a bell life when the player is genuinely low', () => {
+    // Mirror of collectBell(): a bell restores a life only at/under the threshold.
+    const bellRestoresLife = (lives: number): boolean => lives <= SCORING.bellLifeThreshold;
+    expect(bellRestoresLife(SCORING.bellLifeThreshold)).toBe(true); // low → clutch save
+    expect(bellRestoresLife(PLAYER.maxLives)).toBe(false); // healthy → points, not a life
+    expect(SCORING.bellLifeThreshold).toBeLessThan(PLAYER.maxLives);
+  });
+
+  it('requires more hazard hits than a level hands out guaranteed lives', () => {
+    // A level yields 12 blooms (≤ 1 garland) + 3 bells. With garlandsPerLife ≥ 2 a single
+    // level completes at most 1 garland → 0 guaranteed garland-lives, and bells only refill
+    // when low. So the guaranteed life income per level is 0 — damage strictly accumulates.
+    const bloomsPerLevel = 12;
+    const guaranteedGarlandLives = Math.floor(
+      Math.floor(bloomsPerLevel / SCORING.garlandSize) / SCORING.garlandsPerLife,
+    );
+    expect(guaranteedGarlandLives).toBe(0);
+  });
+});
+
 describe('level config', () => {
   it('has three distinct regions in order', () => {
     expect(LEVELS.terai.index).toBe(1);

@@ -52,8 +52,8 @@ export const PLAYER = {
   fallLimitPadding: 120,
   respawnFlashMs: 400,
   damageInvulnMs: 1500,
-  startingLives: 4,
-  maxLives: 6, // reward cap: blooms/bells can grant lives up to this ceiling
+  startingLives: 3,
+  maxLives: 4, // reward cap: blooms/bells can grant lives up to this ceiling
 
   // Procedural animation feel.
   walkBobHz: 9,

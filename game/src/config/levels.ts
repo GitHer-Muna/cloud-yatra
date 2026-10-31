@@ -81,12 +81,20 @@ export const SCORING = {
   // Every GARLAND_SIZE blooms completes a "garland" (mala) that grants +1 life. This
   // gives a concrete survival reason to chase every bloom, not only points.
   garlandSize: 12,
+  // A life is granted only every Nth garland (not every one). At 1, the life economy was
+  // runaway (a single level's 12 blooms refilled lives faster than hazards drained them,
+  // so the player never died). 2 → one life per 24 blooms keeps collecting worthwhile
+  // while letting damage actually threaten the run.
+  garlandsPerLife: 2,
   garlandBonusPoints: 150, // points awarded alongside the garland life
   garlandCapConvertPoints: 100, // extra points when a garland completes but lives are full
-  // A prayer bell is a rare blessing: it grants +1 life immediately (big, felt reward)
-  // on top of its points. At the life cap it converts to a large point bonus instead.
+  // A prayer bell is a rare blessing: it restores a life ONLY when the player is at or
+  // below this many lives (a clutch save), otherwise it converts to a large point bonus.
+  // Previously every bell granted +1 life unconditionally, which (with garlands) made the
+  // player effectively immortal.
   bellLifeBonus: 1,
-  bellCapConvertPoints: 150, // extra points when a bell is found but lives are full
+  bellLifeThreshold: 1,
+  bellCapConvertPoints: 150, // extra points when a bell is found but lives are full (or not low)
 } as const;
 
 const GROUND = 60;

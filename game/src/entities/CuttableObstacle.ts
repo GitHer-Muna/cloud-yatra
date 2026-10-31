@@ -24,6 +24,12 @@ const TEXTURE_PREFIX = 'cuttable-';
 export class CuttableObstacle extends Phaser.Physics.Arcade.Sprite {
   private cutDone = false;
   readonly kind: CuttableKind;
+  /**
+   * True once the player has had the first, harmless warning bump against THIS obstacle.
+   * The scene uses it to escalate: the first contact teaches ("slash or jump"), but
+   * continuing to shove into the same uncut tangle then costs a life.
+   */
+  warned = false;
 
   constructor(scene: Phaser.Scene, x: number, groundTopY: number, kind: CuttableKind) {
     CuttableObstacle.ensureTexture(scene, kind);
