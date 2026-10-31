@@ -27,3 +27,4 @@
 # (rebuild trigger — picks up current VITE_GRAFANA_DASHBOARD_URL)
 # rebuild 2026-10-30: repoint embed to public dashboard token 01ba06ef…
 # rebuild 171121: variable updated, bake new token
+# rebuild 2026-10-31: repoint embed to public dashboard token 8ddfb66… (login-wall links removed)
