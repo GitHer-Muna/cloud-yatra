@@ -101,7 +101,8 @@ cloud-yatra/
 │
 ├── backend/               Optional backend — Cloudflare Worker + D1
 │   ├── migrations/        D1 schema (events, sessions, scores, daily_rollup)
-│   └── src/               Router, DB, event validation, metrics, logger, CORS, chaos
+│   └── src/               Router, DB, event validation, metrics, logger, CORS, chaos,
+│                          dashboard + Faro reverse proxies
 │
 ├── observability/         Grafana Cloud assets
 │   ├── dashboards/        Observatory source (full) + generated public copy JSON
