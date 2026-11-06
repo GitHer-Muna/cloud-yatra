@@ -42,11 +42,18 @@ export function initFaro(appVersion = '0.1.0'): Faro | null {
       version: appVersion,
       environment: env.MODE ?? 'development',
     },
+    // Don't trace/instrument the embedded Grafana dashboard's own proxied traffic. Faro
+    // already auto-ignores its collector URL (the Worker `/faro` path); these patterns add
+    // the dashboard reverse-proxy paths so the dashboard iframe's internal requests aren't
+    // captured as the game's RUM. Patterns are matched against the full request URL.
+    ignoreUrls: [/\/dash(\/|$)/, /\/public-dashboards\//, /\/apis\/.*\.grafana\.app/],
     instrumentations: [
       // Errors, web vitals, session, console, etc. (Faro's standard web set.)
       ...getWebInstrumentations(),
-      // HTTP/XHR tracing adds browser request timing and trace correlation without any
-      // external application endpoint. Faro's own collector URLs are excluded by the package.
+      // HTTP/XHR tracing adds browser request timing and trace correlation. Faro auto-
+      // excludes its OWN collector URL (now the Worker's first-party `/faro` path) from
+      // tracing, derived from the configured transport — so ingest isn't self-traced. The
+      // config-level `ignoreUrls` below additionally excludes the dashboard-proxy traffic.
       new TracingInstrumentation(),
       // Replay is intentionally sampled: canvas recording makes Phaser sessions useful,
       // while 10% keeps trial volume bounded. All form/input text remains masked.

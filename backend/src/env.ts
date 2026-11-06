@@ -20,6 +20,14 @@ export interface Env {
   // Grafana stack origin, e.g. "https://curioushalibut2108.grafana.net". Unset = proxy off.
   GRAFANA_PROXY_BASE?: string;
 
+  // First-party passthrough target for Faro RUM ingest. The Faro collector host
+  // (faro-collector-prod-*.grafana.net) is blocked by browser ad/tracker shields, so the
+  // game points VITE_FARO_URL at `${WORKER}/faro` and the Worker forwards to this real
+  // collector URL from its own origin. Public-by-design (same class as VITE_FARO_URL); the
+  // app key is already in the URL path. Unset = /faro returns 404 and the game uses its
+  // direct collector URL instead.
+  FARO_UPSTREAM?: string;
+
   // Optional secrets (wrangler secret put ...). Empty/undefined disables the push.
   GRAFANA_LOKI_URL?: string; // e.g. https://logs-prod-xxx.grafana.net/loki/api/v1/push
   GRAFANA_LOKI_USER?: string; // Loki/basic-auth user id (numeric)
