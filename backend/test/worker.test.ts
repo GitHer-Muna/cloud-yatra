@@ -2,8 +2,8 @@
  * worker.test.ts — exercises the Worker through its fetch handler in the real workerd
  * runtime, writing to an in-memory D1 with the production migrations applied.
  */
-import { env, createExecutionContext, waitOnExecutionContext } from 'cloudflare:test';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { env, createExecutionContext, waitOnExecutionContext, fetchMock } from 'cloudflare:test';
+import { beforeEach, afterEach, describe, expect, it } from 'vitest';
 import worker, { __resetStatsCache } from '../src/index';
 import { migrate } from './apply-migrations';
 import { __resetChaos } from '../src/chaos';
@@ -583,5 +583,123 @@ describe('Chaos Mode', () => {
     await callH('POST', '/chaos/start', TOKEN, { durationMs: 60000, errorRate: 0 });
     const text = await (await call('GET', '/metrics')).text();
     expect(text).toContain('cy_chaos_active');
+  });
+});
+
+describe('Grafana dashboard proxy', () => {
+  // The Grafana public-dashboard SPA probes the authenticated-only app-platform resource
+  // APIs (/apis/<group>.grafana.app/...). A public dashboard can't authenticate, so these
+  // must answer 401 — which the SPA expects and recovers from via its bootdata fallback.
+  // We short-circuit them in the Worker (no upstream hop) rather than proxying to Grafana.
+  it('short-circuits /apis/*.grafana.app probes with 401 (not a proxied round-trip)', async () => {
+    const res = await call('GET', '/apis/dashboard.grafana.app/');
+    expect(res.status).toBe(401);
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('*');
+  });
+
+  it('short-circuits the plugin-meta resource API with 401', async () => {
+    const res = await call('GET', '/apis/plugins.grafana.app/v0alpha1/namespaces/stacks-x/metas');
+    expect(res.status).toBe(401);
+  });
+
+  it('short-circuits /apis under the /dash prefix too', async () => {
+    const res = await call('GET', '/dash/apis/dashboard.grafana.app/');
+    expect(res.status).toBe(401);
+  });
+});
+
+describe('Grafana proxy — analytics stripped from boot/settings JSON', () => {
+  afterEach(() => {
+    fetchMock.deactivate();
+  });
+
+  it('disables GA, Rudderstack/FullStory, and embedded Faro in /bootdata', async () => {
+    const upstreamBody = JSON.stringify({
+      user: { analytics: { identifier: '@https://x.grafana.net/' } },
+      settings: {
+        googleAnalyticsId: 'UA-123',
+        googleAnalytics4Id: 'G-abc',
+        rudderstackWriteKey: 'secretkey',
+        rudderstackDataPlaneUrl: 'https://rs.grafana.com',
+        feedbackLinksEnabled: true,
+        grafanaJavascriptAgent: { enabled: true, customEndpoint: 'https://faro-collector.example/collect/x' },
+        analytics: { enabled: true },
+        // A normal dashboard setting that must pass through untouched:
+        defaultDatasource: '-- Grafana --',
+      },
+    });
+    fetchMock.activate();
+    fetchMock
+      .get('https://grafana.test')
+      .intercept({ path: '/bootdata', method: 'GET' })
+      .reply(200, upstreamBody, { headers: { 'Content-Type': 'application/json' } });
+
+    const res = await call('GET', '/bootdata');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      user: { analytics: { identifier: string } };
+      settings: Record<string, unknown>;
+    };
+    const s = body.settings;
+    expect(s.googleAnalyticsId).toBe('');
+    expect(s.googleAnalytics4Id).toBe('');
+    expect(s.rudderstackWriteKey).toBe('');
+    expect(s.rudderstackDataPlaneUrl).toBe('');
+    expect(s.feedbackLinksEnabled).toBe(false);
+    expect((s.grafanaJavascriptAgent as { enabled: boolean }).enabled).toBe(false);
+    expect((s.analytics as { enabled: boolean }).enabled).toBe(false);
+    expect(body.user.analytics.identifier).toBe('');
+    // Untouched dashboard setting survives.
+    expect(s.defaultDatasource).toBe('-- Grafana --');
+  });
+
+  it('strips the Permissions-Policy header that triggers "Unrecognized feature" errors', async () => {
+    fetchMock.activate();
+    fetchMock
+      .get('https://grafana.test')
+      .intercept({ path: '/api/frontend/settings', method: 'GET' })
+      .reply(200, JSON.stringify({ googleAnalyticsId: 'UA-9' }), {
+        headers: {
+          'Content-Type': 'application/json',
+          'Permissions-Policy': 'attribution-reporting=(), run-ad-auction=()',
+          'X-Frame-Options': 'deny',
+        },
+      });
+
+    const res = await call('GET', '/api/frontend/settings');
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Permissions-Policy')).toBeNull();
+    expect(res.headers.get('X-Frame-Options')).toBeNull();
+    const body = (await res.json()) as { googleAnalyticsId: string };
+    expect(body.googleAnalyticsId).toBe(''); // settings-at-top-level shape handled too
+  });
+});
+
+describe('Faro first-party ingest passthrough (/faro)', () => {
+  afterEach(() => {
+    fetchMock.deactivate();
+  });
+
+  it('answers preflight from the game origin', async () => {
+    const res = await call('OPTIONS', '/faro');
+    expect(res.status).toBe(204);
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:5173');
+  });
+
+  it('forwards a POST to the configured upstream collector and relays CORS', async () => {
+    fetchMock.activate();
+    fetchMock
+      .get('https://faro.test')
+      .intercept({ path: '/collect/appkey123', method: 'POST' })
+      .reply(200, '');
+
+    const res = await call('POST', '/faro', { meta: {}, events: [] });
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:5173');
+  });
+
+  it('rejects non-POST methods', async () => {
+    const res = await call('GET', '/faro');
+    expect(res.status).toBe(405);
   });
 });

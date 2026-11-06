@@ -32,6 +32,7 @@ import { ingest, leaderboard, pulse, recent, sessionRollup, stats, submitScore }
 import { inc, observe, renderMetrics, setGauge } from './metrics';
 import { Logger, hexId, pushTrace } from './logger';
 import { isProxyRequest, handleProxy } from './grafanaProxy';
+import { isFaroRequest, handleFaro } from './faroProxy';
 import {
   decide,
   getStatus,
@@ -110,6 +111,18 @@ export default {
       } catch (err) {
         log.error('proxy_error', { error: err instanceof Error ? err.message : String(err) });
         return new Response('dashboard proxy error', { status: 502 });
+      }
+    }
+
+    // First-party Faro RUM ingest passthrough (/faro). The Faro collector host is blocked by
+    // browser tracker shields; serving ingest from this origin avoids ERR_BLOCKED_BY_CLIENT.
+    // Like the dashboard proxy, this is a pipe — it skips chaos, metrics, and request logging.
+    if (isFaroRequest(pathname)) {
+      try {
+        return await handleFaro(req, env);
+      } catch (err) {
+        log.error('faro_proxy_error', { error: err instanceof Error ? err.message : String(err) });
+        return new Response('faro proxy error', { status: 502 });
       }
     }
 

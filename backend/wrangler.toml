@@ -40,6 +40,11 @@ SERVICE_NAME = "cloud-yatra-api"
 # Reverse-proxy origin for embedding the Grafana public dashboard below the game. The Worker
 # serves it under /dash/* with frame-blocking headers stripped so the game can iframe it.
 GRAFANA_PROXY_BASE = "https://curioushalibut2108.grafana.net"
+# First-party passthrough target for Faro RUM ingest. The game points VITE_FARO_URL at
+# ${WORKER}/faro and the Worker forwards here, so RUM is sent from this (first-party) origin
+# instead of the faro-collector host that browser ad/tracker shields block. Public config:
+# the app key is already embedded in the collector URL path.
+FARO_UPSTREAM = "https://faro-collector-prod-ap-south-1.grafana.net/collect/dd6661dd58b770f59b0d0bd72ec44511"
 # Grafana Cloud push endpoints are OPTIONAL. Leave empty to disable the push (the Worker
 # still logs to Cloudflare Workers Logs and exposes /metrics for a pull scrape). Set these
 # as Wrangler SECRETS, not here:  GRAFANA_LOKI_URL, GRAFANA_LOKI_USER, GRAFANA_LOKI_TOKEN,
