@@ -81,6 +81,22 @@ describe('CORS + routing', () => {
     expect(res.headers.get('Access-Control-Allow-Credentials')).toBe('true');
   });
 
+  it('reflects the requested headers on preflight so the Faro SDK idempotency-key is allowed', async () => {
+    // The Grafana Faro Web SDK sends an `idempotency-key` request header on RUM ingest.
+    // The preflight must echo it back in Access-Control-Allow-Headers or the browser blocks
+    // every /faro POST with "Request header field idempotency-key is not allowed". We make
+    // the allowlist future-proof by reflecting Access-Control-Request-Headers verbatim.
+    const res = await callH('OPTIONS', '/faro', {
+      'Access-Control-Request-Method': 'POST',
+      'Access-Control-Request-Headers': 'content-type,idempotency-key,x-faro-session-id',
+    });
+    expect(res.status).toBe(204);
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:5173');
+    const allow = (res.headers.get('Access-Control-Allow-Headers') ?? '').toLowerCase();
+    expect(allow).toContain('idempotency-key');
+    expect(allow).toContain('x-faro-session-id');
+  });
+
   it('404s unknown routes', async () => {
     const res = await call('GET', '/nope');
     expect(res.status).toBe(404);

@@ -17,12 +17,23 @@ function allowedOrigin(req: Request, env: Env): string | null {
 
 export function corsHeaders(req: Request, env: Env): Record<string, string> {
   const origin = allowedOrigin(req, env);
+  // Echo back exactly the headers the browser asks to send in its preflight
+  // (Access-Control-Request-Headers). This makes the allowlist future-proof: SDKs like
+  // Grafana Faro add their own request headers over time (e.g. `idempotency-key`,
+  // `x-faro-session-id`), and reflecting the requested set means a new header never trips a
+  // CORS preflight failure again. When no preflight header is present (e.g. a simple GET),
+  // fall back to a concrete superset that covers everything the game + Faro SDK send.
+  const requested = req.headers.get('Access-Control-Request-Headers');
+  const allowHeaders =
+    requested && requested.trim().length > 0
+      ? requested
+      : 'Content-Type, X-Correlation-Id, X-Chaos-Token, Authorization, X-Faro-Session-Id, idempotency-key';
   const headers: Record<string, string> = {
     'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-    'Access-Control-Allow-Headers':
-      'Content-Type, X-Correlation-Id, X-Chaos-Token, Authorization, X-Faro-Session-Id',
+    'Access-Control-Allow-Headers': allowHeaders,
     'Access-Control-Max-Age': '86400',
-    Vary: 'Origin',
+    // Vary on the request-headers too, since the allow-headers response now depends on it.
+    Vary: 'Origin, Access-Control-Request-Headers',
   };
   if (origin) {
     headers['Access-Control-Allow-Origin'] = origin;
