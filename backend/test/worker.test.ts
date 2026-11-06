@@ -702,4 +702,40 @@ describe('Faro first-party ingest passthrough (/faro)', () => {
     const res = await call('GET', '/faro');
     expect(res.status).toBe(405);
   });
+
+  it('advertises X-Faro-Session-Id in the CORS preflight', async () => {
+    const res = await call('OPTIONS', '/faro');
+    expect(res.headers.get('Access-Control-Allow-Headers')).toContain('X-Faro-Session-Id');
+  });
+
+  it('forwards the X-Faro-Session-Id header to the upstream collector', async () => {
+    fetchMock.activate();
+    let forwardedSessionId: string | null = null;
+    fetchMock
+      .get('https://faro.test')
+      .intercept({ path: '/collect/appkey123', method: 'POST' })
+      .reply((opts) => {
+        const h = opts.headers as Record<string, string> | undefined;
+        // Header keys may be lower-cased by the client; look them up case-insensitively.
+        forwardedSessionId =
+          (h?.['x-faro-session-id'] ?? h?.['X-Faro-Session-Id'] ?? null) as string | null;
+        return { statusCode: 200, data: '' };
+      });
+
+    const req = new Request(BASE + '/faro', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Faro-Session-Id': 'sess-abc123',
+        Origin: 'http://localhost:5173',
+      },
+      body: JSON.stringify({ meta: {}, logs: [] }),
+    });
+    const ctx = createExecutionContext();
+    const res = await worker.fetch(req, env, ctx);
+    await waitOnExecutionContext(ctx);
+
+    expect(res.status).toBe(200);
+    expect(forwardedSessionId).toBe('sess-abc123');
+  });
 });

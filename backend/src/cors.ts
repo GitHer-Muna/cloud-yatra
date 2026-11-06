@@ -19,7 +19,8 @@ export function corsHeaders(req: Request, env: Env): Record<string, string> {
   const origin = allowedOrigin(req, env);
   const headers: Record<string, string> = {
     'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, X-Correlation-Id, X-Chaos-Token, Authorization',
+    'Access-Control-Allow-Headers':
+      'Content-Type, X-Correlation-Id, X-Chaos-Token, Authorization, X-Faro-Session-Id',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
   };
