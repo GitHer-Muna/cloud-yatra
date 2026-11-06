@@ -604,23 +604,32 @@ describe('Chaos Mode', () => {
 
 describe('Grafana dashboard proxy', () => {
   // The Grafana public-dashboard SPA probes the authenticated-only app-platform resource
-  // APIs (/apis/<group>.grafana.app/...). A public dashboard can't authenticate, so these
-  // must answer 401 — which the SPA expects and recovers from via its bootdata fallback.
-  // We short-circuit them in the Worker (no upstream hop) rather than proxying to Grafana.
-  it('short-circuits /apis/*.grafana.app probes with 401 (not a proxied round-trip)', async () => {
+  // APIs (/apis/<group>.grafana.app/...). A public viewer can't authenticate, so the real
+  // Grafana returns 401 — which makes the browser log a red network error and the SPA log
+  // "PluginMeta: failed to load plugin metas". We instead answer with a VALID EMPTY 200 in
+  // the Kubernetes list/discovery shape, so the SPA resolves cleanly (same end state as its
+  // bootdata fallback) with NO console error. No upstream hop either.
+  it('answers the /apis group-discovery probe with a valid empty 200 (no console error)', async () => {
     const res = await call('GET', '/apis/dashboard.grafana.app/');
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(200);
     expect(res.headers.get('Access-Control-Allow-Origin')).toBe('*');
+    const body = (await res.json()) as { kind: string; items: unknown[] };
+    expect(body.kind).toBe('APIGroupDiscoveryList');
+    expect(Array.isArray(body.items)).toBe(true);
+    expect(body.items).toHaveLength(0);
   });
 
-  it('short-circuits the plugin-meta resource API with 401', async () => {
+  it('answers the plugin-meta list probe with an empty List 200', async () => {
     const res = await call('GET', '/apis/plugins.grafana.app/v0alpha1/namespaces/stacks-x/metas');
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { kind: string; items: unknown[] };
+    expect(body.kind).toBe('List');
+    expect(body.items).toHaveLength(0);
   });
 
-  it('short-circuits /apis under the /dash prefix too', async () => {
+  it('answers /apis probes under the /dash prefix too', async () => {
     const res = await call('GET', '/dash/apis/dashboard.grafana.app/');
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(200);
   });
 });
 

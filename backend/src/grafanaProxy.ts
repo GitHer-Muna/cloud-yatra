@@ -61,17 +61,39 @@ export function isProxyRequest(pathname: string): boolean {
   return GRAFANA_ROOT_PREFIXES.some((p) => pathname.startsWith(p));
 }
 
-// Grafana's app-platform resource APIs (served under /apis/<group>.grafana.app/...) require
-// an AUTHENTICATED session. A PUBLIC dashboard has none, so Grafana always answers these
-// probes with 401 — and the SPA is built to EXPECT that 401 and fall back to its embedded
-// bootdata (see the browser log "plugin meta failed to load so Grafana is falling back to
-// bootdata"). Proxying them upstream just does a wasted round-trip to fetch a 401 we already
-// know is coming, which also shows up as a slow failed request in the console. Short-circuit
-// them with the same 401 locally: identical outcome for the SPA, no upstream hop. The path to
-// match is the request path minus an optional /dash prefix (the SPA uses root-absolute /apis).
-function isUnauthenticatedResourceApi(path: string): boolean {
+// Answer the Grafana SPA's authenticated-only /apis/*.grafana.app probes with a VALID EMPTY
+// 200 (instead of the 401 the real Grafana gives a public viewer) so the SPA resolves cleanly
+// and logs nothing. Returns null for any path that is NOT one of these probes (so normal
+// proxying proceeds). The path is the request path minus an optional /dash prefix (the SPA
+// issues these as root-absolute /apis/... fetches).
+//
+// Shapes (Kubernetes-style, which is what the app-platform APIs speak):
+//  • `/apis/<group>/<version>/namespaces/<ns>/metas` (and other list endpoints) → an empty
+//    `List`: `{ kind, apiVersion, items: [] }`. The SPA reads `.items` and finds nothing to
+//    add on top of bootdata.
+//  • `/apis/<group>.grafana.app/` (group discovery root) → an empty `APIGroupDiscoveryList`
+//    so version discovery succeeds with no groups. `{ kind, apiVersion, items: [] }` is
+//    accepted by the discovery client (it iterates `.items`/`.groups` — both absent/empty).
+function quietApiResponse(path: string): Response | null {
   const p = path.startsWith(`${PREFIX}/`) ? path.slice(PREFIX.length) : path;
-  return p.startsWith('/apis/');
+  if (!p.startsWith('/apis/')) return null;
+
+  const body = p.includes('.grafana.app/') && /\/apis\/[^/]+\.grafana\.app\/?$/.test(p)
+    ? // Group-discovery root, e.g. /apis/dashboard.grafana.app/
+      { kind: 'APIGroupDiscoveryList', apiVersion: 'apidiscovery.k8s.io/v2', items: [] }
+    : // A list resource, e.g. .../namespaces/<ns>/metas
+      { kind: 'List', apiVersion: 'v1', items: [], metadata: {} };
+
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      // These are inherently empty and stable per load; let the browser cache briefly to
+      // avoid repeat probes on panel re-renders.
+      'Cache-Control': 'public, max-age=60',
+    },
+  });
 }
 
 /** Frame/CSP headers that would block embedding — stripped from every proxied response. */
@@ -189,18 +211,21 @@ export async function handleProxy(req: Request, env: Env): Promise<Response> {
 
   const url = new URL(req.url);
 
-  // Short-circuit the authenticated-only app-platform resource APIs (/apis/*.grafana.app).
-  // A public dashboard can never authenticate to these; Grafana returns 401 and the SPA
-  // falls back to bootdata. Return that 401 directly instead of a wasted upstream hop.
-  if (isUnauthenticatedResourceApi(url.pathname)) {
-    return new Response('{"message":"Unauthorized"}', {
-      status: 401,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  }
+  // The Grafana public-dashboard SPA probes the authenticated-only app-platform resource
+  // APIs (/apis/*.grafana.app) on load — API-group discovery and panel plugin metas. A
+  // public dashboard has no session, so the REAL Grafana returns 401; the SPA catches it and
+  // falls back to its embedded bootdata, which is why the dashboard still renders. BUT the
+  // browser prints that 401 as a red network error and the SPA logs `PluginMeta: failed to
+  // load plugin metas`, which looks alarming in a demo.
+  //
+  // Instead of relaying/returning a 401, answer these probes with a VALID EMPTY 200 in the
+  // Kubernetes-style shape the SPA expects. The SPA then resolves successfully with "no
+  // extra plugin metas / no extra group versions" — the exact same end state as the bootdata
+  // fallback, but with NO thrown error, NO red console line, and NO error log. Everything the
+  // dashboard needs to render comes from bootdata either way; these endpoints only ever add
+  // (here: nothing) on top of it.
+  const quiet = quietApiResponse(url.pathname);
+  if (quiet) return quiet;
   // Two shapes reach here:
   //   1) /dash/<rest>        → the dashboard HTML entry (and anything anchor-relative).
   //   2) /api|/public|/avatar → the SPA's ROOT-absolute fetches (panel queries, settings,
