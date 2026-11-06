@@ -60,10 +60,20 @@ export async function handleFaro(req: Request, env: Env): Promise<Response> {
 
   // Forward the body verbatim. Faro uses application/json (fetch transport) or a text body
   // via sendBeacon; pass the Content-Type through so the collector parses it correctly.
-  const ct = req.headers.get('Content-Type') ?? 'application/json';
+  // The collector also REQUIRES the `X-Faro-Session-Id` header (and may read other
+  // `x-faro-*` headers) — it returns 400 "missing X-Faro-Session-Id header" without it — so
+  // forward every `x-faro-*` request header too.
+  const upstreamHeaders = new Headers();
+  upstreamHeaders.set('Content-Type', req.headers.get('Content-Type') ?? 'application/json');
+  req.headers.forEach((value, key) => {
+    if (key.toLowerCase().startsWith('x-faro-')) {
+      upstreamHeaders.set(key, value);
+    }
+  });
+
   const res = await fetch(target, {
     method: 'POST',
-    headers: { 'Content-Type': ct },
+    headers: upstreamHeaders,
     body: await req.arrayBuffer(),
   });
 
