@@ -1,10 +1,9 @@
 /**
  * events.ts — the game's TELEMETRY VOCABULARY (schema as code).
  *
- * Defines the shared ENVELOPE and per-event ATTRIBUTES as strongly-typed TS. It
- * mirrors `.kiro/specs/cloud-yatra/design.md §4`. Events are created and enriched by
- * TelemetryService; this file also provides `validateEvent()` so malformed telemetry
- * is caught locally and never crashes gameplay.
+ * Defines the shared ENVELOPE and per-event ATTRIBUTES as strongly-typed TS. Events are
+ * created and enriched by TelemetryService; this file also provides `validateEvent()` so
+ * malformed telemetry is caught locally and never crashes gameplay.
  *
  * No network, no Grafana, no external dependencies here.
  */

@@ -42,8 +42,10 @@ SERVICE_NAME = "cloud-yatra-api"
 GRAFANA_PROXY_BASE = "https://curioushalibut2108.grafana.net"
 # First-party passthrough target for Faro RUM ingest. The game points VITE_FARO_URL at
 # ${WORKER}/faro and the Worker forwards here, so RUM is sent from this (first-party) origin
-# instead of the faro-collector host that browser ad/tracker shields block. Public config:
-# the app key is already embedded in the collector URL path.
+# instead of the faro-collector host that browser ad/tracker shields block. This is a
+# write-only RUM INGEST endpoint — its key only permits sending telemetry, never reading, and
+# it already ships in the public browser bundle, so it is not a secret. Point it at your own
+# Grafana Faro receiver URL. Unset = /faro returns 404 and the browser posts RUM directly.
 FARO_UPSTREAM = "https://faro-collector-prod-ap-south-1.grafana.net/collect/dd6661dd58b770f59b0d0bd72ec44511"
 # Grafana Cloud push endpoints are OPTIONAL. Leave empty to disable the push (the Worker
 # still logs to Cloudflare Workers Logs and exposes /metrics for a pull scrape). Set these

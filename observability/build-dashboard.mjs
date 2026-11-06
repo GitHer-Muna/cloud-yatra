@@ -112,7 +112,7 @@ function wireDatasources(node) {
   return node;
 }
 
-/** The branded header (Nepal dawn gradient), operator-voiced, non-AI. */
+/** The branded header (Nepal dawn gradient), operator-voiced. */
 function headerPanel(id) {
   const content =
     '<div style="padding:14px 18px;' +
