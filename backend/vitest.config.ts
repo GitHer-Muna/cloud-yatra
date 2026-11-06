@@ -22,6 +22,8 @@ export default defineWorkersConfig(async () => {
               ENVIRONMENT: 'test',
               SERVICE_NAME: 'cloud-yatra-api',
               CHAOS_ADMIN_TOKEN: 'test-admin-token',
+              GRAFANA_PROXY_BASE: 'https://grafana.test',
+              FARO_UPSTREAM: 'https://faro.test/collect/appkey123',
             },
           },
           wrangler: { configPath: './wrangler.toml' },

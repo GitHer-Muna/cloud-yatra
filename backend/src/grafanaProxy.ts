@@ -61,6 +61,19 @@ export function isProxyRequest(pathname: string): boolean {
   return GRAFANA_ROOT_PREFIXES.some((p) => pathname.startsWith(p));
 }
 
+// Grafana's app-platform resource APIs (served under /apis/<group>.grafana.app/...) require
+// an AUTHENTICATED session. A PUBLIC dashboard has none, so Grafana always answers these
+// probes with 401 — and the SPA is built to EXPECT that 401 and fall back to its embedded
+// bootdata (see the browser log "plugin meta failed to load so Grafana is falling back to
+// bootdata"). Proxying them upstream just does a wasted round-trip to fetch a 401 we already
+// know is coming, which also shows up as a slow failed request in the console. Short-circuit
+// them with the same 401 locally: identical outcome for the SPA, no upstream hop. The path to
+// match is the request path minus an optional /dash prefix (the SPA uses root-absolute /apis).
+function isUnauthenticatedResourceApi(path: string): boolean {
+  const p = path.startsWith(`${PREFIX}/`) ? path.slice(PREFIX.length) : path;
+  return p.startsWith('/apis/');
+}
+
 /** Frame/CSP headers that would block embedding — stripped from every proxied response. */
 function stripFrameHeaders(h: Headers): void {
   h.delete('X-Frame-Options');
@@ -68,6 +81,93 @@ function stripFrameHeaders(h: Headers): void {
   h.delete('Content-Security-Policy-Report-Only');
   // Grafana sets a strict CSP on the doc; once proxied same-origin it's not needed for the
   // embed, and leaving `frame-ancestors 'none'` would defeat the whole proxy.
+  // Grafana also sends a `Permissions-Policy` listing features (attribution-reporting,
+  // private-aggregation, join-ad-interest-group, run-ad-auction) that some browsers don't
+  // recognize and log as "Unrecognized feature" console errors. The embedded dashboard
+  // doesn't need any of them, so drop the header entirely to keep the console clean.
+  h.delete('Permissions-Policy');
+  h.delete('Feature-Policy');
+}
+
+/**
+ * Rewrite Grafana's boot/settings JSON to DISABLE every third-party analytics + telemetry
+ * integration the public dashboard would otherwise try to load. Those scripts
+ * (Google Analytics, Rudderstack → FullStory, and Grafana's own embedded Faro
+ * "grafanaJavascriptAgent") are routinely blocked by browser shields and ad/tracker
+ * blockers, producing a stream of `ERR_BLOCKED_BY_CLIENT` / "Tracking Prevention blocked"
+ * console errors that have nothing to do with the dashboard. The dashboard itself does not
+ * need any of them, so we strip them at the source: if the SPA never sees the config, it
+ * never issues the request, and the console stays clean. Only known analytics keys are
+ * touched; all dashboard/datasource settings pass through untouched. Returns the original
+ * text unchanged if it isn't parseable JSON (so non-JSON bodies are never corrupted).
+ */
+function stripAnalyticsFromJson(text: string): string {
+  let data: unknown;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return text; // not JSON — leave as-is
+  }
+  if (data === null || typeof data !== 'object') return text;
+
+  // Grafana's boot payload nests config under `settings`; the /api/frontend/settings
+  // endpoint returns the settings object at the top level. Handle both.
+  const root = data as Record<string, unknown>;
+  const settings =
+    root.settings && typeof root.settings === 'object'
+      ? (root.settings as Record<string, unknown>)
+      : root;
+
+  // Blank out string-valued IDs/keys so the SPA sees "not configured".
+  for (const k of [
+    'googleAnalyticsId',
+    'googleAnalytics4Id',
+    'rudderstackWriteKey',
+    'rudderstackDataPlaneUrl',
+    'rudderstackSdkUrl',
+    'rudderstackV3SdkUrl',
+    'rudderstackConfigUrl',
+    'rudderstackIntegrationsUrl',
+    'applicationInsightsConnectionString',
+    'applicationInsightsEndpointUrl',
+  ]) {
+    if (k in settings) settings[k] = '';
+  }
+
+  // Turn off boolean analytics/feedback switches.
+  for (const k of [
+    'GoogleAnalytics4SendManualPageViews',
+    'applicationInsightsAutoRouteTracking',
+    'feedbackLinksEnabled',
+    'externalUserMngAnalytics',
+    'reportingEnabled',
+  ]) {
+    if (k in settings) settings[k] = false;
+  }
+
+  // Disable Grafana's embedded Faro agent (the faro-collector-* requests).
+  if (settings.grafanaJavascriptAgent && typeof settings.grafanaJavascriptAgent === 'object') {
+    (settings.grafanaJavascriptAgent as Record<string, unknown>).enabled = false;
+  }
+  if (settings.analytics && typeof settings.analytics === 'object') {
+    (settings.analytics as Record<string, unknown>).enabled = false;
+  }
+
+  // Clear the per-user analytics identifier (present in /bootdata under `user`).
+  if (root.user && typeof root.user === 'object') {
+    const user = root.user as Record<string, unknown>;
+    if (user.analytics && typeof user.analytics === 'object') {
+      (user.analytics as Record<string, unknown>).identifier = '';
+    }
+  }
+
+  return JSON.stringify(data);
+}
+
+/** True for the boot/settings endpoints whose JSON carries the analytics config. */
+function isBootOrSettings(path: string): boolean {
+  const p = path.startsWith(`${PREFIX}/`) ? path.slice(PREFIX.length) : path;
+  return p === '/bootdata' || p === '/api/frontend/settings';
 }
 
 /**
@@ -88,6 +188,19 @@ export async function handleProxy(req: Request, env: Env): Promise<Response> {
   }
 
   const url = new URL(req.url);
+
+  // Short-circuit the authenticated-only app-platform resource APIs (/apis/*.grafana.app).
+  // A public dashboard can never authenticate to these; Grafana returns 401 and the SPA
+  // falls back to bootdata. Return that 401 directly instead of a wasted upstream hop.
+  if (isUnauthenticatedResourceApi(url.pathname)) {
+    return new Response('{"message":"Unauthorized"}', {
+      status: 401,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
+  }
   // Two shapes reach here:
   //   1) /dash/<rest>        → the dashboard HTML entry (and anything anchor-relative).
   //   2) /api|/public|/avatar → the SPA's ROOT-absolute fetches (panel queries, settings,
@@ -127,6 +240,18 @@ export async function handleProxy(req: Request, env: Env): Promise<Response> {
   // Let the game origin read proxied responses if ever fetched via XHR (the iframe itself
   // doesn't need this, but it's harmless and future-proofs programmatic reads).
   resHeaders.set('Access-Control-Allow-Origin', '*');
+
+  // For the boot/settings JSON, rewrite the body to disable every third-party analytics +
+  // telemetry integration (GA, Rudderstack/FullStory, Grafana's embedded Faro). These are
+  // what the browser's shields block with ERR_BLOCKED_BY_CLIENT / "Tracking Prevention"
+  // console errors; removing them from the config stops the SPA ever requesting them. We
+  // must buffer the body (not stream) to rewrite it, which is fine — these payloads are
+  // small and fetched once at boot.
+  if (isBootOrSettings(url.pathname) && upstream.status === 200) {
+    const original = await upstream.text();
+    const rewritten = stripAnalyticsFromJson(original);
+    return new Response(rewritten, { status: upstream.status, headers: resHeaders });
+  }
 
   // The SPA fetches with ROOT-absolute paths (/api, /public, /avatar) which we proxy at the
   // Worker root, and its static assets load from Grafana's absolute CDN. So the document can
