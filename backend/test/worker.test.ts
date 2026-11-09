@@ -631,6 +631,24 @@ describe('Grafana dashboard proxy', () => {
     const res = await call('GET', '/dash/apis/dashboard.grafana.app/');
     expect(res.status).toBe(200);
   });
+
+  // The public-dashboard SPA's preloadPlugins fetches /api/plugins/<id>/settings for every
+  // installed APP plugin. A public viewer has no session → the real Grafana answers 401,
+  // which the browser logs as a red "GET .../settings 401 (Unauthorized)". We answer 404
+  // "plugin not found" instead, which getPluginSettings treats as "no settings" and resolves
+  // without logging any error. Our dashboard uses no app plugins, so this is always safe.
+  it('answers /api/plugins/<id>/settings with a quiet 404 (not a red 401)', async () => {
+    const res = await call('GET', '/api/plugins/grafana-asserts-app/settings');
+    expect(res.status).toBe(404);
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('*');
+    const body = (await res.json()) as { message: string };
+    expect(body.message).toMatch(/not found/i);
+  });
+
+  it('quiets /api/plugins/<id>/settings under the /dash prefix too', async () => {
+    const res = await call('GET', '/dash/api/plugins/grafana-irm-app/settings');
+    expect(res.status).toBe(404);
+  });
 });
 
 describe('Grafana proxy — analytics stripped from boot/settings JSON', () => {
@@ -676,6 +694,36 @@ describe('Grafana proxy — analytics stripped from boot/settings JSON', () => {
     expect(body.user.analytics.identifier).toBe('');
     // Untouched dashboard setting survives.
     expect(s.defaultDatasource).toBe('-- Grafana --');
+  });
+
+  it('forces preload:false on every app plugin so the SPA never fetches their settings', async () => {
+    const upstreamBody = JSON.stringify({
+      settings: {
+        apps: {
+          'grafana-asserts-app': { id: 'grafana-asserts-app', preload: true },
+          'grafana-irm-app': { id: 'grafana-irm-app', preload: true },
+          'clexporter-app': { id: 'clexporter-app', preload: false },
+        },
+        defaultDatasource: '-- Grafana --',
+      },
+    });
+    fetchMock.activate();
+    fetchMock
+      .get('https://grafana.test')
+      .intercept({ path: '/bootdata', method: 'GET' })
+      .reply(200, upstreamBody, { headers: { 'Content-Type': 'application/json' } });
+
+    const res = await call('GET', '/bootdata');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      settings: { apps: Record<string, { preload: boolean }>; defaultDatasource: string };
+    };
+    const apps = body.settings.apps;
+    expect(apps['grafana-asserts-app'].preload).toBe(false);
+    expect(apps['grafana-irm-app'].preload).toBe(false);
+    expect(apps['clexporter-app'].preload).toBe(false);
+    // Non-app settings pass through untouched.
+    expect(body.settings.defaultDatasource).toBe('-- Grafana --');
   });
 
   it('strips the Permissions-Policy header that triggers "Unrecognized feature" errors', async () => {

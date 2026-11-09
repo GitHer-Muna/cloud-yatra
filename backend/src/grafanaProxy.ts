@@ -61,21 +61,46 @@ export function isProxyRequest(pathname: string): boolean {
   return GRAFANA_ROOT_PREFIXES.some((p) => pathname.startsWith(p));
 }
 
-// Answer the Grafana SPA's authenticated-only /apis/*.grafana.app probes with a VALID EMPTY
-// 200 (instead of the 401 the real Grafana gives a public viewer) so the SPA resolves cleanly
-// and logs nothing. Returns null for any path that is NOT one of these probes (so normal
-// proxying proceeds). The path is the request path minus an optional /dash prefix (the SPA
-// issues these as root-absolute /apis/... fetches).
+// Answer the Grafana SPA's authenticated-only probes with a response that resolves CLEANLY
+// for a PUBLIC viewer (instead of the 401 the real Grafana gives), so the SPA logs nothing.
+// Returns null for any path that is NOT one of these probes (so normal proxying proceeds).
+// The path is the request path minus an optional /dash prefix (the SPA issues these as
+// root-absolute fetches). Two families are handled:
 //
-// Shapes (Kubernetes-style, which is what the app-platform APIs speak):
-//  • `/apis/<group>/<version>/namespaces/<ns>/metas` (and other list endpoints) → an empty
-//    `List`: `{ kind, apiVersion, items: [] }`. The SPA reads `.items` and finds nothing to
-//    add on top of bootdata.
-//  • `/apis/<group>.grafana.app/` (group discovery root) → an empty `APIGroupDiscoveryList`
-//    so version discovery succeeds with no groups. `{ kind, apiVersion, items: [] }` is
-//    accepted by the discovery client (it iterates `.items`/`.groups` — both absent/empty).
+//  • `/api/plugins/<id>/settings` → a 404 "plugin not found" (see inline note). Avoids the
+//    red 401 the public viewer would otherwise get for every preloaded app plugin.
+//  • `/apis/*.grafana.app/...` (app-platform resource API) → a VALID EMPTY 200, in the
+//    Kubernetes-style shape the SPA expects:
+//     - `/apis/<group>/<version>/namespaces/<ns>/metas` (and other list endpoints) → an empty
+//       `List`: `{ kind, apiVersion, items: [] }`. The SPA reads `.items` and finds nothing to
+//       add on top of bootdata.
+//     - `/apis/<group>.grafana.app/` (group discovery root) → an empty `APIGroupDiscoveryList`
+//       so version discovery succeeds with no groups.
 function quietApiResponse(path: string): Response | null {
   const p = path.startsWith(`${PREFIX}/`) ? path.slice(PREFIX.length) : path;
+
+  // `/api/plugins/<id>/settings` — the SPA's `getPluginSettings` → `getLegacySettings`
+  // fetches these during `preloadPlugins`. For a PUBLIC viewer the real Grafana returns 401
+  // (no session), which the browser prints as a red "401 (Unauthorized)" line. Answer with a
+  // 404 "plugin not found" instead: `getPluginSettings` treats a 404 as "this plugin has no
+  // stored settings", caches null, and resolves WITHOUT logging an error (a 404 is an
+  // expected not-configured state; a 401 is an auth failure it surfaces). Combined with the
+  // bootdata `preload: false` rewrite this should rarely fire, but it guards any settings
+  // fetch the SPA still issues (e.g. for a panel plugin referenced by the dashboard).
+  if (/^\/api\/plugins\/[^/]+\/settings\/?$/.test(p)) {
+    return new Response(
+      JSON.stringify({ message: 'Plugin not found, no installed plugin with that id' }),
+      {
+        status: 404,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Cache-Control': 'public, max-age=60',
+        },
+      },
+    );
+  }
+
   if (!p.startsWith('/apis/')) return null;
 
   const body = p.includes('.grafana.app/') && /\/apis\/[^/]+\.grafana\.app\/?$/.test(p)
@@ -180,6 +205,26 @@ function stripAnalyticsFromJson(text: string): string {
     const user = root.user as Record<string, unknown>;
     if (user.analytics && typeof user.analytics === 'object') {
       (user.analytics as Record<string, unknown>).identifier = '';
+    }
+  }
+
+  // Stop the SPA preloading the stack's installed APP plugins. `settings.apps` lists every
+  // app plugin installed on the (authenticated) Grafana stack — Asserts, IRM, k8s, SLO,
+  // Synthetic Monitoring, the Adaptive* apps, etc. On boot, `preloadPlugins` fetches
+  // `/api/plugins/<id>/settings` for every app with `preload: true`. A PUBLIC-dashboard
+  // viewer has no session, so each of those fetches returns 401 → a stream of red
+  // "GET /api/plugins/<id>/settings 401 (Unauthorized)" console errors, plus the matching
+  // `pluginType: 'app'` "PluginMeta: empty result" warnings. OUR dashboard uses only PANEL
+  // and DATASOURCE plugins (timeseries, stat, table, geomap, logs, Infinity, the Video
+  // panel) — never any of these apps. So force `preload: false` on every app: the SPA then
+  // never requests their settings/metas, and the console stays clean. We keep each app's
+  // entry (shape intact) rather than deleting it, so nothing that merely references an app
+  // id breaks; we only stop the eager preload fetch.
+  if (settings.apps && typeof settings.apps === 'object') {
+    for (const app of Object.values(settings.apps as Record<string, unknown>)) {
+      if (app && typeof app === 'object') {
+        (app as Record<string, unknown>).preload = false;
+      }
     }
   }
 
