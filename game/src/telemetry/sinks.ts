@@ -154,6 +154,11 @@ export class HttpBatchSink implements TelemetrySink {
       this.timer = null;
     }
     if (this.queue.length === 0) return;
+    // Offline: don't fire doomed requests. Keep a bounded backlog and retry on next emit.
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      if (this.queue.length > this.maxBatch * 5) this.queue.splice(0, this.queue.length - this.maxBatch * 5);
+      return;
+    }
     const batch = this.queue.splice(0, this.maxBatch);
     const url = `${this.baseUrl}/events`;
     const payload = JSON.stringify({ events: batch });

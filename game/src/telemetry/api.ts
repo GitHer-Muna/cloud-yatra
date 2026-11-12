@@ -121,6 +121,8 @@ export function submitScore(
 
   const base = apiBase();
   if (!base) return;
+  // Offline: the score is already saved locally above; skip the doomed network call.
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
   // Submit even when the player stayed anonymous — default to a per-session friendly name
   // so the shared leaderboard fills up instead of silently dropping nameless runs.
   const submitName = (name && name.trim()) || anonPilgrimName(sessionId);
@@ -173,6 +175,7 @@ const INACTIVE: ChaosStatus = {
 export async function getChaosStatus(timeoutMs = 2500): Promise<ChaosStatus> {
   const base = apiBase();
   if (!base) return INACTIVE;
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return INACTIVE;
   try {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), timeoutMs);

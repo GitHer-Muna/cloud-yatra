@@ -88,6 +88,16 @@ describe('submitScore', () => {
     expect(body.name).toBe('Tenzing');
   });
 
+  it('skips the network entirely while the browser is offline', async () => {
+    vi.stubGlobal('navigator', { onLine: false });
+    submitScore(700, undefined, 1000, 'terai', 'sess-offl');
+    expect((await getChaosStatus()).active).toBe(false);
+    const sink = new HttpBatchSink('https://api.test');
+    sink.emit(evt('level_started'));
+    await sink.flush();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('never submits remotely when no backend is configured (offline-safe)', async () => {
     __setApiBaseEnvReader(() => undefined);
     submitScore(500, undefined, 1000, 'terai', 'sess-abcd');

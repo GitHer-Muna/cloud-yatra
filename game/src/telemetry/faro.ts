@@ -46,6 +46,8 @@ export function initFaro(appVersion = '0.1.0'): Faro | null {
     // already auto-ignores its collector URL (the Worker `/faro` path); these patterns add
     // the dashboard reverse-proxy paths so the dashboard iframe's internal requests aren't
     // captured as the game's RUM. Patterns are matched against the full request URL.
+    // Drop RUM items while offline instead of retrying (and spamming the console).
+    beforeSend: (item) => (typeof navigator !== 'undefined' && navigator.onLine === false ? null : item),
     ignoreUrls: [/\/dash(\/|$)/, /\/public-dashboards\//, /\/apis\/.*\.grafana\.app/],
     instrumentations: [
       // Errors, web vitals, session, console, etc. (Faro's standard web set.)
