@@ -60,14 +60,14 @@
       "type": "text",
       "title": "",
       "gridPos": {
-        "h": 5,
+        "h": 6,
         "w": 24,
         "x": 0,
         "y": 0
       },
       "options": {
         "mode": "html",
-        "content": "<div style=\"padding:14px 18px;background:linear-gradient(90deg,#0b1020 0%,#20357a 38%,#8e2b2b 68%,#f6b73c 100%);border-radius:12px;color:#fff;font-family:system-ui,sans-serif\"><div style=\"display:flex;align-items:center;gap:14px\"><div style=\"font-size:34px;line-height:1\">🏔️</div><div><div style=\"font-size:21px;font-weight:800;letter-spacing:.3px\">Cloud Yatra · Live Observatory</div><div style=\"opacity:.92;font-size:12.5px;margin-top:3px\">Every panel below is real traffic from a little platformer about a Nepali traveller climbing from the jungle to the Himalaya. Play the game above — then watch these numbers move.</div></div></div><div style=\"margin-top:10px;font-size:11.5px;opacity:.85;line-height:1.5\">How to read it: <b>At a glance</b> is the headline. <b>The climb</b> shows how far players get (a classic funnel). <b>Yatri's journey</b> breaks down what happens on the trail. <b>Scores</b> is the shared leaderboard, <b>Around the world</b> maps where people play, and <b>Chaos Mode</b> is where I break my own backend on purpose to watch it recover.</div></div>"
+        "content": "<div style=\"border-radius:12px;overflow:hidden;font-family:system-ui,sans-serif;color:#fff;background:linear-gradient(100deg,#0b1020 0%,#1d3270 40%,#7d1f2c 72%,#c8761c 100%)\"><div style=\"height:6px;background:linear-gradient(90deg,#1f6feb 0 20%,#f5f5f5 20% 40%,#dc143c 40% 60%,#2ea043 60% 80%,#f6b73c 80% 100%)\"></div><div style=\"padding:12px 18px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px\"><div style=\"flex:1 1 380px;min-width:0\"><div style=\"font-size:21px;font-weight:800;letter-spacing:.2px\">Cloud Yatra · Live Observatory <span style=\"font-weight:600;opacity:.8;font-size:16px\">क्लाउड यात्रा</span></div><div style=\"opacity:.92;font-size:12.5px;margin-top:4px;line-height:1.5\">Namaste! Every panel here is real traffic from a small platformer about Yatri, a traveller climbing from the Terai jungle through the Pahad hills to the Himalaya. Play the game above and watch these numbers move.</div></div><div style=\"flex:1 1 320px;min-width:0;font-size:11.5px;opacity:.88;line-height:1.55\"><b>Live now</b> is the headline. <b>The climb</b> shows how far pilgrims get. <b>Yatri's journey</b> breaks down life on the trail. <b>Scores</b> is the shared leaderboard, <b>Around the world</b> maps where people play, and <b>Chaos Mode</b> is where I break my own backend on purpose to watch it recover.</div></div></div>"
       },
       "transparent": true
     },
@@ -79,7 +79,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 5
+        "y": 6
       },
       "id": 1,
       "panels": []
@@ -96,7 +96,7 @@
         "h": 6,
         "w": 4,
         "x": 0,
-        "y": 6
+        "y": 7
       },
       "id": 200,
       "transparent": true,
@@ -122,7 +122,7 @@
           "fields": "",
           "values": false
         },
-        "textMode": "value_and_name",
+        "textMode": "value",
         "justifyMode": "center",
         "wideLayout": true
       },
@@ -151,7 +151,7 @@
     },
     {
       "type": "stat",
-      "title": "Events ingested / min",
+      "title": "Events / min",
       "description": "Telemetry events accepted into D1 in the last 60s (true recent throughput).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
@@ -161,7 +161,7 @@
         "h": 6,
         "w": 4,
         "x": 4,
-        "y": 6
+        "y": 7
       },
       "id": 201,
       "transparent": true,
@@ -187,7 +187,7 @@
           "fields": "",
           "values": false
         },
-        "textMode": "value_and_name",
+        "textMode": "value",
         "justifyMode": "center",
         "wideLayout": true
       },
@@ -226,7 +226,7 @@
         "h": 6,
         "w": 4,
         "x": 8,
-        "y": 6
+        "y": 7
       },
       "id": 202,
       "transparent": true,
@@ -252,7 +252,7 @@
           "fields": "",
           "values": false
         },
-        "textMode": "value_and_name",
+        "textMode": "value",
         "justifyMode": "center",
         "wideLayout": true
       },
@@ -291,7 +291,7 @@
         "h": 6,
         "w": 4,
         "x": 12,
-        "y": 6
+        "y": 7
       },
       "id": 203,
       "transparent": true,
@@ -317,7 +317,7 @@
           "fields": "",
           "values": false
         },
-        "textMode": "value_and_name",
+        "textMode": "value",
         "justifyMode": "center",
         "wideLayout": true
       },
@@ -346,7 +346,7 @@
     },
     {
       "type": "stat",
-      "title": "Gameplay events (D1 total)",
+      "title": "Events stored",
       "description": "Total gameplay events persisted in D1.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
@@ -356,7 +356,7 @@
         "h": 6,
         "w": 4,
         "x": 16,
-        "y": 6
+        "y": 7
       },
       "id": 7,
       "transparent": true,
@@ -382,7 +382,7 @@
           "fields": "",
           "values": false
         },
-        "textMode": "value_and_name",
+        "textMode": "value",
         "justifyMode": "center",
         "wideLayout": true
       },
@@ -411,13 +411,13 @@
     },
     {
       "type": "row",
-      "title": "THE CLIMB · how far pilgrims get",
+      "title": "THE CLIMB · from the Terai to the summit",
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 12
+        "y": 13
       },
       "id": 21,
       "panels": []
@@ -425,16 +425,16 @@
     {
       "type": "bargauge",
       "title": "Progression funnel · how far pilgrims climb",
-      "description": "Distinct sessions reaching each stage (D1).",
+      "description": "Distinct sessions reaching each stage of the yatra, from the Terai jungle to the summit (D1).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "grafanacloud-infinity"
       },
       "gridPos": {
-        "h": 6,
+        "h": 7,
         "w": 24,
         "x": 0,
-        "y": 13
+        "y": 14
       },
       "id": 24,
       "transparent": true,
@@ -453,7 +453,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "min": 0
         },
         "overrides": []
       },
@@ -466,8 +467,14 @@
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "",
+          "fields": "/^Pilgrims$/",
           "values": true
+        },
+        "namePlacement": "top",
+        "sizing": "auto",
+        "text": {
+          "titleSize": 14,
+          "valueSize": 24
         }
       },
       "targets": [
@@ -477,27 +484,17 @@
           "source": "url",
           "format": "table",
           "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
-          "root_selector": "funnel",
+          "root_selector": "funnelSteps",
           "parser": "backend",
           "columns": [
             {
-              "selector": "started",
-              "text": "Started",
-              "type": "number"
+              "selector": "step",
+              "text": "Stage",
+              "type": "string"
             },
             {
-              "selector": "reachedHills",
-              "text": "Reached Hills",
-              "type": "number"
-            },
-            {
-              "selector": "reachedHimal",
-              "text": "Reached Himal",
-              "type": "number"
-            },
-            {
-              "selector": "completed",
-              "text": "Completed",
+              "selector": "sessions",
+              "text": "Pilgrims",
               "type": "number"
             }
           ],
@@ -513,16 +510,16 @@
       "id": 53,
       "transparent": true,
       "title": "Climb intensity by region",
-      "description": "Activity across Terai, Hills, and Himal (D1).",
+      "description": "Gameplay activity in each region of Himal Rajya (D1).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "grafanacloud-infinity"
       },
       "gridPos": {
-        "h": 6,
+        "h": 7,
         "w": 24,
         "x": 0,
-        "y": 19
+        "y": 20
       },
       "fieldConfig": {
         "defaults": {
@@ -539,7 +536,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "min": 0
         },
         "overrides": []
       },
@@ -552,8 +550,13 @@
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "",
+          "fields": "/^Events$/",
           "values": true
+        },
+        "namePlacement": "top",
+        "text": {
+          "titleSize": 14,
+          "valueSize": 24
         }
       },
       "targets": [
@@ -563,17 +566,17 @@
           "source": "url",
           "format": "table",
           "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
-          "root_selector": "byLevel",
+          "root_selector": "regions",
           "parser": "backend",
           "columns": [
             {
-              "selector": "level",
-              "text": "level",
+              "selector": "region",
+              "text": "Region",
               "type": "string"
             },
             {
               "selector": "events",
-              "text": "events",
+              "text": "Events",
               "type": "number"
             }
           ],
@@ -592,7 +595,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 25
+        "y": 27
       },
       "id": 25,
       "panels": []
@@ -606,10 +609,10 @@
         "uid": "grafanacloud-infinity"
       },
       "gridPos": {
-        "h": 7,
+        "h": 9,
         "w": 12,
         "x": 0,
-        "y": 26
+        "y": 28
       },
       "id": 26,
       "transparent": true,
@@ -625,7 +628,78 @@
             "fillOpacity": 80,
             "gradientMode": "hue",
             "axisBorderShow": false
-          }
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "client_perf": {
+                  "text": "Frame-rate sample",
+                  "index": 0
+                },
+                "journey_progress": {
+                  "text": "Trail progress",
+                  "index": 1
+                },
+                "player_jump": {
+                  "text": "Jump",
+                  "index": 2
+                },
+                "collectible_collected": {
+                  "text": "Bloom or bell gathered",
+                  "index": 3
+                },
+                "guru_guidance": {
+                  "text": "Guru Megh spoke",
+                  "index": 4
+                },
+                "player_damaged": {
+                  "text": "Took a hit",
+                  "index": 5
+                },
+                "session_heartbeat": {
+                  "text": "Heartbeat",
+                  "index": 6
+                },
+                "obstacle_cut": {
+                  "text": "Khukuri cut",
+                  "index": 7
+                },
+                "flag_planted": {
+                  "text": "Pennant planted",
+                  "index": 8
+                },
+                "level_started": {
+                  "text": "Region started",
+                  "index": 9
+                },
+                "level_completed": {
+                  "text": "Region cleared",
+                  "index": 10
+                },
+                "game_restarted": {
+                  "text": "Restart",
+                  "index": 11
+                },
+                "game_started": {
+                  "text": "Yatra begun",
+                  "index": 12
+                },
+                "game_over": {
+                  "text": "Game over",
+                  "index": 13
+                },
+                "player_stomp": {
+                  "text": "Stomp",
+                  "index": 14
+                },
+                "player_died": {
+                  "text": "Lost a life",
+                  "index": 15
+                }
+              }
+            }
+          ]
         },
         "overrides": []
       },
@@ -669,17 +743,17 @@
     },
     {
       "type": "barchart",
-      "title": "Deaths by cause",
-      "description": "Where the trail is hardest, computed from D1.",
+      "title": "Lives lost by hazard",
+      "description": "Which hazards cost pilgrims a life (D1).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "grafanacloud-infinity"
       },
       "gridPos": {
-        "h": 7,
+        "h": 9,
         "w": 6,
         "x": 12,
-        "y": 26
+        "y": 28
       },
       "id": 27,
       "transparent": true,
@@ -694,8 +768,40 @@
             "axisBorderShow": false
           },
           "color": {
-            "mode": "palette-classic"
-          }
+            "mode": "fixed",
+            "fixedColor": "#dc143c"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "mist": {
+                  "text": "Mountain mist",
+                  "index": 0
+                },
+                "fall": {
+                  "text": "Fell off the trail",
+                  "index": 1
+                },
+                "eagle": {
+                  "text": "Swooping eagle",
+                  "index": 2
+                },
+                "monkey": {
+                  "text": "Jungle monkey",
+                  "index": 3
+                },
+                "rockfall": {
+                  "text": "Falling rocks",
+                  "index": 4
+                },
+                "obstacle": {
+                  "text": "Barged an obstacle",
+                  "index": 5
+                }
+              }
+            }
+          ]
         },
         "overrides": []
       },
@@ -705,7 +811,8 @@
         "legend": {
           "displayMode": "list",
           "placement": "bottom",
-          "calcs": []
+          "calcs": [],
+          "showLegend": false
         },
         "xField": "cause"
       },
@@ -739,17 +846,17 @@
     },
     {
       "type": "piechart",
-      "title": "Collectibles by kind",
-      "description": "Mix of blooms and prayer bells gathered (D1).",
+      "title": "Blooms and bells gathered",
+      "description": "Lali gurans, Nepal's national flower, versus prayer bells collected (D1).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "grafanacloud-infinity"
       },
       "gridPos": {
-        "h": 7,
+        "h": 9,
         "w": 6,
         "x": 18,
-        "y": 26
+        "y": 28
       },
       "id": 28,
       "transparent": true,
@@ -760,9 +867,63 @@
           "custom": {},
           "color": {
             "mode": "palette-classic"
-          }
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "rhododendron": {
+                  "text": "Lali gurans (rhododendron)",
+                  "index": 0
+                },
+                "marigold": {
+                  "text": "Sayapatri (marigold)",
+                  "index": 1
+                },
+                "blue_poppy": {
+                  "text": "Himalayan blue poppy",
+                  "index": 2
+                },
+                "prayer_bell": {
+                  "text": "Prayer bell",
+                  "index": 3
+                }
+              }
+            }
+          ]
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lali gurans (rhododendron)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#dc143c"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Prayer bell"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#f6b73c"
+                }
+              }
+            ]
+          }
+        ]
       },
       "options": {
         "pieType": "donut",
@@ -781,10 +942,7 @@
           ],
           "showLegend": true
         },
-        "displayLabels": [
-          "name",
-          "percent"
-        ],
+        "displayLabels": [],
         "tooltip": {
           "mode": "multi",
           "sort": "desc"
@@ -820,7 +978,7 @@
     },
     {
       "type": "barchart",
-      "title": "Journey by region · events / deaths / completions",
+      "title": "Journey by region · events, lives lost, regions cleared",
       "description": "How each region of Himal Rajya plays out (D1).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
@@ -830,7 +988,7 @@
         "h": 7,
         "w": 16,
         "x": 0,
-        "y": 33
+        "y": 35
       },
       "id": 29,
       "transparent": true,
@@ -848,12 +1006,58 @@
             "axisBorderShow": false
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Events"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#4dabf7"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lives lost"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#dc143c"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cleared"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#f6b73c"
+                }
+              }
+            ]
+          }
+        ]
       },
       "options": {
         "orientation": "auto",
         "showValue": "auto",
-        "xField": "level",
+        "xField": "Region",
         "stacking": "none",
         "legend": {
           "displayMode": "list",
@@ -868,27 +1072,27 @@
           "source": "url",
           "format": "table",
           "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
-          "root_selector": "byLevel",
+          "root_selector": "regions",
           "parser": "backend",
           "columns": [
             {
-              "selector": "level",
-              "text": "level",
+              "selector": "region",
+              "text": "Region",
               "type": "string"
             },
             {
               "selector": "events",
-              "text": "events",
+              "text": "Events",
               "type": "number"
             },
             {
               "selector": "deaths",
-              "text": "deaths",
+              "text": "Lives lost",
               "type": "number"
             },
             {
               "selector": "completions",
-              "text": "completions",
+              "text": "Cleared",
               "type": "number"
             }
           ],
@@ -897,12 +1101,27 @@
             "data": ""
           }
         }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "Region": 0,
+              "Events": 1,
+              "Lives lost": 2,
+              "Cleared": 3
+            },
+            "renameByName": {},
+            "excludeByName": {}
+          }
+        }
       ]
     },
     {
       "type": "table",
-      "title": "Progression funnel",
-      "description": "Distinct sessions reaching each stage (D1).",
+      "title": "Funnel conversion",
+      "description": "Share of pilgrims who set out that reached each stage.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "grafanacloud-infinity"
@@ -911,7 +1130,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 33
+        "y": 35
       },
       "id": 30,
       "transparent": true,
@@ -922,10 +1141,62 @@
             "cellOptions": {
               "type": "auto"
             },
-            "filterable": true
+            "filterable": false,
+            "minWidth": 110
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Of starters"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "gradient",
+                  "valueDisplayMode": "text"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "continuous-RdYlGr"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Stage"
+            },
+            "properties": [
+              {
+                "id": "custom.minWidth",
+                "value": 180
+              }
+            ]
+          }
+        ]
       },
       "options": {
         "showHeader": true,
@@ -941,26 +1212,21 @@
           "source": "url",
           "format": "table",
           "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
-          "root_selector": "funnel",
+          "root_selector": "funnelSteps",
           "columns": [
             {
-              "selector": "started",
-              "text": "Started",
+              "selector": "step",
+              "text": "Stage",
+              "type": "string"
+            },
+            {
+              "selector": "sessions",
+              "text": "Pilgrims",
               "type": "number"
             },
             {
-              "selector": "reachedHills",
-              "text": "Reached Hills",
-              "type": "number"
-            },
-            {
-              "selector": "reachedHimal",
-              "text": "Reached Himal",
-              "type": "number"
-            },
-            {
-              "selector": "completed",
-              "text": "Completed",
+              "selector": "pctOfStarted",
+              "text": "Of starters",
               "type": "number"
             }
           ],
@@ -968,6 +1234,20 @@
           "url_options": {
             "method": "GET",
             "data": ""
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "Stage": 0,
+              "Pilgrims": 1,
+              "Of starters": 2
+            },
+            "renameByName": {},
+            "excludeByName": {}
           }
         }
       ]
@@ -980,7 +1260,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 40
+        "y": 42
       },
       "id": 31,
       "panels": []
@@ -988,7 +1268,7 @@
     {
       "type": "table",
       "title": "Shared leaderboard · top pilgrims",
-      "description": "Best score per pilgrim, from a completed climb to the Himalayan summit. Fills in as players finish a run.",
+      "description": "Best score per pilgrim. Fills in as players clear regions and reach the summit.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "grafanacloud-infinity"
@@ -997,7 +1277,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 41
+        "y": 43
       },
       "id": 32,
       "transparent": true,
@@ -1008,31 +1288,36 @@
             "cellOptions": {
               "type": "auto"
             },
-            "filterable": true
+            "filterable": true,
+            "minWidth": 100
           },
-          "noValue": "No summit finishes yet — be the first to plant the pennant at the top!"
+          "noValue": "No finishes yet. Be the first to plant the pennant on the summit!"
         },
         "overrides": [
           {
             "matcher": {
               "id": "byName",
-              "options": "score"
+              "options": "Score"
             },
             "properties": [
               {
                 "id": "custom.cellOptions",
                 "value": {
-                  "type": "gauge",
-                  "mode": "gradient"
+                  "type": "color-text"
                 }
               },
               {
                 "id": "color",
                 "value": {
-                  "mode": "continuous-YlRd"
+                  "mode": "fixed",
+                  "fixedColor": "#f6b73c"
                 }
               },
               {
+                "id": "custom.minWidth",
+                "value": 110
+              },
+              {
                 "id": "custom.align",
                 "value": "center"
               }
@@ -1041,19 +1326,39 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "name"
+              "options": "Pilgrim"
             },
             "properties": [
               {
-                "id": "custom.width",
-                "value": 220
+                "id": "custom.minWidth",
+                "value": 140
               }
             ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "country"
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.align",
+                "value": "center"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Country"
             },
             "properties": [
               {
@@ -1061,8 +1366,150 @@
                 "value": "center"
               },
               {
-                "id": "custom.width",
-                "value": 90
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "NP": {
+                        "text": "Nepal",
+                        "index": 0
+                      },
+                      "IN": {
+                        "text": "India",
+                        "index": 1
+                      },
+                      "US": {
+                        "text": "United States",
+                        "index": 2
+                      },
+                      "GB": {
+                        "text": "United Kingdom",
+                        "index": 3
+                      },
+                      "DE": {
+                        "text": "Germany",
+                        "index": 4
+                      },
+                      "FR": {
+                        "text": "France",
+                        "index": 5
+                      },
+                      "NL": {
+                        "text": "Netherlands",
+                        "index": 6
+                      },
+                      "AU": {
+                        "text": "Australia",
+                        "index": 7
+                      },
+                      "CA": {
+                        "text": "Canada",
+                        "index": 8
+                      },
+                      "JP": {
+                        "text": "Japan",
+                        "index": 9
+                      },
+                      "CN": {
+                        "text": "China",
+                        "index": 10
+                      },
+                      "BD": {
+                        "text": "Bangladesh",
+                        "index": 11
+                      },
+                      "BT": {
+                        "text": "Bhutan",
+                        "index": 12
+                      },
+                      "LK": {
+                        "text": "Sri Lanka",
+                        "index": 13
+                      },
+                      "PK": {
+                        "text": "Pakistan",
+                        "index": 14
+                      },
+                      "SG": {
+                        "text": "Singapore",
+                        "index": 15
+                      },
+                      "AE": {
+                        "text": "UAE",
+                        "index": 16
+                      },
+                      "QA": {
+                        "text": "Qatar",
+                        "index": 17
+                      },
+                      "SA": {
+                        "text": "Saudi Arabia",
+                        "index": 18
+                      },
+                      "MY": {
+                        "text": "Malaysia",
+                        "index": 19
+                      },
+                      "KR": {
+                        "text": "South Korea",
+                        "index": 20
+                      },
+                      "HK": {
+                        "text": "Hong Kong",
+                        "index": 21
+                      },
+                      "IE": {
+                        "text": "Ireland",
+                        "index": 22
+                      },
+                      "SE": {
+                        "text": "Sweden",
+                        "index": 23
+                      },
+                      "FI": {
+                        "text": "Finland",
+                        "index": 24
+                      },
+                      "BR": {
+                        "text": "Brazil",
+                        "index": 25
+                      },
+                      "ES": {
+                        "text": "Spain",
+                        "index": 26
+                      },
+                      "IT": {
+                        "text": "Italy",
+                        "index": 27
+                      },
+                      "PL": {
+                        "text": "Poland",
+                        "index": 28
+                      },
+                      "CH": {
+                        "text": "Switzerland",
+                        "index": 29
+                      },
+                      "T1": {
+                        "text": "Tor network",
+                        "index": 30
+                      },
+                      "XX": {
+                        "text": "Unknown",
+                        "index": 31
+                      },
+                      "??": {
+                        "text": "Unknown",
+                        "index": 32
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 120
               }
             ]
           }
@@ -1076,7 +1523,7 @@
         },
         "sortBy": [
           {
-            "displayName": "score",
+            "displayName": "Score",
             "desc": true
           }
         ]
@@ -1117,21 +1564,38 @@
             "data": ""
           }
         }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "Pilgrim": 0,
+              "Score": 1,
+              "Time (ms)": 2,
+              "Country": 3
+            },
+            "renameByName": {
+              "Time (ms)": "Time"
+            },
+            "excludeByName": {}
+          }
+        }
       ]
     },
     {
       "type": "table",
       "title": "Recent pilgrims · who's climbing now",
-      "description": "The latest runs, newest first — a live feed of individual climbs (from /recent). Updates as people play, so you can watch real traffic arrive even before anyone tops the leaderboard.",
+      "description": "The latest runs, newest first: a live feed of individual climbs.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "grafanacloud-infinity"
       },
       "gridPos": {
-        "h": 4,
+        "h": 6,
         "w": 12,
         "x": 0,
-        "y": 49
+        "y": 51
       },
       "id": 68,
       "transparent": true,
@@ -1142,9 +1606,10 @@
             "cellOptions": {
               "type": "auto"
             },
-            "filterable": false
+            "filterable": false,
+            "minWidth": 100
           },
-          "noValue": "No runs yet — play a round and watch your climb appear here live."
+          "noValue": "No runs yet. Play a round and watch your climb appear here."
         },
         "overrides": [
           {
@@ -1154,8 +1619,8 @@
             },
             "properties": [
               {
-                "id": "custom.width",
-                "value": 200
+                "id": "custom.minWidth",
+                "value": 140
               }
             ]
           },
@@ -1168,6 +1633,32 @@
               {
                 "id": "custom.align",
                 "value": "center"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "terai": {
+                        "text": "Terai",
+                        "index": 0
+                      },
+                      "hills": {
+                        "text": "Pahad",
+                        "index": 1
+                      },
+                      "himal": {
+                        "text": "Himal",
+                        "index": 2
+                      },
+                      "himal_rajya": {
+                        "text": "Summit",
+                        "index": 3
+                      }
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -1182,8 +1673,150 @@
                 "value": "center"
               },
               {
-                "id": "custom.width",
-                "value": 90
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "NP": {
+                        "text": "Nepal",
+                        "index": 0
+                      },
+                      "IN": {
+                        "text": "India",
+                        "index": 1
+                      },
+                      "US": {
+                        "text": "United States",
+                        "index": 2
+                      },
+                      "GB": {
+                        "text": "United Kingdom",
+                        "index": 3
+                      },
+                      "DE": {
+                        "text": "Germany",
+                        "index": 4
+                      },
+                      "FR": {
+                        "text": "France",
+                        "index": 5
+                      },
+                      "NL": {
+                        "text": "Netherlands",
+                        "index": 6
+                      },
+                      "AU": {
+                        "text": "Australia",
+                        "index": 7
+                      },
+                      "CA": {
+                        "text": "Canada",
+                        "index": 8
+                      },
+                      "JP": {
+                        "text": "Japan",
+                        "index": 9
+                      },
+                      "CN": {
+                        "text": "China",
+                        "index": 10
+                      },
+                      "BD": {
+                        "text": "Bangladesh",
+                        "index": 11
+                      },
+                      "BT": {
+                        "text": "Bhutan",
+                        "index": 12
+                      },
+                      "LK": {
+                        "text": "Sri Lanka",
+                        "index": 13
+                      },
+                      "PK": {
+                        "text": "Pakistan",
+                        "index": 14
+                      },
+                      "SG": {
+                        "text": "Singapore",
+                        "index": 15
+                      },
+                      "AE": {
+                        "text": "UAE",
+                        "index": 16
+                      },
+                      "QA": {
+                        "text": "Qatar",
+                        "index": 17
+                      },
+                      "SA": {
+                        "text": "Saudi Arabia",
+                        "index": 18
+                      },
+                      "MY": {
+                        "text": "Malaysia",
+                        "index": 19
+                      },
+                      "KR": {
+                        "text": "South Korea",
+                        "index": 20
+                      },
+                      "HK": {
+                        "text": "Hong Kong",
+                        "index": 21
+                      },
+                      "IE": {
+                        "text": "Ireland",
+                        "index": 22
+                      },
+                      "SE": {
+                        "text": "Sweden",
+                        "index": 23
+                      },
+                      "FI": {
+                        "text": "Finland",
+                        "index": 24
+                      },
+                      "BR": {
+                        "text": "Brazil",
+                        "index": 25
+                      },
+                      "ES": {
+                        "text": "Spain",
+                        "index": 26
+                      },
+                      "IT": {
+                        "text": "Italy",
+                        "index": 27
+                      },
+                      "PL": {
+                        "text": "Poland",
+                        "index": 28
+                      },
+                      "CH": {
+                        "text": "Switzerland",
+                        "index": 29
+                      },
+                      "T1": {
+                        "text": "Tor network",
+                        "index": 30
+                      },
+                      "XX": {
+                        "text": "Unknown",
+                        "index": 31
+                      },
+                      "??": {
+                        "text": "Unknown",
+                        "index": 32
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 120
               }
             ]
           },
@@ -1195,11 +1828,15 @@
             "properties": [
               {
                 "id": "unit",
-                "value": "dateTimeAsIso"
+                "value": "dateTimeFromNow"
               },
               {
                 "id": "custom.align",
                 "value": "center"
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 130
               }
             ]
           }
@@ -1259,6 +1896,22 @@
             "data": ""
           }
         }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "Pilgrim": 0,
+              "Score": 1,
+              "Region": 2,
+              "Country": 3,
+              "When": 4
+            },
+            "renameByName": {},
+            "excludeByName": {}
+          }
+        }
       ]
     },
     {
@@ -1273,7 +1926,7 @@
         "h": 4,
         "w": 4,
         "x": 12,
-        "y": 41
+        "y": 43
       },
       "id": 33,
       "transparent": true,
@@ -1299,7 +1952,7 @@
           "fields": "",
           "values": false
         },
-        "textMode": "value_and_name",
+        "textMode": "value",
         "justifyMode": "center",
         "wideLayout": true
       },
@@ -1338,7 +1991,7 @@
         "h": 4,
         "w": 4,
         "x": 16,
-        "y": 41
+        "y": 43
       },
       "id": 34,
       "transparent": true,
@@ -1364,7 +2017,7 @@
           "fields": "",
           "values": false
         },
-        "textMode": "value_and_name",
+        "textMode": "value",
         "justifyMode": "center",
         "wideLayout": true
       },
@@ -1393,7 +2046,7 @@
     },
     {
       "type": "piechart",
-      "title": "Blooms & bells gathered",
+      "title": "Blooms and bells gathered",
       "description": "Rhododendron blooms versus prayer bells collected (D1).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
@@ -1403,7 +2056,7 @@
         "h": 8,
         "w": 4,
         "x": 20,
-        "y": 41
+        "y": 43
       },
       "id": 35,
       "transparent": true,
@@ -1412,23 +2065,70 @@
           "unit": "short",
           "color": {
             "mode": "palette-classic"
-          }
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "rhododendron": {
+                  "text": "Lali gurans (rhododendron)",
+                  "index": 0
+                },
+                "marigold": {
+                  "text": "Sayapatri (marigold)",
+                  "index": 1
+                },
+                "blue_poppy": {
+                  "text": "Himalayan blue poppy",
+                  "index": 2
+                },
+                "prayer_bell": {
+                  "text": "Prayer bell",
+                  "index": 3
+                }
+              }
+            }
+          ]
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lali gurans (rhododendron)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#dc143c"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Prayer bell"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#f6b73c"
+                }
+              }
+            ]
+          }
+        ]
       },
       "options": {
         "pieType": "donut",
-        "displayLabels": [
-          "name",
-          "percent"
-        ],
+        "displayLabels": [],
         "legend": {
-          "displayMode": "table",
-          "placement": "right",
-          "values": [
-            "value",
-            "percent"
-          ],
+          "displayMode": "list",
+          "placement": "bottom",
           "showLegend": true
         },
         "tooltip": {
@@ -1479,10 +2179,10 @@
         "uid": "grafanacloud-infinity"
       },
       "gridPos": {
-        "h": 4,
+        "h": 6,
         "w": 8,
         "x": 12,
-        "y": 49
+        "y": 51
       },
       "id": 36,
       "transparent": true,
@@ -1509,14 +2209,15 @@
                 "value": 50
               }
             ]
-          }
+          },
+          "noValue": "Idle"
         },
         "overrides": []
       },
       "options": {
         "colorMode": "value",
         "graphMode": "none",
-        "textMode": "value_and_name",
+        "textMode": "value",
         "justifyMode": "center",
         "reduceOptions": {
           "calcs": [
@@ -1551,13 +2252,13 @@
     },
     {
       "type": "row",
-      "title": "AROUND THE WORLD · where pilgrims play",
+      "title": "AROUND THE WORLD · where pilgrims join from",
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 53
+        "y": 57
       },
       "id": 37,
       "panels": []
@@ -1576,7 +2277,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 54
+        "y": 58
       },
       "fieldConfig": {
         "defaults": {
@@ -1684,7 +2385,7 @@
     {
       "type": "table",
       "title": "Top countries",
-      "description": "Edge country of sessions (D1). No IP addresses are stored.",
+      "description": "Edge country of sessions, as reported by Cloudflare. No IP addresses are stored.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "grafanacloud-infinity"
@@ -1693,7 +2394,7 @@
         "h": 9,
         "w": 6,
         "x": 12,
-        "y": 54
+        "y": 58
       },
       "id": 38,
       "transparent": true,
@@ -1704,10 +2405,183 @@
             "cellOptions": {
               "type": "auto"
             },
-            "filterable": true
+            "filterable": false,
+            "minWidth": 100
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Country"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "NP": {
+                        "text": "Nepal",
+                        "index": 0
+                      },
+                      "IN": {
+                        "text": "India",
+                        "index": 1
+                      },
+                      "US": {
+                        "text": "United States",
+                        "index": 2
+                      },
+                      "GB": {
+                        "text": "United Kingdom",
+                        "index": 3
+                      },
+                      "DE": {
+                        "text": "Germany",
+                        "index": 4
+                      },
+                      "FR": {
+                        "text": "France",
+                        "index": 5
+                      },
+                      "NL": {
+                        "text": "Netherlands",
+                        "index": 6
+                      },
+                      "AU": {
+                        "text": "Australia",
+                        "index": 7
+                      },
+                      "CA": {
+                        "text": "Canada",
+                        "index": 8
+                      },
+                      "JP": {
+                        "text": "Japan",
+                        "index": 9
+                      },
+                      "CN": {
+                        "text": "China",
+                        "index": 10
+                      },
+                      "BD": {
+                        "text": "Bangladesh",
+                        "index": 11
+                      },
+                      "BT": {
+                        "text": "Bhutan",
+                        "index": 12
+                      },
+                      "LK": {
+                        "text": "Sri Lanka",
+                        "index": 13
+                      },
+                      "PK": {
+                        "text": "Pakistan",
+                        "index": 14
+                      },
+                      "SG": {
+                        "text": "Singapore",
+                        "index": 15
+                      },
+                      "AE": {
+                        "text": "UAE",
+                        "index": 16
+                      },
+                      "QA": {
+                        "text": "Qatar",
+                        "index": 17
+                      },
+                      "SA": {
+                        "text": "Saudi Arabia",
+                        "index": 18
+                      },
+                      "MY": {
+                        "text": "Malaysia",
+                        "index": 19
+                      },
+                      "KR": {
+                        "text": "South Korea",
+                        "index": 20
+                      },
+                      "HK": {
+                        "text": "Hong Kong",
+                        "index": 21
+                      },
+                      "IE": {
+                        "text": "Ireland",
+                        "index": 22
+                      },
+                      "SE": {
+                        "text": "Sweden",
+                        "index": 23
+                      },
+                      "FI": {
+                        "text": "Finland",
+                        "index": 24
+                      },
+                      "BR": {
+                        "text": "Brazil",
+                        "index": 25
+                      },
+                      "ES": {
+                        "text": "Spain",
+                        "index": 26
+                      },
+                      "IT": {
+                        "text": "Italy",
+                        "index": 27
+                      },
+                      "PL": {
+                        "text": "Poland",
+                        "index": 28
+                      },
+                      "CH": {
+                        "text": "Switzerland",
+                        "index": 29
+                      },
+                      "T1": {
+                        "text": "Tor network",
+                        "index": 30
+                      },
+                      "XX": {
+                        "text": "Unknown",
+                        "index": 31
+                      },
+                      "??": {
+                        "text": "Unknown",
+                        "index": 32
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Sessions"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#ff8a8a"
+                }
+              }
+            ]
+          }
+        ]
       },
       "options": {
         "showHeader": true,
@@ -1742,6 +2616,19 @@
             "data": ""
           }
         }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "Country": 0,
+              "Sessions": 1
+            },
+            "renameByName": {},
+            "excludeByName": {}
+          }
+        }
       ]
     },
     {
@@ -1756,7 +2643,7 @@
         "h": 9,
         "w": 6,
         "x": 18,
-        "y": 54
+        "y": 58
       },
       "id": 39,
       "transparent": true,
@@ -1767,17 +2654,111 @@
             "cellOptions": {
               "type": "auto"
             },
-            "filterable": true
+            "filterable": false,
+            "minWidth": 100
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Event type"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "client_perf": {
+                        "text": "Frame-rate sample",
+                        "index": 0
+                      },
+                      "journey_progress": {
+                        "text": "Trail progress",
+                        "index": 1
+                      },
+                      "player_jump": {
+                        "text": "Jump",
+                        "index": 2
+                      },
+                      "collectible_collected": {
+                        "text": "Bloom or bell gathered",
+                        "index": 3
+                      },
+                      "guru_guidance": {
+                        "text": "Guru Megh spoke",
+                        "index": 4
+                      },
+                      "player_damaged": {
+                        "text": "Took a hit",
+                        "index": 5
+                      },
+                      "session_heartbeat": {
+                        "text": "Heartbeat",
+                        "index": 6
+                      },
+                      "obstacle_cut": {
+                        "text": "Khukuri cut",
+                        "index": 7
+                      },
+                      "flag_planted": {
+                        "text": "Pennant planted",
+                        "index": 8
+                      },
+                      "level_started": {
+                        "text": "Region started",
+                        "index": 9
+                      },
+                      "level_completed": {
+                        "text": "Region cleared",
+                        "index": 10
+                      },
+                      "game_restarted": {
+                        "text": "Restart",
+                        "index": 11
+                      },
+                      "game_started": {
+                        "text": "Yatra begun",
+                        "index": 12
+                      },
+                      "game_over": {
+                        "text": "Game over",
+                        "index": 13
+                      },
+                      "player_stomp": {
+                        "text": "Stomp",
+                        "index": 14
+                      },
+                      "player_died": {
+                        "text": "Lost a life",
+                        "index": 15
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 160
+              }
+            ]
+          }
+        ]
       },
       "options": {
         "showHeader": true,
         "cellHeight": "sm",
         "footer": {
           "show": false
-        }
+        },
+        "sortBy": [
+          {
+            "displayName": "Count",
+            "desc": true
+          }
+        ]
       },
       "targets": [
         {
@@ -1805,22 +2786,35 @@
             "data": ""
           }
         }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "Event type": 0,
+              "Count": 1
+            },
+            "renameByName": {},
+            "excludeByName": {}
+          }
+        }
       ]
     },
     {
       "type": "text",
-      "title": "Architecture",
+      "title": "How it fits together",
       "gridPos": {
-        "h": 4,
+        "h": 9,
         "w": 24,
         "x": 0,
-        "y": 63
+        "y": 67
       },
       "id": 40,
       "transparent": true,
       "options": {
-        "mode": "markdown",
-        "content": "**Browser (Phaser)** → **Cloudflare Pages** — the static game.\n\n**Browser** → **Cloudflare Worker** `cloud-yatra-api` → **Cloudflare D1** (SQLite).\n\n**Signals into Grafana Cloud**\n- Frontend RUM and gameplay events → **Faro** (Loki)\n- Backend request metrics and histograms → **Prometheus** (`/metrics`)\n- Backend structured logs → **Loki**\n- Backend request traces → **Tempo**\n- Database-derived gameplay analytics → **Infinity** (`/stats`, `/leaderboard`)\n\nRuns entirely on free tiers: Cloudflare Pages, Workers, and D1, plus Grafana Cloud free."
+        "mode": "html",
+        "content": "<div style=\"font-family:system-ui,sans-serif;font-size:13px;line-height:1.6;color:#d8e4f0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px\"><div style=\"border-left:3px solid #dc143c;padding:2px 12px\"><b style=\"color:#fff\">The game</b><br>Phaser in the browser, served from Cloudflare Pages. Every sprite and note is drawn in code.</div><div style=\"border-left:3px solid #4dabf7;padding:2px 12px\"><b style=\"color:#fff\">The backend</b><br>A Cloudflare Worker validates gameplay events and stores them in D1 (SQLite), which feeds these panels through Infinity.</div><div style=\"border-left:3px solid #f6b73c;padding:2px 12px\"><b style=\"color:#fff\">The signals</b><br>Faro for real-user monitoring, Prometheus for metrics, Loki for logs and Tempo for traces, all in Grafana Cloud.</div><div style=\"border-left:3px solid #39d98a;padding:2px 12px\"><b style=\"color:#fff\">The cost</b><br>Free tiers only: Cloudflare Pages, Workers and D1, plus Grafana Cloud free.</div></div>"
       },
       "fieldConfig": {
         "defaults": {
@@ -1836,7 +2830,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 67
+        "y": 76
       },
       "id": 41,
       "panels": []
@@ -1845,26 +2839,148 @@
       "type": "table",
       "title": "Recent chaos episodes",
       "id": 45,
-      "description": "Start/stop markers for admin-triggered Chaos Mode windows (~60s of injected latency + synthetic 503s). Populates live when chaos runs.",
+      "description": "Start and end markers for admin-triggered Chaos Mode windows: about 60 s of added latency and synthetic 503s. Fills in live when a storm runs.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "grafanacloud-infinity"
       },
       "gridPos": {
-        "h": 7,
+        "h": 9,
         "w": 24,
         "x": 0,
-        "y": 68
+        "y": 77
       },
       "fieldConfig": {
         "defaults": {
-          "custom": {},
-          "noValue": "All calm — no chaos windows yet. Trigger one with Shift+C in the game to watch the backend wobble and recover here."
+          "custom": {
+            "align": "left",
+            "minWidth": 180,
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": false
+          },
+          "noValue": "All calm. No chaos windows yet: press Shift+C in the game to start one and watch the backend wobble and recover."
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsLocal"
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 200
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Event"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "chaos_start": {
+                        "text": "Storm started",
+                        "index": 0
+                      },
+                      "chaos_stop": {
+                        "text": "Stopped by admin",
+                        "index": 1
+                      },
+                      "chaos_expire": {
+                        "text": "Storm passed (window ended)",
+                        "index": 2
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 220
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "#ff6b6b",
+                      "value": null
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Added latency"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              },
+              {
+                "id": "noValue",
+                "value": "-"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Injected error rate"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "noValue",
+                "value": "-"
+              }
+            ]
+          }
+        ]
       },
       "options": {
-        "showHeader": true
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
       },
       "targets": [
         {
@@ -1881,26 +2997,52 @@
           "columns": [
             {
               "selector": "ts",
-              "text": "time",
-              "type": "timestamp_epoch_ms"
+              "text": "Time",
+              "type": "number"
             },
             {
               "selector": "kind",
-              "text": "kind",
+              "text": "Event",
               "type": "string"
             },
             {
               "selector": "profile.latencyMs",
-              "text": "latencyMs",
+              "text": "Added latency",
               "type": "number"
             },
             {
               "selector": "profile.errorRate",
-              "text": "errorRate",
+              "text": "Injected error rate",
               "type": "number"
             }
           ],
           "parser": "backend"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Time",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "Time": 0,
+              "Event": 1,
+              "Added latency": 2,
+              "Injected error rate": 3
+            },
+            "renameByName": {},
+            "excludeByName": {}
+          }
         }
       ]
     }

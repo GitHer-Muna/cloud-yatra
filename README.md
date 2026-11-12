@@ -2,7 +2,7 @@
 
 A 2D browser platformer that doubles as a live full-stack observability demo. You play
 Yatri, a Nepali traveller crossing the fictional cloud-kingdom of Himal Rajya, climbing from
-the Terai lowland jungle through the middle hills to the Himalayan summit.
+the Terai lowland jungle through the Pahad (middle hills) to the Himalayan summit.
 
 Playing the game produces real telemetry. That telemetry flows through a backend and into a
 Grafana Cloud dashboard that updates in near-real-time, so you can watch the system respond
@@ -91,7 +91,7 @@ metric label), and only a coarse edge country is recorded.
 
 ```
 cloud-yatra/
-├── game/                  Frontend — Phaser 3 + TypeScript + Vite (static client)
+├── game/                  Frontend: Phaser 3 + TypeScript + Vite (static client)
 │   ├── index.html         Page shell: header, game stage, embedded dashboard, styles
 │   └── src/
 │       ├── main.ts        Phaser bootstrap: scenes, scale, physics, Faro, chaos panel
@@ -102,7 +102,7 @@ cloud-yatra/
 │       ├── audio/         Original procedural music and sound effects
 │       └── telemetry/     Event schema, sinks (console/Faro/HTTP), backend + chaos client
 │
-├── backend/               Optional backend — Cloudflare Worker + D1
+├── backend/               Optional backend: Cloudflare Worker + D1
 │   ├── migrations/        D1 schema (events, sessions, scores, rollups, chaos state)
 │   └── src/               Router, DB, event validation, metrics, logger, CORS, chaos,
 │                          dashboard + Faro reverse proxies
@@ -115,7 +115,7 @@ cloud-yatra/
 │
 ├── tools/live-check/      Headless-browser check of the live site's console + network
 │
-└── .github/workflows/     CI/CD — a CI quality gate (lint, type-check, tests), deploy Pages,
+└── .github/workflows/     CI/CD: a CI quality gate (lint, type-check, tests), deploy Pages,
                            deploy the Worker, a manual leaderboard-reset, and a daily live
                            console check that fails on any new browser-console error
 ```
@@ -155,9 +155,9 @@ npx wrangler dev --local    # local Worker + local SQLite
 
 Routes:
 
-- `GET` — `/healthz`, `/metrics`, `/stats`, `/leaderboard`, `/recent`, `/session`, `/pulse`,
+- `GET`: `/healthz`, `/metrics`, `/stats`, `/leaderboard`, `/recent`, `/session`, `/pulse`,
   `/chaos/status`, `/chaos/events`
-- `POST` — `/event`, `/events`, `/score`, `/chaos/start`, `/chaos/stop`
+- `POST`: `/event`, `/events`, `/score`, `/chaos/start`, `/chaos/stop`
 
 See `backend/wrangler.toml` for the D1 binding and public settings. Secrets are never
 committed; they live in GitHub Actions secrets and the **Deploy backend Worker** workflow
@@ -177,14 +177,14 @@ are overwritten on the next deploy.
 
 There is one canonical dashboard, kept in two forms:
 
-- `observability/dashboards/cloud-yatra-observatory.json` — the **source** dashboard
+- `observability/dashboards/cloud-yatra-observatory.json`: the **source** dashboard
   (authenticated import). Rich, every signal, with the game embedded in a **Video panel**
   (`innius-video-panel`) at the top and a per-session "your run" row. Import it and map five
   data sources: Faro/Loki (RUM), Prometheus (Worker `/metrics`), Loki (backend logs), Tempo
   (traces), and Infinity (D1 analytics). Install the Video panel from **Administration →
   Plugins and data → Plugins** (search "Video" by innius) so the game-in-dashboard panel
   renders.
-- `observability/dashboards/cloud-yatra-observatory-public.json` — the **public** copy,
+- `observability/dashboards/cloud-yatra-observatory-public.json`: the **public** copy,
   generated from the source by `observability/build-dashboard.mjs`. No template variables
   (public dashboards can't use them), datasource refs wired to this stack's names, URLs
   hardcoded. This is the one shared externally (Share → Share externally) and embedded below
@@ -220,8 +220,8 @@ Chaos Mode is an admin-only, self-contained fault injector built into the Worker
 the dashboard can be shown catching a real incident and its recovery, not just calm traffic.
 Set the `CHAOS_ADMIN_TOKEN` secret, then in the running game press `Shift+C`, enter the token,
 and start a roughly 60-second window. The Worker adds latency (+600 ms) and about 25%
-synthetic `503`s to the gameplay routes only — never to health, metrics, control, or any
-external service — and gameplay keeps working. The window is stored in D1, so every Worker
+synthetic `503`s to the gameplay routes only (never to health, metrics, control, or any
+external service), and gameplay keeps working. The window is stored in D1, so every Worker
 instance sees the same state; pressing Start again extends it rather than starting a second
 one.
 
@@ -254,7 +254,7 @@ development, the leaderboard uses local browser storage, and Guru Megh uses buil
 
 ## Originality and cultural respect
 
-All art and audio are original and generated in code. Cultural and national symbols — the
-*gunyu-cholo*, *dhaka topi*, *khukuri*, prayer flags, the Nepal flag, and *mani* stones — are
+Every sprite, background and note of music is drawn or composed in code; there are no asset files. Cultural and national symbols (the
+*gunyu-cholo*, *dhaka topi*, *khukuri*, prayer flags, the Nepal flag, and *mani* stones) are
 used respectfully and are never hazards. The background music is an original composition and
 is not Nepal's national anthem.

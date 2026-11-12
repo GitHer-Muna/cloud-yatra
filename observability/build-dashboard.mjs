@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * build-dashboard.mjs — generate the ONE canonical Cloud Yatra dashboard.
+ * build-dashboard.mjs: generate the ONE canonical Cloud Yatra dashboard.
  *
  * There is a single source of truth: `cloud-yatra-observatory.json` (rich, every signal,
  * every signal). This script derives the public, embeddable dashboard from it so we never
@@ -63,7 +63,7 @@ function substituteLiterals(node) {
 /**
  * A public (anonymous) viewer must never be handed a link that redirects to a Grafana
  * login wall. Strip any panel/field `links[]` entry that points at an authenticated
- * Grafana surface — app plugins (`/a/...`, e.g. the Frontend Observability drill-down
+ * Grafana surface: app plugins (`/a/...`, e.g. the Frontend Observability drill-down
  * `grafana-kowalski-app`), Explore, or an authenticated dashboard (`/d/`). Genuinely
  * public links (the game, public-dashboards) are kept. Runs recursively so it covers
  * both panel-level and fieldConfig.defaults links.
@@ -112,28 +112,32 @@ function wireDatasources(node) {
   return node;
 }
 
-/** The branded header (Nepal dawn gradient), operator-voiced. */
+/** The branded header: a Nepal dusk gradient with a prayer-flag strip along the top. */
 function headerPanel(id) {
   const content =
-    '<div style="padding:14px 18px;' +
-    'background:linear-gradient(90deg,#0b1020 0%,#20357a 38%,#8e2b2b 68%,#f6b73c 100%);' +
-    'border-radius:12px;color:#fff;font-family:system-ui,sans-serif">' +
-    '<div style="display:flex;align-items:center;gap:14px">' +
-    '<div style="font-size:34px;line-height:1">🏔️</div>' +
-    '<div><div style="font-size:21px;font-weight:800;letter-spacing:.3px">Cloud Yatra · Live Observatory</div>' +
-    '<div style="opacity:.92;font-size:12.5px;margin-top:3px">Every panel below is real traffic from a little ' +
-    'platformer about a Nepali traveller climbing from the jungle to the Himalaya. ' +
-    'Play the game above — then watch these numbers move.</div></div></div>' +
-    '<div style="margin-top:10px;font-size:11.5px;opacity:.85;line-height:1.5">' +
-    'How to read it: <b>At a glance</b> is the headline. <b>The climb</b> shows how far players get ' +
-    '(a classic funnel). <b>Yatri\'s journey</b> breaks down what happens on the trail. ' +
-    '<b>Scores</b> is the shared leaderboard, <b>Around the world</b> maps where people play, and ' +
-    '<b>Chaos Mode</b> is where I break my own backend on purpose to watch it recover.</div></div>';
+    '<div style="border-radius:12px;overflow:hidden;font-family:system-ui,sans-serif;color:#fff;' +
+    'background:linear-gradient(100deg,#0b1020 0%,#1d3270 40%,#7d1f2c 72%,#c8761c 100%)">' +
+    '<div style="height:6px;background:linear-gradient(90deg,#1f6feb 0 20%,#f5f5f5 20% 40%,' +
+    '#dc143c 40% 60%,#2ea043 60% 80%,#f6b73c 80% 100%)"></div>' +
+    '<div style="padding:12px 18px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px">' +
+    '<div style="flex:1 1 380px;min-width:0">' +
+    '<div style="font-size:21px;font-weight:800;letter-spacing:.2px">' +
+    'Cloud Yatra · Live Observatory ' +
+    '<span style="font-weight:600;opacity:.8;font-size:16px">क्लाउड यात्रा</span></div>' +
+    '<div style="opacity:.92;font-size:12.5px;margin-top:4px;line-height:1.5">Namaste! Every panel ' +
+    'here is real traffic from a small platformer about Yatri, a traveller climbing from the ' +
+    'Terai jungle through the Pahad hills to the Himalaya. Play the game above and watch these ' +
+    'numbers move.</div></div>' +
+    '<div style="flex:1 1 320px;min-width:0;font-size:11.5px;opacity:.88;line-height:1.55">' +
+    '<b>Live now</b> is the headline. <b>The climb</b> shows how far pilgrims get. ' +
+    "<b>Yatri's journey</b> breaks down life on the trail. <b>Scores</b> is the shared " +
+    'leaderboard, <b>Around the world</b> maps where people play, and <b>Chaos Mode</b> is ' +
+    'where I break my own backend on purpose to watch it recover.</div></div></div>';
   return {
     id,
     type: 'text',
     title: '',
-    gridPos: { h: 5, w: GRID_W, x: 0, y: 0 },
+    gridPos: { h: 6, w: GRID_W, x: 0, y: 0 },
     options: { mode: 'html', content },
     transparent: true,
   };
@@ -177,8 +181,8 @@ function buildPublic(grand) {
   let panels = d.panels || [];
 
   // Drop the two rows (and their child panels) that can't/shouldn't be public:
-  //   - "PLAY CLOUD YATRA" (the Video panel game embed) — the game is already on the page.
-  //   - "your RUN" (per-session) — needs the `session` variable, impossible on public.
+  //   - "PLAY CLOUD YATRA" (the Video panel game embed): the game is already on the page.
+  //   - "your RUN" (per-session): needs the `session` variable, impossible on public.
   // Rows are flat markers; a row "owns" every panel until the next row marker.
   const dropRowTitles = [/PLAY CLOUD YATRA/i, /YOUR RUN/i];
   const kept = [];
@@ -220,10 +224,10 @@ function buildPublic(grand) {
   // "frame rate" would be misleading on the public copy). Keyed by the source row title.
   const PUBLIC_ROW_TITLES = {
     'LIVE NOW': 'LIVE NOW · service pulse',
-    'LIVE GAME PERFORMANCE': 'THE CLIMB · how far pilgrims get',
+    'LIVE GAME PERFORMANCE': 'THE CLIMB · from the Terai to the summit',
     "YATRI'S JOURNEY": "YATRI'S JOURNEY · what happens on the trail",
     'SCORES & ENGAGEMENT': 'SCORES · the shared leaderboard',
-    'WORLD & CONTEXT': 'AROUND THE WORLD · where pilgrims play',
+    'WORLD & CONTEXT': 'AROUND THE WORLD · where pilgrims join from',
     'CHAOS MODE': 'CHAOS MODE · fault injection and recovery',
   };
   for (const p of panels) {
@@ -248,7 +252,7 @@ function buildPublic(grand) {
   d.panels = finalPanels;
   d.uid = 'cloud-yatra';
   d.title = 'Cloud Yatra · Live Observatory';
-  // Public dashboards can't use template variables — strip them all.
+  // Public dashboards can't use template variables, so strip them all.
   d.templating = { list: [] };
   // Keep annotations minimal (the built-in only).
   delete d.__inputs;
@@ -291,7 +295,7 @@ function reflow(panels) {
         y = maxBottom;
       }
     } else {
-      // A stray top-level panel with no preceding row — place it full width.
+      // A stray top-level panel with no preceding row: place it full width.
       if (!p.gridPos) p.gridPos = { h: 8, w: GRID_W, x: 0, y };
       p.gridPos.y = y;
       y += p.gridPos.h;
