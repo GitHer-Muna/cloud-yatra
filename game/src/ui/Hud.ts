@@ -207,12 +207,7 @@ export class Hud {
     this.muteText.setText(muted ? '🔇 (M)' : '🔊 (M)');
   }
 
-  /** Small FPS readout (bottom-left) — helps diagnose real-browser frame rate. The
-   * optional mode suffix shows which backdrop path is active during A/B testing. */
-  private fpsMode = '';
-  setFpsMode(mode: string): void {
-    this.fpsMode = mode;
-  }
+  /** Small FPS readout (bottom-left). */
   setFps(fps: number): void {
     if (!this.fpsText) {
       this.fpsText = this.scene.add
@@ -225,11 +220,11 @@ export class Hud {
         .setDepth(1000)
         .setAlpha(0.7);
     }
-    this.fpsText.setText(this.fpsMode ? `${Math.round(fps)} fps · ${this.fpsMode}` : `${Math.round(fps)} fps`);
+    this.fpsText.setText(`${Math.round(fps)} fps`);
   }
 
   /**
-   * A MINIMAL level intro: just the level name + a single short line, shown briefly and
+   * A minimal level intro: just the level name + a single short line, shown briefly and
    * fading on its own (or on the first move key). No text wall — the player should grasp
    * it in a glance, and the persistent bottom controls bar covers the details.
    */

@@ -1,7 +1,7 @@
 /**
- * HimalRajyaScene — the playable levels of Cloud Yatra, now fully LEVEL-CONFIG-DRIVEN.
+ * HimalRajyaScene — the playable levels of Cloud Yatra, driven entirely by level config.
  *
- * The scene reads a `LevelConfig` (see config/levels.ts) for EVERYTHING that varies per
+ * The scene reads a `LevelConfig` (see config/levels.ts) for everything that varies per
  * level: world width, palette, platforms, collectibles, hazards, checkpoints and par
  * time. This lets the three regions of Nepal look and play distinctly without cloning
  * scene code:
@@ -10,15 +10,15 @@
  *   - HIMAL  (level 3): the high-Himalaya finale — big snow peaks, glacier, snow ground.
  *
  * Layers:
- *  - BACKGROUND (visual only): per-region procedural art with PARALLAX depth.
- *  - GAMEPLAY (physics): ground + platforms, Yatri, blooms, prayer bells, hazards,
+ *  - Background (visual only): per-region procedural art with parallax depth.
+ *  - Gameplay (physics): ground + platforms, Yatri, blooms, prayer bells, hazards,
  *    checkpoints, START/END markers.
  *
- * PROGRESSION: completing a level advances to the NEXT level (carrying cumulative score).
+ * Progression: completing a level advances to the next level (carrying cumulative score).
  * Completing level 3 is the finale → submits the final score and opens the Leaderboard.
  * Dying restarts the pilgrimage from level 1.
  *
- * All art is ORIGINAL, drawn procedurally.
+ * All art is original, drawn procedurally.
  */
 import Phaser from 'phaser';
 import { VIEW_WIDTH, VIEW_HEIGHT } from '../config/constants';
@@ -54,14 +54,12 @@ import { frameRateIndependentLerp } from '../config/cameraLerp';
 
 const FPS_SAMPLE_MS = 2000;
 
-// The world height is fixed to the view height; only the world WIDTH varies per level.
+// The world height is fixed to the view height; only the world width varies per level.
 const WORLD_HEIGHT = VIEW_HEIGHT;
 
 // Base camera-follow smoothing, expressed as the per-frame lerp at 60fps (the value this
-// game was tuned with). Phaser applies camera lerp once PER FRAME with no delta scaling, so
-// on a high-refresh display (e.g. Edge at 120/144Hz) the camera would track ~2–2.4× tighter
-// and on a low-fps device it would lag. We recompute a delta-corrected lerp each frame (see
-// update) so the camera feels identical on every browser/refresh rate.
+// game was tuned with). Phaser applies camera lerp once per frame with no delta scaling, so
+// it is recomputed each frame from the frame delta (see update) to stay refresh-rate independent.
 const CAMERA_LERP_BASE = 0.15;
 
 export class HimalRajyaScene extends Phaser.Scene {
@@ -155,13 +153,13 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.worldWidth = this.level.worldWidth;
     this.cumulativeScore = data.cumulativeScore ?? 0;
     this.playerName = data.playerName ?? '';
-    // `attempt` = how many times THIS journey has been (re)started from the Terai. It is
+    // `attempt` = how many times this journey has been (re)started from the Terai. It is
     // carried across level advances (1→2→3 keep the same attempt) and only incremented
     // when the player restarts a fresh journey after death or completion. Fed to the
     // dashboard + Guru Megh so "attempts" is a truthful per-journey metric.
     this.attempt = Math.max(1, data.attempt ?? 1);
     // Carry journey-wide performance totals from previous levels (added to this level's
-    // counters in the end-of-run summary so it reflects the WHOLE journey, like score).
+    // counters in the end-of-run summary so it reflects the whole journey, like score).
     this.carriedBlooms = Math.max(0, data.journeyBlooms ?? 0);
     this.carriedBells = Math.max(0, data.journeyBells ?? 0);
     this.carriedGarlands = Math.max(0, data.journeyGarlands ?? 0);
@@ -247,7 +245,7 @@ export class HimalRajyaScene extends Phaser.Scene {
           ? 'himalPoppy'
           : 'rhododendron';
     for (const b of this.level.blooms) {
-      // Flowers GROW FROM THE GROUND: the stem base rests on the actual route surface
+      // Flowers GROW FROM the GROUND: the stem base rests on the actual route surface
       // (ground or platform top). The bloom sprite uses a bottom-centre origin, so passing
       // the surface top places it sitting on the trail — collectible by simply walking past.
       const surfaceTop = this.surfaceTopAt(b.x, groundTop);
@@ -265,7 +263,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     // Prayer bells (rare bonus, big points) — spread across the journey. Same
     // allowGravity:false group default so bells don't fall on spawn either.
     const bells = this.physics.add.group({ allowGravity: false, immovable: true });
-    // Bells REST ON THE SURFACE (ground or platform top), not floating in the sky. The
+    // Bells REST ON the surface (ground or platform top), not floating in the sky. The
     // sprite uses a bottom-centre origin, so we pass the surface top at the bell's x.
     for (const b of this.level.bells) {
       const surfaceTop = this.surfaceTopAt(b.x, groundTop);
@@ -280,10 +278,10 @@ export class HimalRajyaScene extends Phaser.Scene {
     // Hazards — spawned by kind from the level config.
     this.spawnHazards(groundTop);
 
-    // Khukuri-cuttable obstacles on the path. These NEVER cost a life — they simply
+    // Khukuri-cuttable obstacles on the path. These never cost a life — they simply
     // block the way: walking into an uncut one gently bumps the player back (and shows a
     // one-time "Slash with F!" hint). The player clears them by slashing (F/J) or can
-    // jump over them. This removes the old "stuck losing lives at a bush" frustration.
+    // jump over them.
     for (const cu of this.level.cuttables) {
       const obs = new CuttableObstacle(this, cu.x, groundTop, cu.kind);
       this.cuttables.push(obs);
@@ -312,13 +310,13 @@ export class HimalRajyaScene extends Phaser.Scene {
       right: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.D),
       attack: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.F),
     };
-    // A second attack key (J) for players who prefer it — OR'd into the attack signal.
+    // A second attack key (J) for players who prefer it — or'd into the attack signal.
     const attackAlt = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.J);
     this.attackAltKey = attackAlt;
 
-    // Movement/jump keys must drive Yatri WHILE PLAYING, but the game sits above a Grafana
+    // Movement/jump keys must drive Yatri while PLAYING, but the game sits above a Grafana
     // dashboard on one scrollable page — so arrows / Space must still scroll the page when
-    // the player isn't actively in the game. We therefore capture these keys ONLY while the
+    // the player isn't actively in the game. We therefore capture these keys only while the
     // game canvas has focus, and release capture when it loses focus. This lets keyboard and
     // touchpad users scroll down to the dashboard, then click the game to play again.
     const GAME_KEYS = ['UP', 'DOWN', 'LEFT', 'RIGHT', 'SPACE', 'W', 'A', 'S', 'D'];
@@ -345,7 +343,7 @@ export class HimalRajyaScene extends Phaser.Scene {
       });
     }
 
-    // Safety net so real play ALWAYS reaches the shared leaderboard: most visitors clear a
+    // Safety net so real play always reaches the shared leaderboard: most visitors clear a
     // level or two and then close/switch the tab without ever dying or reaching the summit.
     // When the page is hidden (tab switch, navigation, mobile home button) we bank the run
     // once via a sendBeacon-backed submit, so even a partial climb shows up. Guarded by
@@ -375,7 +373,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     });
 
     // Touch controls for phones/tablets (keyboard-only otherwise). Enable extra pointers
-    // so multi-touch (e.g. hold RIGHT + tap JUMP) works. Only drawn on touch devices.
+    // so multi-touch (e.g. hold right + tap jump) works. Only drawn on touch devices.
     if (isTouchDevice()) {
       this.input.addPointer(2);
       this.touch = new TouchControls(this);
@@ -385,8 +383,6 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.hud.setScore(this.score);
     this.hud.setLives(this.yatri.getLives());
     this.hud.setCombo(0);
-    // Show which backdrop render path is active (helps A/B the Edge frame rate).
-    this.hud.setFpsMode(this.disableBake ? 'nobake (live Graphics)' : 'baked');
     this.hud.showIntro(2600, `Level ${this.level.index} — ${this.level.name}`, this.level.subtitle);
 
     // The end-of-run / level status card. A Graphics "panel" sits behind the text and is
@@ -447,10 +443,8 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.sound_ = audio;
     // Each region of Nepal has its own melody/tempo/timbre — switch to this level's.
     this.sound_.setRegion(this.level.id);
-    // Music starts HERE — i.e. only once actual gameplay has begun (the player pressed
-    // START on the menu, which is itself the user gesture browsers require). It does NOT
-    // play on the title screen or on page load. A fallback on the first in-game input
-    // covers the rare case where the AudioContext is still 'suspended' at scene start.
+    // Music starts once gameplay begins (the menu START press is the user gesture browsers
+    // require). A fallback on the first in-game input covers a still-suspended AudioContext.
     const kickAudio = (): void => {
       this.sound_?.resume();
       this.sound_?.start();
@@ -485,7 +479,7 @@ export class HimalRajyaScene extends Phaser.Scene {
       this.hud.setFps(avgFps);
     });
 
-    // Low-volume session heartbeat (~15s) so the dashboard can count ACTIVE sessions and
+    // Low-volume session heartbeat (~15s) so the dashboard can count active sessions and
     // chart session duration accurately. One timer per browser session (stored on the
     // registry) so scene restarts don't stack multiple heartbeats. ~4 events/min = tiny.
     if (!this.registry.get('heartbeatStarted')) {
@@ -536,7 +530,11 @@ export class HimalRajyaScene extends Phaser.Scene {
         loop: true,
         callback: () => void this.pollChaos(),
       });
-      this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => chaosPoll.remove(false));
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+        chaosPoll.remove(false);
+        // The scene object is reused on restart, but its game objects are destroyed.
+        this.chaosBanner = undefined;
+      });
     }
   }
 
@@ -545,7 +543,9 @@ export class HimalRajyaScene extends Phaser.Scene {
    * audience can SEE the backend is under a deliberate storm (gameplay is unaffected).
    */
   private showChaosBanner(active: boolean, remainingMs: number): void {
-    if (!this.sys.isActive()) return;
+    // The status poll is async and can resolve after the scene has stopped.
+    if (!this.sys.isActive() || !this.sys.displayList) return;
+    if (this.chaosBanner && !this.chaosBanner.active) this.chaosBanner = undefined;
     if (!active) {
       if (this.chaosBanner?.visible) {
         this.tweens.add({ targets: this.chaosBanner, alpha: 0, duration: 400, onComplete: () => this.chaosBanner?.setVisible(false) });
@@ -579,6 +579,7 @@ export class HimalRajyaScene extends Phaser.Scene {
   private async pollChaos(): Promise<void> {
     if (this.gameOver || this.levelComplete) return;
     const status = await getChaosStatus();
+    if (!this.sys.isActive()) return;
     this.showChaosBanner(status.active, status.remainingMs);
     if (status.active && !this.chaosWasActive) {
       this.chaosWasActive = true;
@@ -595,7 +596,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.fpsSampler.tick(deltaMs, this.game.loop.actualFps);
 
     // Frame-rate-independent camera follow. Phaser applies the lerp once per frame without
-    // delta scaling, so convert the 60fps-tuned base into the equivalent lerp for THIS
+    // delta scaling, so convert the 60fps-tuned base into the equivalent lerp for this
     // frame's delta (see frameRateIndependentLerp). At 60fps this equals the base exactly;
     // at any other refresh rate the camera reaches the same smoothing per unit of real time,
     // so scrolling feels the same on every browser.
@@ -658,7 +659,7 @@ export class HimalRajyaScene extends Phaser.Scene {
       this.yatri.setVelocityX(0);
     }
 
-    // Fell out of the world. Falling into the void ALWAYS costs a life and always
+    // Fell out of the world. Falling into the void always costs a life and always
     // respawns — invulnerability (from a recent hit) must not let the player "survive"
     // the void or get yanked back without penalty. We force the hit, then respawn once.
     if (!this.gameOver && !this.levelComplete && this.yatri.hasFallenBelow(WORLD_HEIGHT)) {
@@ -738,7 +739,7 @@ export class HimalRajyaScene extends Phaser.Scene {
         }
         case 'rockfall': {
           // For rockfall the config `y` is the top spawn height and `speed` the fall speed.
-          // The rock stops/resets at the HIGHEST surface under its column (a platform top
+          // The rock stops/resets at the highest surface under its column (a platform top
           // if one sits beneath, else the ground) so it lands ON the surface rather than
           // passing through a solid ledge a player may be standing on.
           const landY = this.surfaceTopAt(h.x, groundTop);
@@ -768,7 +769,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     for (const obs of this.cuttables) {
       if (obs.isCut() || !obs.active) continue;
       const bounds = obs.getBounds();
-      // Cut if the forward swing hitbox touches it OR the player is standing in/next to
+      // Cut if the forward swing hitbox touches it or the player is standing in/next to
       // it while swinging — so a swing reliably clears whatever is blocking you, never a
       // "I slashed but it didn't cut" moment.
       const forwardHit = hit ? Phaser.Geom.Intersects.RectangleToRectangle(hit, bounds) : false;
@@ -796,7 +797,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.bellsCollected += 1;
     this.score += SCORING.bellPoints;
 
-    // A prayer bell is a BLESSING, but not a steady life faucet: it restores a life ONLY
+    // A prayer bell is a BLESSING, but not a steady life faucet: it restores a life only
     // when the player is genuinely low (at or below bellLifeThreshold) — a clutch save that
     // rewards reaching the platform without refilling an already-healthy run. Otherwise
     // (healthy, or at the life cap) it converts to a big point bonus so it's never wasted.
@@ -834,7 +835,7 @@ export class HimalRajyaScene extends Phaser.Scene {
   private collectBloom(bloom: RhododendronBloom): void {
     if (!bloom.collect()) return;
 
-    // Advance the combo. The cap is the step at which the multiplier FIRST reaches
+    // Advance the combo. The cap is the step at which the multiplier first reaches
     // comboMax: 1 + (step-1)*comboStep = comboMax  →  step = (comboMax-1)/comboStep + 1.
     // Counting past that is wasted (the multiplier is already clamped), so we cap there.
     const comboCap = Math.round((SCORING.comboMax - 1) / SCORING.comboStep) + 1;
@@ -853,7 +854,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.hud.setScore(this.score);
     this.hud.setCombo(multiplier > 1 ? multiplier : 0);
     this.hud.setBlooms(this.bloomsCollected, SCORING.garlandSize);
-    // Only celebrate the moment the combo FIRST hits max (rising edge) — not every bloom
+    // Only celebrate the moment the combo first hits max (rising edge) — not every bloom
     // thereafter — so Guru Megh doesn't repeat and telemetry volume stays low.
     if (this.combo >= comboCap && !wasAtMax) this.guruMoment('celebrate', 'combo_streak');
 
@@ -883,7 +884,7 @@ export class HimalRajyaScene extends Phaser.Scene {
 
   /**
    * A completed rhododendron garland (every garlandSize blooms): always points, plus a
-   * life on every SECOND garland only. Granting a life on EVERY garland (12 blooms) made
+   * life on every SECOND garland only. Granting a life on every garland (12 blooms) made
    * the life economy runaway — a single level yields a full garland + bells, refilling
    * faster than hazards drain, so the player never died. Requiring two garlands (24 blooms)
    * per life keeps collecting rewarding while letting damage actually matter.
@@ -936,7 +937,7 @@ export class HimalRajyaScene extends Phaser.Scene {
 
   /**
    * Eagle contact. If the Yatri is descending onto the eagle's head (a stomp), the
-   * eagle is defeated and she bounces — this makes the high platform route WINNABLE while
+   * eagle is defeated and she bounces — this makes the high platform route winnable while
    * still rewarding good timing. Any other contact (side/below) costs a life as before.
    */
   private onEagleContact(eagle: Eagle): void {
@@ -947,7 +948,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     const falling = body.velocity.y > 40;
     const feetAboveHead = body.bottom <= eagleBody.top + eagleBody.height * 0.6;
     const attacking = this.yatri.isAttacking();
-    // Either a well-timed stomp OR a khukuri swing defeats the eagle. This keeps the
+    // Either a well-timed stomp or a khukuri swing defeats the eagle. This keeps the
     // elevated route completable without requiring one exact jump timing.
     if (attacking || (falling && feetAboveHead)) {
       if (eagle.kill()) {
@@ -999,13 +1000,12 @@ export class HimalRajyaScene extends Phaser.Scene {
   }
 
   /**
-   * Walking into an un-cut obstacle. The FIRST contact with a given tangle is a gentle,
+   * Walking into an un-cut obstacle. The first contact with a given tangle is a gentle,
    * harmless bump-back (no life lost) plus a hint so the player learns to slash (F/J) or
-   * jump over it. But continuing to shove into the SAME uncut obstacle then costs a life
+   * jump over it. But continuing to shove into the same uncut obstacle then costs a life
    * (thorns, nettle and bamboo should hurt if you insist on barging through them) — routed
    * through hitHazard so invulnerability, Pilgrim's Grace and death all apply normally.
-   * This removes the old "obstacles can never kill you" loophole while staying fair:
-   * ignoring the mechanic is what hurts, not a single accidental touch.
+   * Ignoring the mechanic is what hurts, not a single accidental touch.
    */
   private bumpBackFromObstacle(obs: CuttableObstacle): void {
     if (this.gameOver || this.levelComplete) return;
@@ -1101,7 +1101,7 @@ export class HimalRajyaScene extends Phaser.Scene {
   private completeLevel(): void {
     this.levelComplete = true;
     this.yatri.setVelocity(0, 0);
-    // Music belongs to ACTIVE play only: stop the loop on the win card. On levels 1–2 it
+    // Music belongs to active play only: stop the loop on the win card. On levels 1–2 it
     // restarts when the next level begins (scene.restart → kickAudio); on the finale it
     // stays silent into the leaderboard. One-shot win SFX below are unaffected.
     this.sound_?.stop();
@@ -1137,12 +1137,12 @@ export class HimalRajyaScene extends Phaser.Scene {
     const isFinale = this.level.index >= 3;
 
     // Telemetry: on levels 1–2 record the per-level completion (region-keyed, for the
-    // dashboard). On the FINALE we do NOT fire a per-level event here — submitFinalScore()
+    // dashboard). On the FINALE we do not fire a per-level event here — submitFinalScore()
     // records the single authoritative 'himal_rajya' leaderboard entry below, so the run
     // is counted exactly once.
     if (!isFinale) {
       this.telemetry.record({ type: 'level_completed', score: runScore, timeMs });
-      // Also bank the run to the shared leaderboard at EVERY level completion, not only the
+      // Also bank the run to the shared leaderboard at every level completion, not only the
       // summit. Most players clear a level or two and then stop or close the tab without
       // ever dying or reaching the top — if we only submitted on death/summit, their run
       // (and the whole leaderboard) would stay empty despite real play. submitRemoteScore
@@ -1246,7 +1246,7 @@ export class HimalRajyaScene extends Phaser.Scene {
 
   /**
    * Your-run performance summary, shown on every end-of-run card (win or loss) so a player
-   * always sees how THIS journey went: how far they climbed, what they gathered, their
+   * always sees how this journey went: how far they climbed, what they gathered, their
    * best combo, how many falls, and the time. Pure presentation — reads tracked counters.
    */
   private runSummaryLines(timeMs: number): string {
@@ -1270,10 +1270,10 @@ export class HimalRajyaScene extends Phaser.Scene {
 
   /**
    * A footer line for the end-of-run card that surfaces this run's anonymous session id, so a
-   * player can tie THIS run to the Grand Observatory's per-session "Your run" panels (paste it
+   * player can tie this run to the Grand Observatory's per-session "Your run" panels (paste it
    * into the dashboard's "Your session" box / append var-session=<id> to the URL). The id
    * can't be click-copied off the Phaser canvas, so we copy it to the clipboard once (best
-   * effort) AND print the full id on the card so it's usable even when the clipboard is
+   * effort) and print the full id on the card so it's usable even when the clipboard is
    * blocked. Pure presentation + a harmless clipboard attempt; never throws.
    */
   private sessionIdFooter(): string {
@@ -1305,7 +1305,7 @@ export class HimalRajyaScene extends Phaser.Scene {
   /**
    * Draw the status card's backing panel + a top accent bar, sized to the current text, in
    * an outcome colour (gold = summit, green = level won, red = game over, blue = neutral).
-   * Call AFTER setting the text + making it visible so getBounds() reflects the final size.
+   * Call after setting the text + making it visible so getBounds() reflects the final size.
    */
   private styleStatusCard(accent: number): void {
     // Reposition vertically so even a tall end-of-run card stays within a safe band and
@@ -1359,7 +1359,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.gameOver = true;
     this.yatri.setVelocity(0, 0);
 
-    // Music lifecycle: the journey's music belongs to ACTIVE play only. The moment the
+    // Music lifecycle: the journey's music belongs to active play only. The moment the
     // game ends, stop it immediately — a silent game-over screen feels calmer and avoids
     // music droning on. It restarts from the top when the player begins a new journey
     // (scene.restart → create() → kickAudio).
@@ -1371,7 +1371,7 @@ export class HimalRajyaScene extends Phaser.Scene {
       score: this.score,
       durationMs: this.telemetry.sinceStartMs(),
     });
-    // Submit this run to the shared leaderboard on EVERY ending, not just the rare full
+    // Submit this run to the shared leaderboard on every ending, not just the rare full
     // summit — otherwise the board stays empty because almost no run reaches the top. The
     // run's total is the banked journey plus this level's score. submitRemoteScore is
     // offline-safe, fire-and-forget, and defaults a friendly name for anonymous players.
@@ -1617,33 +1617,16 @@ export class HimalRajyaScene extends Phaser.Scene {
 
   // Monotonic counter so each baked backdrop texture gets a unique key per scene build.
   private bakeSeq = 0;
-  // A/B test switch: add `?nobake=1` to the URL to DISABLE backdrop baking and keep the
-  // old live-Graphics path, so you can measure the Edge frame rate both ways (the HUD
-  // shows which mode is active). Default (no flag) = baking ON (the fast path).
-  private readonly disableBake =
-    typeof window !== 'undefined' &&
-    new URLSearchParams(window.location.search).has('nobake');
-
   /**
-   * PERFORMANCE: the backdrops below are STATIC art — drawn once, never animated. Left as
-   * live Phaser `Graphics`, every one of them re-tessellates and re-uploads its (often
-   * hundreds of) vector fills to the GPU EVERY FRAME. On a browser whose WebGL compositor
-   * path is weaker/throttled — notably Microsoft Edge, which was the one reported as
-   * sluggish while Chrome/Brave/Firefox were smooth — that per-frame vector cost is enough
-   * to drop the frame rate, which (with the real-delta loop) reads as heavy, "hard to move"
-   * controls.
-   *
-   * `bakeStatic` flattens a finished Graphics into a single texture and replaces it with a
-   * one-quad `Image` at the same world position, depth and parallax scroll factor. A quad
-   * costs essentially nothing per frame, so the backdrop stops competing with gameplay for
-   * GPU time on every browser. The look is pixel-identical; only the cost changes.
+   * Performance: the backdrops below are static art. A live Phaser `Graphics` re-tessellates
+   * and re-uploads its vector fills every frame, so `bakeStatic` flattens a finished
+   * Graphics into a single texture and swaps in a one-quad `Image` at the same world
+   * position, depth and parallax scroll factor.
    *
    * We bake over the full world extent (worldWidth ≤ 3800 < the 4096 GPU texture limit) so
    * world-space draw coordinates map 1:1 into the texture and the Image sits at (0,0).
    */
   private bakeStatic(g: Phaser.GameObjects.Graphics): void {
-    // A/B test: `?nobake=1` keeps the live Graphics (slow path) for measurement.
-    if (this.disableBake) return;
     const scrollX = g.scrollFactorX;
     const scrollY = g.scrollFactorY;
     const depth = g.depth;
@@ -1810,7 +1793,7 @@ export class HimalRajyaScene extends Phaser.Scene {
   }
 
   private createHimalaya(): void {
-    // TWO layers for depth: far (paler, slower) and mid (rockier, with lit/shadow faces).
+    // two layers for depth: far (paler, slower) and mid (rockier, with lit/shadow faces).
     const far = this.add.graphics().setScrollFactor(0.08).setDepth(-95);
     const mid = this.add.graphics().setScrollFactor(0.16).setDepth(-90);
     const baseY = WORLD_HEIGHT * 0.62;
@@ -2081,7 +2064,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     drawStupa(2500, WORLD_HEIGHT * 0.6);
     this.bakeStatic(g);
 
-    // --- A spinning PRAYER WHEEL (mani wheel): golden cylinder with vertical ribs that
+    // --- A spinning PRAYER wheel (mani wheel): golden cylinder with vertical ribs that
     //     rotates — a constant sight along Nepali pilgrim paths. ---
     this.createPrayerWheel(650, WORLD_HEIGHT - 78);
     this.createPrayerWheel(1900, WORLD_HEIGHT - 78);
@@ -2287,23 +2270,16 @@ export class HimalRajyaScene extends Phaser.Scene {
   /**
    * Make an elevated collectible grabbable by a jump rising from the ground.
    *
-   * On-ledge blooms/bells sit on a solid platform top; a straight-up jump from the ground
-   * directly below hits the platform's underside instead of the pickup. To fix this the
-   * standard platformer way (generous pickup reach / coins the jump arc sweeps through),
-   * we stretch the pickup hitbox DOWNWARD into the airspace below the ledge so the player
-   * collects it as they jump up toward it. The visual (flower/bell on the ledge) is
-   * unchanged; only the collision box grows. `heightAboveGround` is 0 for ground-level
-   * pickups (no change) and the ledge rise for elevated ones.
+   * A jump from the ground below a ledge hits the platform's underside before the pickup,
+   * so the pickup hitbox is stretched downward into the airspace below the ledge. Only the
+   * collision box grows. `heightAboveGround` is 0 for ground-level pickups.
    */
   private extendElevatedPickup(
     pickup: RhododendronBloom | PrayerBell,
     heightAboveGround: number,
   ): void {
     if (heightAboveGround <= 20) return; // ground-level — leave the tidy walk-through box
-    // Extend the hitbox only a SMALL amount below the pickup (not down to the ground), so the
-    // player must actually jump UP to the ledge to collect it — the jump arc catching the box
-    // just under the bloom/bell counts, but you can't grab it from the ground below. Now that
-    // the jump height lets Yatri climb to these ledges, this stays a fair "reach it" pickup.
+    // Extend only slightly below the pickup so the player still has to jump up to it.
     const REACH_BELOW = 26; // px of grab zone beneath the pickup
     pickup.extendPickupDownward(Math.min(heightAboveGround, REACH_BELOW));
   }
