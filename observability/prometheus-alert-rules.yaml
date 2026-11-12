@@ -1,0 +1,69 @@
+# Cloud Yatra — alert rules in standard Prometheus rule-file format.
+#
+# EASIEST WAY TO IMPORT (no UIDs to edit):
+#   Grafana Cloud → Alerting → Alert rules → "Import to Grafana-managed rules"
+#   (or More → Import alert rules) → Import source: "Prometheus YAML file" → upload this
+#   file → Data source: your "…-prom" Prometheus data source → Import → Yes, import.
+#
+# These are the same five rules as grafana-alerts.yaml (Grafana provisioning format, for
+# Terraform/file provisioning). They run on the Worker's /metrics, scraped by the Grafana
+# Cloud "Metrics Endpoint" integration (job="cloud-yatra-api"). Thresholds are demo-tuned.
+groups:
+  - name: cloud-yatra-reliability
+    interval: 1m
+    rules:
+      - alert: CloudYatraHighErrorRate
+        expr: |
+          100 * sum(rate(cy_api_requests_total{status_class="5xx"}[5m]))
+            / clamp_min(sum(rate(cy_api_requests_total[5m])), 0.0001) > 5
+        for: 5m
+        labels:
+          severity: critical
+          service: cloud-yatra-api
+        annotations:
+          summary: 'Backend 5xx error rate is {{ printf "%.1f" $value }}% (SLO budget burning).'
+          description: More than 5% of requests to the Cloud Yatra Worker returned 5xx over the last 5 minutes.
+          runbook_url: https://github.com/GitHer-Muna/cloud-yatra#observability
+
+      - alert: CloudYatraHighLatencyP99
+        expr: histogram_quantile(0.99, sum(rate(cy_api_request_duration_ms_bucket[5m])) by (le)) > 1000
+        for: 10m
+        labels:
+          severity: warning
+          service: cloud-yatra-api
+        annotations:
+          summary: 'p99 API latency is {{ printf "%.0f" $value }}ms (target <1000ms).'
+          description: The 99th-percentile request duration on the Cloud Yatra Worker exceeded 1s for 10 minutes.
+
+      - alert: CloudYatraErrorBudgetFastBurn
+        expr: |
+          (sum(rate(cy_api_requests_total{status_class="5xx"}[1h]))
+            / clamp_min(sum(rate(cy_api_requests_total[1h])), 0.0001)) / 0.01 > 14
+        for: 2m
+        labels:
+          severity: critical
+          service: cloud-yatra-api
+          slo: availability-99
+        annotations:
+          summary: 'Error budget burning at {{ printf "%.1f" $value }}x the sustainable rate.'
+          description: At this 1h burn rate the 30-day error budget for the 99% availability SLO would be gone in about 2 days.
+
+      - alert: CloudYatraWorkerDown
+        expr: max(cy_api_up) < 1 or absent(cy_api_up)
+        for: 3m
+        labels:
+          severity: critical
+          service: cloud-yatra-api
+        annotations:
+          summary: The Cloud Yatra Worker is not reporting healthy.
+          description: cy_api_up is not 1, or Grafana has not scraped /metrics recently.
+
+      - alert: CloudYatraChaosModeActive
+        expr: max(cy_chaos_active) > 0
+        for: 0m
+        labels:
+          severity: info
+          service: cloud-yatra-api
+        annotations:
+          summary: Chaos Mode is active — synthetic latency/errors are being injected into gameplay routes.
+          description: Admin-triggered resilience demo. Resolves automatically when the ~60s window ends.

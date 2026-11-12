@@ -107,7 +107,8 @@ cloud-yatra/
 ├── observability/         Grafana Cloud assets
 │   ├── dashboards/        Observatory source (full) + generated public copy JSON
 │   ├── build-dashboard.mjs  Generates the public dashboard from the source
-│   └── grafana-alerts.yaml  Importable Grafana-managed alert rules
+│   ├── prometheus-alert-rules.yaml  Alert rules (Prometheus format, UI import)
+│   └── grafana-alerts.yaml  Same rules, Grafana provisioning format
 │
 ├── tools/live-check/      Headless-browser check of the live site's console + network
 │
@@ -186,8 +187,10 @@ not possible on the public dashboard (public dashboards can't use template varia
 identify a viewer); it lives in the authenticated source dashboard, driven by a `session`
 variable.
 
-`observability/grafana-alerts.yaml` holds importable Grafana-managed alert rules; set your
-Prometheus data source UID before importing.
+`observability/prometheus-alert-rules.yaml` holds the alert rules in standard Prometheus
+format: import it with Alerting → Alert rules → Import to Grafana-managed rules → Prometheus
+YAML file, and pick the Prometheus data source. `observability/grafana-alerts.yaml` has the
+same rules in Grafana provisioning format (set the data source UID first).
 
 Backend logs (Loki) and traces (Tempo) ship only when their push secrets are set. Set the
 `GRAFANA_LOKI_*` and `GRAFANA_OTLP_*` secrets (see [Configuration](#configuration)) to enable
