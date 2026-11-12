@@ -368,6 +368,27 @@ describe('/stats', () => {
 
     // Funnel from the sessions table: 2 started, 1 reached each of hills/himal, 1 completed.
     expect(s.funnel).toEqual({ started: 2, reachedHills: 1, reachedHimal: 1, completed: 1 });
+
+    // Ordered funnel rows end at the summit; this fixture has no summit finish.
+    expect(s.funnelSteps.map((r: any) => r.sessions)).toEqual([2, 1, 1, 0]);
+    expect(s.funnelSteps[1].pctOfStarted).toBe(50);
+    // Regions come back in climbing order with display names.
+    expect(s.regions.map((r: any) => r.region)).toEqual([
+      'Terai (lowland jungle)',
+      'Pahad (middle hills)',
+      'Himal (high Himalaya)',
+    ]);
+    expect(s.regions[2]).toMatchObject({ events: 3, deaths: 1, completions: 1 });
+  });
+
+  it('counts a session on the summit only for a finale completion', async () => {
+    await call('POST', '/events', [
+      makeEvent({ type: 'game_started', sessionId: 'sess-summit-1', levelId: 'terai', tMs: 1 }),
+      makeEvent({ type: 'level_completed', sessionId: 'sess-summit-1', levelId: 'terai', tMs: 2, attrs: { score: 10 } }),
+      makeEvent({ type: 'level_completed', sessionId: 'sess-summit-1', levelId: 'himal_rajya', tMs: 3, attrs: { score: 99 } }),
+    ]);
+    const s = (await call('GET', '/stats').then((r) => r.json())) as any;
+    expect(s.funnelSteps[3]).toMatchObject({ step: '4. Stood on the summit', sessions: 1 });
   });
 
   it('keeps aggregates in step with events on idempotent replay', async () => {

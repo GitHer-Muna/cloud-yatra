@@ -459,8 +459,19 @@ export interface Stats {
   byLevel: Array<{ level: string; events: number; deaths: number; completions: number }>;
   topCountries: Array<{ country: string; sessions: number }>;
   funnel: { started: number; reachedHills: number; reachedHimal: number; completed: number };
+  /** The funnel as ordered rows (for bar gauges), ending at the summit. */
+  funnelSteps: Array<{ step: string; sessions: number; pctOfStarted: number }>;
+  /** byLevel for the three playable regions, with display names. */
+  regions: Array<{ region: string; events: number; deaths: number; completions: number }>;
   avgFps: number | null;
 }
+
+/** Display names for the playable regions, in climbing order. */
+const REGION_NAMES: Array<[string, string]> = [
+  ['terai', 'Terai (lowland jungle)'],
+  ['hills', 'Pahad (middle hills)'],
+  ['himal', 'Himal (high Himalaya)'],
+];
 
 /**
  * Aggregate dashboard stats, read from the small incremental rollup tables (migration
@@ -471,7 +482,8 @@ export interface Stats {
  * tiny keyed aggregate table (agg_type/agg_cause/agg_kind/agg_level — bounded by the number
  * of distinct low-cardinality values) or the small per-session `sessions` table. The only
  * query that still touches `events` is avgFps, which is time-bounded to the last hour and
- * served by the (type, received_at) index, so it reads just the recent perf rows.
+ * served by the (type, received_at) index, so it reads just the recent perf rows, and the
+ * summit count, which reads only the summit-completion rows through the (level_id, type) index.
  */
 export async function stats(env: Env): Promise<Stats> {
   const now = Date.now();
@@ -548,6 +560,25 @@ export async function stats(env: Env): Promise<Stats> {
        FROM sessions`,
     )) ?? { started: 0, hills: 0, himal: 0, completed: 0 };
 
+  const summitRow = await one<{ n: number }>(
+    `SELECT COUNT(DISTINCT session_id) n FROM events
+      WHERE level_id = 'himal_rajya' AND type = 'level_completed'`,
+  );
+  const started = funnelRow.started ?? 0;
+  const pct = (n: number) => (started > 0 ? Math.round((n / started) * 1000) / 10 : 0);
+  const funnelSteps = [
+    { step: '1. Set out in the Terai', sessions: started },
+    { step: '2. Reached the Pahad', sessions: funnelRow.hills ?? 0 },
+    { step: '3. Reached the Himal', sessions: funnelRow.himal ?? 0 },
+    { step: '4. Stood on the summit', sessions: summitRow?.n ?? 0 },
+  ].map((r) => ({ ...r, pctOfStarted: pct(r.sessions) }));
+
+  const levelById = new Map(byLevel.map((r) => [r.level, r]));
+  const regions = REGION_NAMES.map(([id, region]) => {
+    const r = levelById.get(id);
+    return { region, events: r?.events ?? 0, deaths: r?.deaths ?? 0, completions: r?.completions ?? 0 };
+  });
+
   const avgFpsRow = await one<{ v: number | null }>(
     `SELECT AVG(avg_fps) v FROM events WHERE type='client_perf' AND received_at >= ?`,
     now - 60 * 60 * 1000,
@@ -575,6 +606,8 @@ export async function stats(env: Env): Promise<Stats> {
       reachedHimal: funnelRow.himal ?? 0,
       completed: funnelRow.completed ?? 0,
     },
+    funnelSteps,
+    regions,
     avgFps: avgFpsRow?.v ?? null,
   };
 }
