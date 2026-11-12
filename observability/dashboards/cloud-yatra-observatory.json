@@ -1025,14 +1025,14 @@
           "decimals": 0,
           "color": {
             "mode": "fixed",
-            "fixedColor": "#1f9d63"
+            "fixedColor": "#3a9e8f"
           },
           "custom": {}
         },
         "overrides": []
       },
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "none",
         "reduceOptions": {
           "calcs": [
@@ -1045,7 +1045,7 @@
         "justifyMode": "center",
         "wideLayout": true,
         "text": {
-          "valueSize": 40
+          "valueSize": 44
         }
       },
       "targets": [
@@ -1093,14 +1093,14 @@
           "decimals": 0,
           "color": {
             "mode": "fixed",
-            "fixedColor": "#1f6feb"
+            "fixedColor": "#4a7fd6"
           },
           "custom": {}
         },
         "overrides": []
       },
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "none",
         "reduceOptions": {
           "calcs": [
@@ -1113,7 +1113,7 @@
         "justifyMode": "center",
         "wideLayout": true,
         "text": {
-          "valueSize": 40
+          "valueSize": 44
         }
       },
       "targets": [
@@ -1161,14 +1161,14 @@
           "decimals": 0,
           "color": {
             "mode": "fixed",
-            "fixedColor": "#c8861c"
+            "fixedColor": "#d6a03a"
           },
           "custom": {}
         },
         "overrides": []
       },
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "none",
         "reduceOptions": {
           "calcs": [
@@ -1181,7 +1181,7 @@
         "justifyMode": "center",
         "wideLayout": true,
         "text": {
-          "valueSize": 40
+          "valueSize": 44
         }
       },
       "targets": [
@@ -1229,14 +1229,14 @@
           "decimals": 0,
           "color": {
             "mode": "fixed",
-            "fixedColor": "#c0283d"
+            "fixedColor": "#c4415a"
           },
           "custom": {}
         },
         "overrides": []
       },
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "none",
         "reduceOptions": {
           "calcs": [
@@ -1249,7 +1249,7 @@
         "justifyMode": "center",
         "wideLayout": true,
         "text": {
-          "valueSize": 40
+          "valueSize": 44
         }
       },
       "targets": [
@@ -1297,14 +1297,14 @@
           "decimals": 0,
           "color": {
             "mode": "fixed",
-            "fixedColor": "#7b4bd6"
+            "fixedColor": "#7f7fd5"
           },
           "custom": {}
         },
         "overrides": []
       },
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "none",
         "reduceOptions": {
           "calcs": [
@@ -1317,7 +1317,7 @@
         "justifyMode": "center",
         "wideLayout": true,
         "text": {
-          "valueSize": 40
+          "valueSize": 44
         }
       },
       "targets": [
@@ -2871,7 +2871,8 @@
           "unit": "short",
           "decimals": 0,
           "color": {
-            "mode": "continuous-GrYlRd"
+            "mode": "fixed",
+            "fixedColor": "#4a7fd6"
           },
           "thresholds": {
             "mode": "absolute",
@@ -2888,7 +2889,7 @@
       },
       "options": {
         "orientation": "horizontal",
-        "displayMode": "gradient",
+        "displayMode": "basic",
         "showUnfilled": true,
         "valueMode": "color",
         "reduceOptions": {
@@ -2954,7 +2955,8 @@
           "unit": "short",
           "decimals": 0,
           "color": {
-            "mode": "continuous-BlPu"
+            "mode": "fixed",
+            "fixedColor": "#3a9e8f"
           },
           "thresholds": {
             "mode": "absolute",
@@ -2971,7 +2973,7 @@
       },
       "options": {
         "orientation": "horizontal",
-        "displayMode": "lcd",
+        "displayMode": "basic",
         "showUnfilled": true,
         "valueMode": "color",
         "reduceOptions": {
@@ -3050,12 +3052,12 @@
           "decimals": 0,
           "color": {
             "mode": "fixed",
-            "fixedColor": "#2f9e5b"
+            "fixedColor": "#4a7fd6"
           },
           "custom": {
             "lineWidth": 1,
-            "fillOpacity": 85,
-            "gradientMode": "opacity",
+            "fillOpacity": 70,
+            "gradientMode": "none",
             "axisBorderShow": false
           },
           "mappings": [
@@ -3194,13 +3196,13 @@
           "decimals": 0,
           "custom": {
             "lineWidth": 1,
-            "fillOpacity": 85,
-            "gradientMode": "opacity",
+            "fillOpacity": 70,
+            "gradientMode": "none",
             "axisBorderShow": false
           },
           "color": {
             "mode": "fixed",
-            "fixedColor": "#dc143c"
+            "fixedColor": "#c4415a"
           },
           "mappings": [
             {
@@ -3335,7 +3337,7 @@
                 "id": "color",
                 "value": {
                   "mode": "fixed",
-                  "fixedColor": "#dc143c"
+                  "fixedColor": "#c4415a"
                 }
               }
             ]
@@ -3350,7 +3352,7 @@
                 "id": "color",
                 "value": {
                   "mode": "fixed",
-                  "fixedColor": "#f6b73c"
+                  "fixedColor": "#d6a03a"
                 }
               }
             ]
@@ -3432,7 +3434,7 @@
           },
           "custom": {
             "lineWidth": 1,
-            "fillOpacity": 85,
+            "fillOpacity": 75,
             "gradientMode": "none",
             "axisBorderShow": false
           }
@@ -3448,7 +3450,7 @@
                 "id": "color",
                 "value": {
                   "mode": "fixed",
-                  "fixedColor": "#4dabf7"
+                  "fixedColor": "#4a7fd6"
                 }
               }
             ]
@@ -3463,7 +3465,7 @@
                 "id": "color",
                 "value": {
                   "mode": "fixed",
-                  "fixedColor": "#dc143c"
+                  "fixedColor": "#c4415a"
                 }
               }
             ]
@@ -3478,7 +3480,7 @@
                 "id": "color",
                 "value": {
                   "mode": "fixed",
-                  "fixedColor": "#f6b73c"
+                  "fixedColor": "#d6a03a"
                 }
               }
             ]
@@ -3605,19 +3607,20 @@
                 "id": "custom.cellOptions",
                 "value": {
                   "type": "gauge",
-                  "mode": "gradient",
+                  "mode": "basic",
                   "valueDisplayMode": "text"
-                }
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "continuous-RdYlGr"
                 }
               },
               {
                 "id": "custom.minWidth",
                 "value": 150
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#4a7fd6"
+                }
               }
             ]
           },
@@ -3759,7 +3762,7 @@
                 "id": "color",
                 "value": {
                   "mode": "fixed",
-                  "fixedColor": "#f6b73c"
+                  "fixedColor": "#d6a03a"
                 }
               },
               {
@@ -4405,14 +4408,14 @@
           "decimals": 0,
           "color": {
             "mode": "fixed",
-            "fixedColor": "#b8741a"
+            "fixedColor": "#d6a03a"
           },
           "custom": {}
         },
         "overrides": []
       },
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "none",
         "reduceOptions": {
           "calcs": [
@@ -4425,7 +4428,7 @@
         "justifyMode": "center",
         "wideLayout": true,
         "text": {
-          "valueSize": 40
+          "valueSize": 44
         }
       },
       "targets": [
@@ -4576,7 +4579,7 @@
                 "id": "color",
                 "value": {
                   "mode": "fixed",
-                  "fixedColor": "#dc143c"
+                  "fixedColor": "#c4415a"
                 }
               }
             ]
@@ -4591,7 +4594,7 @@
                 "id": "color",
                 "value": {
                   "mode": "fixed",
-                  "fixedColor": "#f6b73c"
+                  "fixedColor": "#d6a03a"
                 }
               }
             ]
@@ -4672,19 +4675,19 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#5a6b80",
+                "color": "#8b98ad",
                 "value": null
               },
               {
-                "color": "#e0294a",
+                "color": "#c4415a",
                 "value": 1
               },
               {
-                "color": "#d9822b",
+                "color": "#d6a03a",
                 "value": 30
               },
               {
-                "color": "#2f9e5b",
+                "color": "#3a9e8f",
                 "value": 50
               }
             ]
@@ -4694,7 +4697,7 @@
         "overrides": []
       },
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "none",
         "textMode": "value",
         "justifyMode": "center",
@@ -4706,7 +4709,7 @@
           "values": false
         },
         "text": {
-          "valueSize": 40
+          "valueSize": 44
         }
       },
       "targets": [
@@ -5053,19 +5056,6 @@
             },
             "properties": [
               {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed",
-                  "fixedColor": "#ff8a8a"
-                }
-              },
-              {
                 "id": "custom.minWidth",
                 "value": 110
               }
@@ -5316,7 +5306,7 @@
       "transparent": true,
       "options": {
         "mode": "html",
-        "content": "<div style=\"display:flex;flex-wrap:wrap;gap:10px 14px;font-family:system-ui,sans-serif\"><div style=\"flex:1 1 200px;min-width:0;border-left:3px solid #dc143c;padding:2px 10px\"><div style=\"font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8aa6bf\">Game</div><div style=\"font-size:13px;color:#e6eef6;font-weight:600\">Phaser · Cloudflare Pages</div></div><div style=\"flex:1 1 200px;min-width:0;border-left:3px solid #4dabf7;padding:2px 10px\"><div style=\"font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8aa6bf\">Backend</div><div style=\"font-size:13px;color:#e6eef6;font-weight:600\">Cloudflare Worker · D1 (SQLite)</div></div><div style=\"flex:1 1 200px;min-width:0;border-left:3px solid #f6b73c;padding:2px 10px\"><div style=\"font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8aa6bf\">Signals</div><div style=\"font-size:13px;color:#e6eef6;font-weight:600\">Faro · Prometheus · Loki · Tempo</div></div><div style=\"flex:1 1 200px;min-width:0;border-left:3px solid #39d98a;padding:2px 10px\"><div style=\"font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8aa6bf\">Cost</div><div style=\"font-size:13px;color:#e6eef6;font-weight:600\">Free tiers only</div></div></div>"
+        "content": "<div style=\"display:flex;flex-wrap:wrap;gap:10px 14px;font-family:system-ui,sans-serif\"><div style=\"flex:1 1 200px;min-width:0;border-left:3px solid #c4415a;padding:2px 10px\"><div style=\"font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8aa6bf\">Game</div><div style=\"font-size:13px;color:#e6eef6;font-weight:600\">Phaser · Cloudflare Pages</div></div><div style=\"flex:1 1 200px;min-width:0;border-left:3px solid #4a7fd6;padding:2px 10px\"><div style=\"font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8aa6bf\">Backend</div><div style=\"font-size:13px;color:#e6eef6;font-weight:600\">Cloudflare Worker · D1 (SQLite)</div></div><div style=\"flex:1 1 200px;min-width:0;border-left:3px solid #d6a03a;padding:2px 10px\"><div style=\"font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8aa6bf\">Signals</div><div style=\"font-size:13px;color:#e6eef6;font-weight:600\">Faro · Prometheus · Loki · Tempo</div></div><div style=\"flex:1 1 200px;min-width:0;border-left:3px solid #3a9e8f;padding:2px 10px\"><div style=\"font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8aa6bf\">Cost</div><div style=\"font-size:13px;color:#e6eef6;font-weight:600\">Free tiers only</div></div></div>"
       },
       "fieldConfig": {
         "defaults": {
@@ -5554,17 +5544,17 @@
                     "options": {
                       "chaos_start": {
                         "text": "Storm started",
-                        "color": "#ff6b6b",
+                        "color": "#c4415a",
                         "index": 0
                       },
                       "chaos_stop": {
                         "text": "Stopped by admin",
-                        "color": "#4dabf7",
+                        "color": "#4a7fd6",
                         "index": 1
                       },
                       "chaos_expire": {
                         "text": "Storm passed, skies clear",
-                        "color": "#39d98a",
+                        "color": "#3a9e8f",
                         "index": 2
                       }
                     }
@@ -5713,12 +5703,12 @@
               "options": {
                 "false": {
                   "text": "Calm skies",
-                  "color": "#2f9e5b",
+                  "color": "#2d6e5f",
                   "index": 0
                 },
                 "true": {
                   "text": "Storm in progress",
-                  "color": "#c0283d",
+                  "color": "#9b3044",
                   "index": 1
                 }
               }
@@ -5726,7 +5716,7 @@
           ],
           "color": {
             "mode": "fixed",
-            "fixedColor": "#2f9e5b"
+            "fixedColor": "#2d6e5f"
           },
           "noValue": "Calm skies"
         },

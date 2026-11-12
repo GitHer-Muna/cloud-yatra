@@ -116,9 +116,9 @@ function wireDatasources(node) {
 function headerPanel(id) {
   const content =
     '<div style="border-radius:12px;overflow:hidden;font-family:system-ui,sans-serif;color:#fff;' +
-    'background:linear-gradient(100deg,#0b1020 0%,#1d3270 40%,#7d1f2c 72%,#c8761c 100%)">' +
-    '<div style="height:6px;background:linear-gradient(90deg,#1f6feb 0 20%,#f5f5f5 20% 40%,' +
-    '#dc143c 40% 60%,#2ea043 60% 80%,#f6b73c 80% 100%)"></div>' +
+    'background:linear-gradient(100deg,#111a2e 0%,#17284a 60%,#3a1a2a 100%);border:1px solid rgba(255,255,255,.06)">' +
+    '<div style="height:3px;background:linear-gradient(90deg,#4a7fd6 0 20%,#d9dde3 20% 40%,' +
+    '#c4415a 40% 60%,#3a9e8f 60% 80%,#d6a03a 80% 100%)"></div>' +
     '<div style="padding:12px 18px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px">' +
     '<div style="flex:1 1 380px;min-width:0">' +
     '<div style="font-size:21px;font-weight:800;letter-spacing:.2px">' +
