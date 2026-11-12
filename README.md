@@ -188,9 +188,9 @@ There is one canonical dashboard, kept in two forms:
   generated from the source by `observability/build-dashboard.mjs`. No template variables
   (public dashboards can't use them), datasource refs wired to this stack's names, URLs
   hardcoded. This is the one shared externally (Share → Share externally) and embedded below
-  the game. Regenerate with `node observability/build-dashboard.mjs` after editing the
-  source. Rows: Live Now, SLOs & error budget, Backend, Logs & Traces, Player Experience,
-  Game Performance, Yatri's Journey, Scores, World, Chaos.
+  the game. Its layout is set in `PUBLIC_LAYOUT` in the build script; regenerate with
+  `node observability/build-dashboard.mjs` after editing the source. Sections: Live now, The
+  climb, Yatri's journey, Scores, Around the world, Chaos Mode, How it's built.
 
 The public dashboard is embedded **inline below the game** on the standalone page. Grafana
 Cloud sends CSP `frame-ancestors 'none'`, so the dashboard can't be iframed on another

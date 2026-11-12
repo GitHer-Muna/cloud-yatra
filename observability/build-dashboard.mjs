@@ -16,7 +16,7 @@
  *     game page, which knows the session; public dashboards can't filter per viewer),
  *   - inline `${api_base_url}` and `$faro_app_id` to literals,
  *   - replace `${DS_*}` datasource refs with this stack's real datasource names,
- *   - reflow the grid so the remaining rows are contiguous (no gaps from removed rows).
+ *   - lay the panels out explicitly per section (PUBLIC_LAYOUT).
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -124,23 +124,63 @@ function headerPanel(id) {
     '<div style="font-size:21px;font-weight:800;letter-spacing:.2px">' +
     'Cloud Yatra · Live Observatory ' +
     '<span style="font-weight:600;opacity:.8;font-size:16px">क्लाउड यात्रा</span></div>' +
-    '<div style="opacity:.92;font-size:12.5px;margin-top:4px;line-height:1.5">Namaste! Every panel ' +
-    'here is real traffic from a small platformer about Yatri, a traveller climbing from the ' +
-    'Terai jungle through the Pahad hills to the Himalaya. Play the game above and watch these ' +
-    'numbers move.</div></div>' +
-    '<div style="flex:1 1 320px;min-width:0;font-size:11.5px;opacity:.88;line-height:1.55">' +
-    '<b>Live now</b> is the headline. <b>The climb</b> shows how far pilgrims get. ' +
-    "<b>Yatri's journey</b> breaks down life on the trail. <b>Scores</b> is the shared " +
-    'leaderboard, <b>Around the world</b> maps where people play, and <b>Chaos Mode</b> is ' +
-    'where I break my own backend on purpose to watch it recover.</div></div></div>';
+    '<div style="opacity:.92;font-size:12.5px;margin-top:4px;line-height:1.5">Namaste! Live ' +
+    "traffic from Yatri's climb, Terai to Himalaya. Play above, watch it move.</div></div>" +
+    '</div></div>';
   return {
     id,
     type: 'text',
     title: '',
-    gridPos: { h: 6, w: GRID_W, x: 0, y: 0 },
+    gridPos: { h: 3, w: GRID_W, x: 0, y: 0 },
     options: { mode: 'html', content },
     transparent: true,
   };
+}
+
+/**
+ * The public layout: [row id, row title, [[panel id, w, h], ...]].
+ * Panels in a section are placed left to right and wrap onto a new line at 24 columns.
+ */
+const PUBLIC_LAYOUT = [
+  [1, 'LIVE NOW · the pulse of the trail',
+    [[200, 4, 5], [201, 4, 5], [202, 4, 5], [203, 4, 5], [7, 4, 5], [36, 4, 5]]],
+  [21, 'THE CLIMB · from the Terai to the summit', [[24, 12, 7], [30, 8, 7], [33, 4, 7]]],
+  [25, "YATRI'S JOURNEY · life on the trail",
+    [[53, 8, 8], [29, 16, 8], [26, 8, 10], [39, 6, 10], [27, 5, 10], [28, 5, 10]]],
+  [31, 'SCORES · the shared leaderboard', [[32, 12, 8], [68, 12, 8]]],
+  [37, 'AROUND THE WORLD · where pilgrims join from', [[54, 16, 7], [38, 8, 7]]],
+  [41, 'CHAOS MODE · break it on purpose, watch it heal', [[920, 6, 8], [45, 18, 8]]],
+  [900, "HOW IT'S BUILT", [[40, 24, 2]]],
+];
+
+function layoutPublic(panels) {
+  const byId = new Map(panels.map((p) => [p.id, p]));
+  const out = [headerPanel(1_000_000)];
+  let y = out[0].gridPos.h;
+  for (const [rowId, title, items] of PUBLIC_LAYOUT) {
+    const row = byId.get(rowId) ?? { id: rowId, type: 'row', collapsed: false, panels: [] };
+    row.title = title;
+    row.gridPos = { h: 1, w: GRID_W, x: 0, y };
+    out.push(row);
+    y += 1;
+    let x = 0;
+    let lineH = 0;
+    for (const [id, w, h] of items) {
+      const p = byId.get(id);
+      if (!p) throw new Error(`public layout: panel ${id} not found in source`);
+      if (x + w > GRID_W) {
+        y += lineH;
+        x = 0;
+        lineH = 0;
+      }
+      p.gridPos = { h, w, x, y };
+      out.push(p);
+      x += w;
+      lineH = Math.max(lineH, h);
+    }
+    y += lineH;
+  }
+  return out;
 }
 
 function panelIsRow(p) {
@@ -219,35 +259,12 @@ function buildPublic(grand) {
   // Prune rows that have no child panels after the datasource filter.
   panels = pruneEmptyRows(panels);
 
-  // Re-title rows so each section matches the D1-only content it holds (the
-  // metric/RUM panels are filtered out, so the source titles like "service pulse" or
-  // "frame rate" would be misleading on the public copy). Keyed by the source row title.
-  const PUBLIC_ROW_TITLES = {
-    'LIVE NOW': 'LIVE NOW · service pulse',
-    'LIVE GAME PERFORMANCE': 'THE CLIMB · from the Terai to the summit',
-    "YATRI'S JOURNEY": "YATRI'S JOURNEY · what happens on the trail",
-    'SCORES & ENGAGEMENT': 'SCORES · the shared leaderboard',
-    'WORLD & CONTEXT': 'AROUND THE WORLD · where pilgrims join from',
-    'CHAOS MODE': 'CHAOS MODE · fault injection and recovery',
-  };
-  for (const p of panels) {
-    if (p.type !== 'row') continue;
-    const key = (p.title || '').split('·')[0].trim();
-    if (PUBLIC_ROW_TITLES[key]) p.title = PUBLIC_ROW_TITLES[key];
-  }
-
   // Substitute literals (api_base_url, faro_app_id) and wire datasources by name, and strip
   // any links that would bounce a public viewer to a Grafana login wall.
   panels = panels.map((p) => stripPrivateLinks(wireDatasources(substituteLiterals(p))));
 
-  // Reflow the grid top-to-bottom so removed rows/panels leave no gaps. We preserve each
-  // panel's width/height and its left-to-right order within a row, just re-stacking rows.
-  reflow(panels);
-
-  // Prepend the branded header and shift everything down by its height (3).
-  const header = headerPanel(1_000_000);
-  for (const p of panels) if (p.gridPos) p.gridPos.y += header.gridPos.h;
-  const finalPanels = [header, ...panels];
+  // Lay the public copy out explicitly, section by section, each with a one-line caption.
+  const finalPanels = layoutPublic(panels);
 
   d.panels = finalPanels;
   d.uid = 'cloud-yatra';
@@ -261,47 +278,6 @@ function buildPublic(grand) {
   d.refresh = '30s';
   d.time = { from: 'now-1h', to: 'now' };
   return d;
-}
-
-/**
- * Re-pack rows so there are no vertical gaps. The grand layout is a sequence of row markers
- * each followed by their panels. We keep panel x/w/h, recompute y per row block.
- */
-function reflow(panels) {
-  // Group into blocks: a row marker + the panels that follow it until the next row.
-  let y = 0;
-  let i = 0;
-  while (i < panels.length) {
-    const p = panels[i];
-    if (p.type === 'row') {
-      p.gridPos = { h: 1, w: GRID_W, x: 0, y };
-      y += 1;
-      i += 1;
-      // Lay out the child panels of this row, preserving their relative y-order and x/w.
-      const block = [];
-      while (i < panels.length && panels[i].type !== 'row') {
-        block.push(panels[i]);
-        i += 1;
-      }
-      // Normalize the block's own y to start at the current y, keeping relative offsets.
-      if (block.length) {
-        const minY = Math.min(...block.map((b) => b.gridPos?.y ?? 0));
-        let maxBottom = y;
-        for (const b of block) {
-          if (!b.gridPos) b.gridPos = { h: 8, w: 12, x: 0, y: 0 };
-          b.gridPos.y = y + (b.gridPos.y - minY);
-          maxBottom = Math.max(maxBottom, b.gridPos.y + b.gridPos.h);
-        }
-        y = maxBottom;
-      }
-    } else {
-      // A stray top-level panel with no preceding row: place it full width.
-      if (!p.gridPos) p.gridPos = { h: 8, w: GRID_W, x: 0, y };
-      p.gridPos.y = y;
-      y += p.gridPos.h;
-      i += 1;
-    }
-  }
 }
 
 // --- run ------------------------------------------------------------------------------

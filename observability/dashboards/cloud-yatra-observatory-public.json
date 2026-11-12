@@ -60,26 +60,26 @@
       "type": "text",
       "title": "",
       "gridPos": {
-        "h": 6,
+        "h": 3,
         "w": 24,
         "x": 0,
         "y": 0
       },
       "options": {
         "mode": "html",
-        "content": "<div style=\"border-radius:12px;overflow:hidden;font-family:system-ui,sans-serif;color:#fff;background:linear-gradient(100deg,#0b1020 0%,#1d3270 40%,#7d1f2c 72%,#c8761c 100%)\"><div style=\"height:6px;background:linear-gradient(90deg,#1f6feb 0 20%,#f5f5f5 20% 40%,#dc143c 40% 60%,#2ea043 60% 80%,#f6b73c 80% 100%)\"></div><div style=\"padding:12px 18px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px\"><div style=\"flex:1 1 380px;min-width:0\"><div style=\"font-size:21px;font-weight:800;letter-spacing:.2px\">Cloud Yatra · Live Observatory <span style=\"font-weight:600;opacity:.8;font-size:16px\">क्लाउड यात्रा</span></div><div style=\"opacity:.92;font-size:12.5px;margin-top:4px;line-height:1.5\">Namaste! Every panel here is real traffic from a small platformer about Yatri, a traveller climbing from the Terai jungle through the Pahad hills to the Himalaya. Play the game above and watch these numbers move.</div></div><div style=\"flex:1 1 320px;min-width:0;font-size:11.5px;opacity:.88;line-height:1.55\"><b>Live now</b> is the headline. <b>The climb</b> shows how far pilgrims get. <b>Yatri's journey</b> breaks down life on the trail. <b>Scores</b> is the shared leaderboard, <b>Around the world</b> maps where people play, and <b>Chaos Mode</b> is where I break my own backend on purpose to watch it recover.</div></div></div>"
+        "content": "<div style=\"border-radius:12px;overflow:hidden;font-family:system-ui,sans-serif;color:#fff;background:linear-gradient(100deg,#0b1020 0%,#1d3270 40%,#7d1f2c 72%,#c8761c 100%)\"><div style=\"height:6px;background:linear-gradient(90deg,#1f6feb 0 20%,#f5f5f5 20% 40%,#dc143c 40% 60%,#2ea043 60% 80%,#f6b73c 80% 100%)\"></div><div style=\"padding:12px 18px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px\"><div style=\"flex:1 1 380px;min-width:0\"><div style=\"font-size:21px;font-weight:800;letter-spacing:.2px\">Cloud Yatra · Live Observatory <span style=\"font-weight:600;opacity:.8;font-size:16px\">क्लाउड यात्रा</span></div><div style=\"opacity:.92;font-size:12.5px;margin-top:4px;line-height:1.5\">Namaste! Live traffic from Yatri's climb, Terai to Himalaya. Play above, watch it move.</div></div></div></div>"
       },
       "transparent": true
     },
     {
       "type": "row",
-      "title": "LIVE NOW · service pulse",
+      "title": "LIVE NOW · the pulse of the trail",
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 6
+        "y": 3
       },
       "id": 1,
       "panels": []
@@ -93,10 +93,10 @@
         "uid": "grafanacloud-infinity"
       },
       "gridPos": {
-        "h": 6,
+        "h": 5,
         "w": 4,
         "x": 0,
-        "y": 7
+        "y": 4
       },
       "id": 200,
       "transparent": true,
@@ -106,15 +106,15 @@
           "decimals": 0,
           "color": {
             "mode": "fixed",
-            "fixedColor": "#39d98a"
+            "fixedColor": "#1f9d63"
           },
           "custom": {}
         },
         "overrides": []
       },
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
+        "colorMode": "background",
+        "graphMode": "none",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -124,7 +124,10 @@
         },
         "textMode": "value",
         "justifyMode": "center",
-        "wideLayout": true
+        "wideLayout": true,
+        "text": {
+          "valueSize": 40
+        }
       },
       "targets": [
         {
@@ -158,10 +161,10 @@
         "uid": "grafanacloud-infinity"
       },
       "gridPos": {
-        "h": 6,
+        "h": 5,
         "w": 4,
         "x": 4,
-        "y": 7
+        "y": 4
       },
       "id": 201,
       "transparent": true,
@@ -171,15 +174,15 @@
           "decimals": 0,
           "color": {
             "mode": "fixed",
-            "fixedColor": "#4dabf7"
+            "fixedColor": "#1f6feb"
           },
           "custom": {}
         },
         "overrides": []
       },
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
+        "colorMode": "background",
+        "graphMode": "none",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -189,7 +192,10 @@
         },
         "textMode": "value",
         "justifyMode": "center",
-        "wideLayout": true
+        "wideLayout": true,
+        "text": {
+          "valueSize": 40
+        }
       },
       "targets": [
         {
@@ -223,10 +229,10 @@
         "uid": "grafanacloud-infinity"
       },
       "gridPos": {
-        "h": 6,
+        "h": 5,
         "w": 4,
         "x": 8,
-        "y": 7
+        "y": 4
       },
       "id": 202,
       "transparent": true,
@@ -236,15 +242,15 @@
           "decimals": 0,
           "color": {
             "mode": "fixed",
-            "fixedColor": "#f6b73c"
+            "fixedColor": "#c8861c"
           },
           "custom": {}
         },
         "overrides": []
       },
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
+        "colorMode": "background",
+        "graphMode": "none",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -254,7 +260,10 @@
         },
         "textMode": "value",
         "justifyMode": "center",
-        "wideLayout": true
+        "wideLayout": true,
+        "text": {
+          "valueSize": 40
+        }
       },
       "targets": [
         {
@@ -281,17 +290,17 @@
     },
     {
       "type": "stat",
-      "title": "Deaths today",
+      "title": "Lives lost today",
       "description": "Player deaths recorded today (D1 daily rollup, UTC).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "grafanacloud-infinity"
       },
       "gridPos": {
-        "h": 6,
+        "h": 5,
         "w": 4,
         "x": 12,
-        "y": 7
+        "y": 4
       },
       "id": 203,
       "transparent": true,
@@ -301,15 +310,15 @@
           "decimals": 0,
           "color": {
             "mode": "fixed",
-            "fixedColor": "#ff6b6b"
+            "fixedColor": "#c0283d"
           },
           "custom": {}
         },
         "overrides": []
       },
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
+        "colorMode": "background",
+        "graphMode": "none",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -319,7 +328,10 @@
         },
         "textMode": "value",
         "justifyMode": "center",
-        "wideLayout": true
+        "wideLayout": true,
+        "text": {
+          "valueSize": 40
+        }
       },
       "targets": [
         {
@@ -353,10 +365,10 @@
         "uid": "grafanacloud-infinity"
       },
       "gridPos": {
-        "h": 6,
+        "h": 5,
         "w": 4,
         "x": 16,
-        "y": 7
+        "y": 4
       },
       "id": 7,
       "transparent": true,
@@ -366,15 +378,15 @@
           "decimals": 0,
           "color": {
             "mode": "fixed",
-            "fixedColor": "#b388ff"
+            "fixedColor": "#7b4bd6"
           },
           "custom": {}
         },
         "overrides": []
       },
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
+        "colorMode": "background",
+        "graphMode": "none",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -384,7 +396,10 @@
         },
         "textMode": "value",
         "justifyMode": "center",
-        "wideLayout": true
+        "wideLayout": true,
+        "text": {
+          "valueSize": 40
+        }
       },
       "targets": [
         {
@@ -410,6 +425,93 @@
       ]
     },
     {
+      "type": "stat",
+      "title": "Average FPS (1h)",
+      "description": "Average sampled browser frame rate over the last hour. 50+ is smooth, under 30 is choppy.",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "grafanacloud-infinity"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 20,
+        "y": 4
+      },
+      "id": 36,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 1,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#5a6b80",
+                "value": null
+              },
+              {
+                "color": "#e0294a",
+                "value": 1
+              },
+              {
+                "color": "#d9822b",
+                "value": 30
+              },
+              {
+                "color": "#2f9e5b",
+                "value": 50
+              }
+            ]
+          },
+          "noValue": "Idle"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {
+          "valueSize": 40
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
+          "root_selector": "",
+          "parser": "backend",
+          "columns": [
+            {
+              "selector": "avgFps",
+              "text": "avgFps",
+              "type": "number"
+            }
+          ],
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          }
+        }
+      ]
+    },
+    {
       "type": "row",
       "title": "THE CLIMB · from the Terai to the summit",
       "collapsed": false,
@@ -417,7 +519,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 13
+        "y": 9
       },
       "id": 21,
       "panels": []
@@ -432,9 +534,9 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 24,
+        "w": 12,
         "x": 0,
-        "y": 14
+        "y": 10
       },
       "id": 24,
       "transparent": true,
@@ -506,27 +608,258 @@
       ]
     },
     {
-      "type": "bargauge",
-      "id": 53,
-      "transparent": true,
-      "title": "Climb intensity by region",
-      "description": "Gameplay activity in each region of Himal Rajya (D1).",
+      "type": "table",
+      "title": "Funnel conversion",
+      "description": "Share of pilgrims who set out that reached each stage.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "grafanacloud-infinity"
       },
       "gridPos": {
         "h": 7,
+        "w": 8,
+        "x": 12,
+        "y": 10
+      },
+      "id": 30,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": false,
+            "minWidth": 110
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Of starters"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "gradient",
+                  "valueDisplayMode": "text"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "continuous-RdYlGr"
+                }
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Stage"
+            },
+            "properties": [
+              {
+                "id": "custom.minWidth",
+                "value": 190
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Pilgrims"
+            },
+            "properties": [
+              {
+                "id": "custom.minWidth",
+                "value": 100
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
+          "root_selector": "funnelSteps",
+          "columns": [
+            {
+              "selector": "step",
+              "text": "Stage",
+              "type": "string"
+            },
+            {
+              "selector": "sessions",
+              "text": "Pilgrims",
+              "type": "number"
+            },
+            {
+              "selector": "pctOfStarted",
+              "text": "Of starters",
+              "type": "number"
+            }
+          ],
+          "parser": "backend",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "Stage": 0,
+              "Pilgrims": 1,
+              "Of starters": 2
+            },
+            "renameByName": {},
+            "excludeByName": {}
+          }
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Regions cleared",
+      "description": "Every region cleared by any pilgrim, all time (D1).",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "grafanacloud-infinity"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 20,
+        "y": 10
+      },
+      "id": 33,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#b8741a"
+          },
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "text": {
+          "valueSize": 40
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
+          "root_selector": "totals",
+          "parser": "backend",
+          "columns": [
+            {
+              "selector": "completions",
+              "text": "completions",
+              "type": "number"
+            }
+          ],
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          }
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "YATRI'S JOURNEY · life on the trail",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
         "w": 24,
         "x": 0,
-        "y": 20
+        "y": 17
+      },
+      "id": 25,
+      "panels": []
+    },
+    {
+      "type": "bargauge",
+      "id": 53,
+      "transparent": true,
+      "title": "Activity by region",
+      "description": "Gameplay activity in each region of Himal Rajya (D1).",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "grafanacloud-infinity"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 18
       },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
           "decimals": 0,
           "color": {
-            "mode": "continuous-BlYlRd"
+            "mode": "continuous-BlPu"
           },
           "thresholds": {
             "mode": "absolute",
@@ -543,7 +876,7 @@
       },
       "options": {
         "orientation": "horizontal",
-        "displayMode": "gradient",
+        "displayMode": "lcd",
         "showUnfilled": true,
         "valueMode": "color",
         "reduceOptions": {
@@ -588,33 +921,20 @@
       ]
     },
     {
-      "type": "row",
-      "title": "YATRI'S JOURNEY · what happens on the trail",
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 27
-      },
-      "id": 25,
-      "panels": []
-    },
-    {
       "type": "barchart",
-      "title": "Gameplay actions by type",
-      "description": "Every gameplay signal by type (D1).",
+      "title": "Journey by region · events, lives lost, regions cleared",
+      "description": "How each region of Himal Rajya plays out (D1).",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "grafanacloud-infinity"
       },
       "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 0,
-        "y": 28
+        "h": 8,
+        "w": 16,
+        "x": 8,
+        "y": 18
       },
-      "id": 26,
+      "id": 29,
       "transparent": true,
       "fieldConfig": {
         "defaults": {
@@ -625,8 +945,153 @@
           },
           "custom": {
             "lineWidth": 1,
-            "fillOpacity": 80,
-            "gradientMode": "hue",
+            "fillOpacity": 85,
+            "gradientMode": "none",
+            "axisBorderShow": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Events"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#4dabf7"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lives lost"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#dc143c"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cleared"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#f6b73c"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "orientation": "auto",
+        "showValue": "always",
+        "xField": "Region",
+        "stacking": "none",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "barWidth": 0.85,
+        "groupWidth": 0.75
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
+          "root_selector": "regions",
+          "parser": "backend",
+          "columns": [
+            {
+              "selector": "region",
+              "text": "Region",
+              "type": "string"
+            },
+            {
+              "selector": "events",
+              "text": "Events",
+              "type": "number"
+            },
+            {
+              "selector": "deaths",
+              "text": "Lives lost",
+              "type": "number"
+            },
+            {
+              "selector": "completions",
+              "text": "Cleared",
+              "type": "number"
+            }
+          ],
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "Region": 0,
+              "Events": 1,
+              "Lives lost": 2,
+              "Cleared": 3
+            },
+            "renameByName": {},
+            "excludeByName": {}
+          }
+        }
+      ]
+    },
+    {
+      "type": "barchart",
+      "title": "What pilgrims do on the trail",
+      "description": "Every gameplay signal stored in D1, grouped by type.",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "grafanacloud-infinity"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 0,
+        "y": 26
+      },
+      "id": 26,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#2f9e5b"
+          },
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 85,
+            "gradientMode": "opacity",
             "axisBorderShow": false
           },
           "mappings": [
@@ -711,7 +1176,9 @@
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": false
-        }
+        },
+        "barWidth": 0.8,
+        "groupWidth": 0.8
       },
       "targets": [
         {
@@ -742,6 +1209,188 @@
       ]
     },
     {
+      "type": "table",
+      "title": "Events by type",
+      "description": "Full breakdown of every persisted gameplay signal (D1).",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "grafanacloud-infinity"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 6,
+        "x": 8,
+        "y": 26
+      },
+      "id": 39,
+      "transparent": true,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": false,
+            "minWidth": 100
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Event type"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "client_perf": {
+                        "text": "Frame-rate sample",
+                        "index": 0
+                      },
+                      "journey_progress": {
+                        "text": "Trail progress",
+                        "index": 1
+                      },
+                      "player_jump": {
+                        "text": "Jump",
+                        "index": 2
+                      },
+                      "collectible_collected": {
+                        "text": "Bloom or bell gathered",
+                        "index": 3
+                      },
+                      "guru_guidance": {
+                        "text": "Guru Megh spoke",
+                        "index": 4
+                      },
+                      "player_damaged": {
+                        "text": "Took a hit",
+                        "index": 5
+                      },
+                      "session_heartbeat": {
+                        "text": "Heartbeat",
+                        "index": 6
+                      },
+                      "obstacle_cut": {
+                        "text": "Khukuri cut",
+                        "index": 7
+                      },
+                      "flag_planted": {
+                        "text": "Pennant planted",
+                        "index": 8
+                      },
+                      "level_started": {
+                        "text": "Region started",
+                        "index": 9
+                      },
+                      "level_completed": {
+                        "text": "Region cleared",
+                        "index": 10
+                      },
+                      "game_restarted": {
+                        "text": "Restart",
+                        "index": 11
+                      },
+                      "game_started": {
+                        "text": "Yatra begun",
+                        "index": 12
+                      },
+                      "game_over": {
+                        "text": "Game over",
+                        "index": 13
+                      },
+                      "player_stomp": {
+                        "text": "Stomp",
+                        "index": 14
+                      },
+                      "player_died": {
+                        "text": "Lost a life",
+                        "index": 15
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Count"
+            },
+            "properties": [
+              {
+                "id": "custom.minWidth",
+                "value": 70
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Count",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
+          "root_selector": "eventsByType",
+          "columns": [
+            {
+              "selector": "type",
+              "text": "Event type",
+              "type": "string"
+            },
+            {
+              "selector": "count",
+              "text": "Count",
+              "type": "number"
+            }
+          ],
+          "parser": "backend",
+          "url_options": {
+            "method": "GET",
+            "data": ""
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "Event type": 0,
+              "Count": 1
+            },
+            "renameByName": {},
+            "excludeByName": {}
+          }
+        }
+      ]
+    },
+    {
       "type": "barchart",
       "title": "Lives lost by hazard",
       "description": "Which hazards cost pilgrims a life (D1).",
@@ -750,10 +1399,10 @@
         "uid": "grafanacloud-infinity"
       },
       "gridPos": {
-        "h": 9,
-        "w": 6,
-        "x": 12,
-        "y": 28
+        "h": 10,
+        "w": 5,
+        "x": 14,
+        "y": 26
       },
       "id": 27,
       "transparent": true,
@@ -763,8 +1412,8 @@
           "decimals": 0,
           "custom": {
             "lineWidth": 1,
-            "fillOpacity": 80,
-            "gradientMode": "hue",
+            "fillOpacity": 85,
+            "gradientMode": "opacity",
             "axisBorderShow": false
           },
           "color": {
@@ -814,7 +1463,8 @@
           "calcs": [],
           "showLegend": false
         },
-        "xField": "cause"
+        "xField": "cause",
+        "barWidth": 0.7
       },
       "targets": [
         {
@@ -853,10 +1503,10 @@
         "uid": "grafanacloud-infinity"
       },
       "gridPos": {
-        "h": 9,
-        "w": 6,
-        "x": 18,
-        "y": 28
+        "h": 10,
+        "w": 5,
+        "x": 19,
+        "y": 26
       },
       "id": 28,
       "transparent": true,
@@ -935,9 +1585,8 @@
         },
         "legend": {
           "displayMode": "table",
-          "placement": "right",
+          "placement": "bottom",
           "values": [
-            "value",
             "percent"
           ],
           "showLegend": true
@@ -977,282 +1626,6 @@
       ]
     },
     {
-      "type": "barchart",
-      "title": "Journey by region · events, lives lost, regions cleared",
-      "description": "How each region of Himal Rajya plays out (D1).",
-      "datasource": {
-        "type": "yesoreyeram-infinity-datasource",
-        "uid": "grafanacloud-infinity"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 16,
-        "x": 0,
-        "y": 35
-      },
-      "id": 29,
-      "transparent": true,
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "decimals": 0,
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "lineWidth": 1,
-            "fillOpacity": 80,
-            "gradientMode": "none",
-            "axisBorderShow": false
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Events"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed",
-                  "fixedColor": "#4dabf7"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Lives lost"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed",
-                  "fixedColor": "#dc143c"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Cleared"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed",
-                  "fixedColor": "#f6b73c"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "orientation": "auto",
-        "showValue": "auto",
-        "xField": "Region",
-        "stacking": "none",
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "type": "json",
-          "source": "url",
-          "format": "table",
-          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
-          "root_selector": "regions",
-          "parser": "backend",
-          "columns": [
-            {
-              "selector": "region",
-              "text": "Region",
-              "type": "string"
-            },
-            {
-              "selector": "events",
-              "text": "Events",
-              "type": "number"
-            },
-            {
-              "selector": "deaths",
-              "text": "Lives lost",
-              "type": "number"
-            },
-            {
-              "selector": "completions",
-              "text": "Cleared",
-              "type": "number"
-            }
-          ],
-          "url_options": {
-            "method": "GET",
-            "data": ""
-          }
-        }
-      ],
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "indexByName": {
-              "Region": 0,
-              "Events": 1,
-              "Lives lost": 2,
-              "Cleared": 3
-            },
-            "renameByName": {},
-            "excludeByName": {}
-          }
-        }
-      ]
-    },
-    {
-      "type": "table",
-      "title": "Funnel conversion",
-      "description": "Share of pilgrims who set out that reached each stage.",
-      "datasource": {
-        "type": "yesoreyeram-infinity-datasource",
-        "uid": "grafanacloud-infinity"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 16,
-        "y": 35
-      },
-      "id": 30,
-      "transparent": true,
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": false,
-            "minWidth": 110
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Of starters"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "percent"
-              },
-              {
-                "id": "decimals",
-                "value": 0
-              },
-              {
-                "id": "min",
-                "value": 0
-              },
-              {
-                "id": "max",
-                "value": 100
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "gauge",
-                  "mode": "gradient",
-                  "valueDisplayMode": "text"
-                }
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "continuous-RdYlGr"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Stage"
-            },
-            "properties": [
-              {
-                "id": "custom.minWidth",
-                "value": 180
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "type": "json",
-          "source": "url",
-          "format": "table",
-          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
-          "root_selector": "funnelSteps",
-          "columns": [
-            {
-              "selector": "step",
-              "text": "Stage",
-              "type": "string"
-            },
-            {
-              "selector": "sessions",
-              "text": "Pilgrims",
-              "type": "number"
-            },
-            {
-              "selector": "pctOfStarted",
-              "text": "Of starters",
-              "type": "number"
-            }
-          ],
-          "parser": "backend",
-          "url_options": {
-            "method": "GET",
-            "data": ""
-          }
-        }
-      ],
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "indexByName": {
-              "Stage": 0,
-              "Pilgrims": 1,
-              "Of starters": 2
-            },
-            "renameByName": {},
-            "excludeByName": {}
-          }
-        }
-      ]
-    },
-    {
       "type": "row",
       "title": "SCORES · the shared leaderboard",
       "collapsed": false,
@@ -1260,7 +1633,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 42
+        "y": 36
       },
       "id": 31,
       "panels": []
@@ -1277,7 +1650,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 43
+        "y": 37
       },
       "id": 32,
       "transparent": true,
@@ -1288,7 +1661,7 @@
             "cellOptions": {
               "type": "auto"
             },
-            "filterable": true,
+            "filterable": false,
             "minWidth": 100
           },
           "noValue": "No finishes yet. Be the first to plant the pennant on the summit!"
@@ -1314,12 +1687,12 @@
                 }
               },
               {
-                "id": "custom.minWidth",
-                "value": 110
-              },
-              {
                 "id": "custom.align",
                 "value": "center"
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 110
               }
             ]
           },
@@ -1331,7 +1704,7 @@
             "properties": [
               {
                 "id": "custom.minWidth",
-                "value": 140
+                "value": 150
               }
             ]
           },
@@ -1352,6 +1725,10 @@
               {
                 "id": "custom.align",
                 "value": "center"
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 110
               }
             ]
           },
@@ -1509,7 +1886,7 @@
               },
               {
                 "id": "custom.minWidth",
-                "value": 120
+                "value": 130
               }
             ]
           }
@@ -1517,7 +1894,7 @@
       },
       "options": {
         "showHeader": true,
-        "cellHeight": "md",
+        "cellHeight": "sm",
         "footer": {
           "show": false
         },
@@ -1592,10 +1969,10 @@
         "uid": "grafanacloud-infinity"
       },
       "gridPos": {
-        "h": 6,
+        "h": 8,
         "w": 12,
-        "x": 0,
-        "y": 51
+        "x": 12,
+        "y": 37
       },
       "id": 68,
       "transparent": true,
@@ -1620,7 +1997,7 @@
             "properties": [
               {
                 "id": "custom.minWidth",
-                "value": 140
+                "value": 150
               }
             ]
           },
@@ -1659,6 +2036,10 @@
                     }
                   }
                 ]
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 110
               }
             ]
           },
@@ -1816,7 +2197,7 @@
               },
               {
                 "id": "custom.minWidth",
-                "value": 120
+                "value": 130
               }
             ]
           },
@@ -1837,6 +2218,18 @@
               {
                 "id": "custom.minWidth",
                 "value": 130
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Score"
+            },
+            "properties": [
+              {
+                "id": "custom.minWidth",
+                "value": 100
               }
             ]
           }
@@ -1915,342 +2308,6 @@
       ]
     },
     {
-      "type": "stat",
-      "title": "Total completions",
-      "description": "Level and summit completions persisted in D1.",
-      "datasource": {
-        "type": "yesoreyeram-infinity-datasource",
-        "uid": "grafanacloud-infinity"
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 12,
-        "y": 43
-      },
-      "id": 33,
-      "transparent": true,
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "decimals": 0,
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "#73d13d"
-          },
-          "custom": {}
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value",
-        "justifyMode": "center",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "type": "json",
-          "source": "url",
-          "format": "table",
-          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
-          "root_selector": "totals",
-          "parser": "backend",
-          "columns": [
-            {
-              "selector": "completions",
-              "text": "completions",
-              "type": "number"
-            }
-          ],
-          "url_options": {
-            "method": "GET",
-            "data": ""
-          }
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "title": "Total events",
-      "description": "All gameplay events persisted in D1.",
-      "datasource": {
-        "type": "yesoreyeram-infinity-datasource",
-        "uid": "grafanacloud-infinity"
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 16,
-        "y": 43
-      },
-      "id": 34,
-      "transparent": true,
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "decimals": 0,
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "#8ecbff"
-          },
-          "custom": {}
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value",
-        "justifyMode": "center",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "type": "json",
-          "source": "url",
-          "format": "table",
-          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
-          "root_selector": "totals",
-          "parser": "backend",
-          "columns": [
-            {
-              "selector": "events",
-              "text": "events",
-              "type": "number"
-            }
-          ],
-          "url_options": {
-            "method": "GET",
-            "data": ""
-          }
-        }
-      ]
-    },
-    {
-      "type": "piechart",
-      "title": "Blooms and bells gathered",
-      "description": "Rhododendron blooms versus prayer bells collected (D1).",
-      "datasource": {
-        "type": "yesoreyeram-infinity-datasource",
-        "uid": "grafanacloud-infinity"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 4,
-        "x": 20,
-        "y": 43
-      },
-      "id": 35,
-      "transparent": true,
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "palette-classic"
-          },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "rhododendron": {
-                  "text": "Lali gurans (rhododendron)",
-                  "index": 0
-                },
-                "marigold": {
-                  "text": "Sayapatri (marigold)",
-                  "index": 1
-                },
-                "blue_poppy": {
-                  "text": "Himalayan blue poppy",
-                  "index": 2
-                },
-                "prayer_bell": {
-                  "text": "Prayer bell",
-                  "index": 3
-                }
-              }
-            }
-          ]
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Lali gurans (rhododendron)"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed",
-                  "fixedColor": "#dc143c"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Prayer bell"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed",
-                  "fixedColor": "#f6b73c"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "pieType": "donut",
-        "displayLabels": [],
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "values": true
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "type": "json",
-          "source": "url",
-          "format": "table",
-          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
-          "root_selector": "collectsByKind",
-          "parser": "backend",
-          "columns": [
-            {
-              "selector": "kind",
-              "text": "kind",
-              "type": "string"
-            },
-            {
-              "selector": "count",
-              "text": "count",
-              "type": "number"
-            }
-          ],
-          "url_options": {
-            "method": "GET",
-            "data": ""
-          }
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "title": "Average FPS · last hour",
-      "description": "Average sampled client FPS recorded in D1.",
-      "datasource": {
-        "type": "yesoreyeram-infinity-datasource",
-        "uid": "grafanacloud-infinity"
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 8,
-        "x": 12,
-        "y": 51
-      },
-      "id": 36,
-      "transparent": true,
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "decimals": 1,
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#e0294a",
-                "value": null
-              },
-              {
-                "color": "#ffb454",
-                "value": 30
-              },
-              {
-                "color": "#73d13d",
-                "value": 50
-              }
-            ]
-          },
-          "noValue": "Idle"
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "textMode": "value",
-        "justifyMode": "center",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "type": "json",
-          "source": "url",
-          "format": "table",
-          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
-          "root_selector": "",
-          "parser": "backend",
-          "columns": [
-            {
-              "selector": "avgFps",
-              "text": "avgFps",
-              "type": "number"
-            }
-          ],
-          "url_options": {
-            "method": "GET",
-            "data": ""
-          }
-        }
-      ]
-    },
-    {
       "type": "row",
       "title": "AROUND THE WORLD · where pilgrims join from",
       "collapsed": false,
@@ -2258,7 +2315,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 57
+        "y": 45
       },
       "id": 37,
       "panels": []
@@ -2274,10 +2331,10 @@
         "uid": "grafanacloud-infinity"
       },
       "gridPos": {
-        "h": 9,
-        "w": 12,
+        "h": 7,
+        "w": 16,
         "x": 0,
-        "y": 58
+        "y": 46
       },
       "fieldConfig": {
         "defaults": {
@@ -2391,10 +2448,10 @@
         "uid": "grafanacloud-infinity"
       },
       "gridPos": {
-        "h": 9,
-        "w": 6,
-        "x": 12,
-        "y": 58
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 46
       },
       "id": 38,
       "transparent": true,
@@ -2557,6 +2614,10 @@
                     }
                   }
                 ]
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 150
               }
             ]
           },
@@ -2578,6 +2639,10 @@
                   "mode": "fixed",
                   "fixedColor": "#ff8a8a"
                 }
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 110
               }
             ]
           }
@@ -2632,133 +2697,75 @@
       ]
     },
     {
-      "type": "table",
-      "title": "Events by type",
-      "description": "Full breakdown of every persisted gameplay signal (D1).",
+      "type": "row",
+      "collapsed": false,
+      "title": "CHAOS MODE · break it on purpose, watch it heal",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 53
+      },
+      "id": 41,
+      "panels": []
+    },
+    {
+      "id": 920,
+      "type": "stat",
+      "title": "Storm status",
+      "description": "Live Chaos Mode state from the Worker. Turns red while a storm is injecting latency and errors.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
         "uid": "grafanacloud-infinity"
       },
       "gridPos": {
-        "h": 9,
+        "h": 8,
         "w": 6,
-        "x": 18,
-        "y": 58
+        "x": 0,
+        "y": 54
       },
-      "id": 39,
-      "transparent": true,
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": false,
-            "minWidth": 100
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Event type"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "client_perf": {
-                        "text": "Frame-rate sample",
-                        "index": 0
-                      },
-                      "journey_progress": {
-                        "text": "Trail progress",
-                        "index": 1
-                      },
-                      "player_jump": {
-                        "text": "Jump",
-                        "index": 2
-                      },
-                      "collectible_collected": {
-                        "text": "Bloom or bell gathered",
-                        "index": 3
-                      },
-                      "guru_guidance": {
-                        "text": "Guru Megh spoke",
-                        "index": 4
-                      },
-                      "player_damaged": {
-                        "text": "Took a hit",
-                        "index": 5
-                      },
-                      "session_heartbeat": {
-                        "text": "Heartbeat",
-                        "index": 6
-                      },
-                      "obstacle_cut": {
-                        "text": "Khukuri cut",
-                        "index": 7
-                      },
-                      "flag_planted": {
-                        "text": "Pennant planted",
-                        "index": 8
-                      },
-                      "level_started": {
-                        "text": "Region started",
-                        "index": 9
-                      },
-                      "level_completed": {
-                        "text": "Region cleared",
-                        "index": 10
-                      },
-                      "game_restarted": {
-                        "text": "Restart",
-                        "index": 11
-                      },
-                      "game_started": {
-                        "text": "Yatra begun",
-                        "index": 12
-                      },
-                      "game_over": {
-                        "text": "Game over",
-                        "index": 13
-                      },
-                      "player_stomp": {
-                        "text": "Stomp",
-                        "index": 14
-                      },
-                      "player_died": {
-                        "text": "Lost a life",
-                        "index": 15
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "custom.minWidth",
-                "value": 160
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "false": {
+                  "text": "Calm skies",
+                  "color": "#2f9e5b",
+                  "index": 0
+                },
+                "true": {
+                  "text": "Storm in progress",
+                  "color": "#c0283d",
+                  "index": 1
+                }
               }
-            ]
-          }
-        ]
+            }
+          ],
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#2f9e5b"
+          },
+          "noValue": "Calm skies"
+        },
+        "overrides": []
       },
       "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "text": {
+          "valueSize": 26
         },
-        "sortBy": [
-          {
-            "displayName": "Count",
-            "desc": true
-          }
-        ]
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^active$/",
+          "values": false
+        }
       },
       "targets": [
         {
@@ -2766,74 +2773,21 @@
           "type": "json",
           "source": "url",
           "format": "table",
-          "url": "https://cloud-yatra-api.im-shree03.workers.dev/stats",
-          "root_selector": "eventsByType",
+          "url": "https://cloud-yatra-api.im-shree03.workers.dev/chaos/status",
+          "parser": "backend",
           "columns": [
             {
-              "selector": "type",
-              "text": "Event type",
+              "selector": "active",
+              "text": "active",
               "type": "string"
-            },
-            {
-              "selector": "count",
-              "text": "Count",
-              "type": "number"
             }
           ],
-          "parser": "backend",
           "url_options": {
             "method": "GET",
             "data": ""
           }
         }
-      ],
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "indexByName": {
-              "Event type": 0,
-              "Count": 1
-            },
-            "renameByName": {},
-            "excludeByName": {}
-          }
-        }
       ]
-    },
-    {
-      "type": "text",
-      "title": "How it fits together",
-      "gridPos": {
-        "h": 9,
-        "w": 24,
-        "x": 0,
-        "y": 67
-      },
-      "id": 40,
-      "transparent": true,
-      "options": {
-        "mode": "html",
-        "content": "<div style=\"font-family:system-ui,sans-serif;font-size:13px;line-height:1.6;color:#d8e4f0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px\"><div style=\"border-left:3px solid #dc143c;padding:2px 12px\"><b style=\"color:#fff\">The game</b><br>Phaser in the browser, served from Cloudflare Pages. Every sprite and note is drawn in code.</div><div style=\"border-left:3px solid #4dabf7;padding:2px 12px\"><b style=\"color:#fff\">The backend</b><br>A Cloudflare Worker validates gameplay events and stores them in D1 (SQLite), which feeds these panels through Infinity.</div><div style=\"border-left:3px solid #f6b73c;padding:2px 12px\"><b style=\"color:#fff\">The signals</b><br>Faro for real-user monitoring, Prometheus for metrics, Loki for logs and Tempo for traces, all in Grafana Cloud.</div><div style=\"border-left:3px solid #39d98a;padding:2px 12px\"><b style=\"color:#fff\">The cost</b><br>Free tiers only: Cloudflare Pages, Workers and D1, plus Grafana Cloud free.</div></div>"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        }
-      }
-    },
-    {
-      "type": "row",
-      "collapsed": false,
-      "title": "CHAOS MODE · fault injection and recovery",
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 76
-      },
-      "id": 41,
-      "panels": []
     },
     {
       "type": "table",
@@ -2845,10 +2799,10 @@
         "uid": "grafanacloud-infinity"
       },
       "gridPos": {
-        "h": 9,
-        "w": 24,
-        "x": 0,
-        "y": 77
+        "h": 8,
+        "w": 18,
+        "x": 6,
+        "y": 54
       },
       "fieldConfig": {
         "defaults": {
@@ -2875,7 +2829,7 @@
               },
               {
                 "id": "custom.minWidth",
-                "value": 200
+                "value": 210
               }
             ]
           },
@@ -2886,28 +2840,6 @@
             },
             "properties": [
               {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "chaos_start": {
-                        "text": "Storm started",
-                        "index": 0
-                      },
-                      "chaos_stop": {
-                        "text": "Stopped by admin",
-                        "index": 1
-                      },
-                      "chaos_expire": {
-                        "text": "Storm passed (window ended)",
-                        "index": 2
-                      }
-                    }
-                  }
-                ]
-              },
-              {
                 "id": "custom.cellOptions",
                 "value": {
                   "type": "color-text"
@@ -2915,25 +2847,32 @@
               },
               {
                 "id": "custom.minWidth",
-                "value": 220
+                "value": 230
               },
               {
-                "id": "color",
-                "value": {
-                  "mode": "thresholds"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "#ff6b6b",
-                      "value": null
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "chaos_start": {
+                        "text": "Storm started",
+                        "color": "#ff6b6b",
+                        "index": 0
+                      },
+                      "chaos_stop": {
+                        "text": "Stopped by admin",
+                        "color": "#4dabf7",
+                        "index": 1
+                      },
+                      "chaos_expire": {
+                        "text": "Storm passed, skies clear",
+                        "color": "#39d98a",
+                        "index": 2
+                      }
                     }
-                  ]
-                }
+                  }
+                ]
               }
             ]
           },
@@ -2950,6 +2889,10 @@
               {
                 "id": "noValue",
                 "value": "-"
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 140
               }
             ]
           },
@@ -2970,6 +2913,10 @@
               {
                 "id": "noValue",
                 "value": "-"
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 170
               }
             ]
           }
@@ -3045,6 +2992,40 @@
           }
         }
       ]
+    },
+    {
+      "id": 900,
+      "type": "row",
+      "collapsed": false,
+      "panels": [],
+      "title": "HOW IT'S BUILT",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 62
+      }
+    },
+    {
+      "type": "text",
+      "title": "",
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 63
+      },
+      "id": 40,
+      "transparent": true,
+      "options": {
+        "mode": "html",
+        "content": "<div style=\"display:flex;flex-wrap:wrap;gap:10px 14px;font-family:system-ui,sans-serif\"><div style=\"flex:1 1 200px;min-width:0;border-left:3px solid #dc143c;padding:2px 10px\"><div style=\"font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8aa6bf\">Game</div><div style=\"font-size:13px;color:#e6eef6;font-weight:600\">Phaser · Cloudflare Pages</div></div><div style=\"flex:1 1 200px;min-width:0;border-left:3px solid #4dabf7;padding:2px 10px\"><div style=\"font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8aa6bf\">Backend</div><div style=\"font-size:13px;color:#e6eef6;font-weight:600\">Cloudflare Worker · D1 (SQLite)</div></div><div style=\"flex:1 1 200px;min-width:0;border-left:3px solid #f6b73c;padding:2px 10px\"><div style=\"font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8aa6bf\">Signals</div><div style=\"font-size:13px;color:#e6eef6;font-weight:600\">Faro · Prometheus · Loki · Tempo</div></div><div style=\"flex:1 1 200px;min-width:0;border-left:3px solid #39d98a;padding:2px 10px\"><div style=\"font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8aa6bf\">Cost</div><div style=\"font-size:13px;color:#e6eef6;font-weight:600\">Free tiers only</div></div></div>"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        }
+      }
     }
   ],
   "links": [
