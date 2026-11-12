@@ -212,6 +212,7 @@ export async function startChaos(
   try {
     const res = await fetch(`${base}/chaos/start`, {
       method: 'POST',
+      signal: AbortSignal.timeout(10_000),
       headers: {
         'Content-Type': 'application/json',
         'X-Chaos-Token': token,
@@ -236,6 +237,7 @@ export async function stopChaos(token: string): Promise<ChaosResult> {
   try {
     const res = await fetch(`${base}/chaos/stop`, {
       method: 'POST',
+      signal: AbortSignal.timeout(10_000),
       headers: { 'X-Chaos-Token': token },
     });
     if (res.status === 401) return { ok: false, status: INACTIVE, error: 'unauthorized' };

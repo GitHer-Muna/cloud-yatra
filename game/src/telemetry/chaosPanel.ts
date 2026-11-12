@@ -81,7 +81,11 @@ function buildPanel(): Panel {
       <strong style="font-size:14px">⚡ Chaos Mode</strong>
       <span data-cy="dot" style="width:10px;height:10px;border-radius:50%;background:#3a4a5c"></span>
     </div>
-    <div data-cy="status" style="margin-bottom:10px;color:#9fb4c7">Idle</div>
+    <div data-cy="status" style="margin-bottom:6px;color:#9fb4c7">Idle</div>
+    <div style="margin-bottom:10px;color:#7f93a7;font-size:11.5px">
+      Deliberately slows our own backend (+latency, ~25% errors) for ~60s so the live
+      dashboard shows an incident and its recovery. Gameplay keeps working.
+    </div>
     <label style="display:block;margin-bottom:6px;color:#9fb4c7">Admin token</label>
     <input data-cy="token" type="password" autocomplete="off" spellcheck="false"
       placeholder="CHAOS_ADMIN_TOKEN"
@@ -143,20 +147,44 @@ function buildPanel(): Panel {
     }
   };
 
+  const setBusy = (busy: boolean): void => {
+    startBtn.disabled = busy;
+    stopBtn.disabled = busy;
+    startBtn.style.opacity = stopBtn.style.opacity = busy ? '0.6' : '1';
+  };
+
   startBtn.addEventListener('click', async () => {
     saveToken();
+    setBusy(true);
+    msgEl.style.color = '#e0b050';
     msgEl.textContent = 'Starting…';
     const res = await startChaos(tokenInput.value.trim());
-    msgEl.textContent = res.ok ? '' : errText(res.error);
-    if (res.ok) render(res.status);
+    setBusy(false);
+    if (res.ok) {
+      render(res.status);
+      msgEl.style.color = '#7fd18b';
+      msgEl.textContent = '✓ Storm started. Watch the red banner in-game and the dashboard below (~10–30s to show).';
+    } else {
+      msgEl.style.color = '#ff8a7a';
+      msgEl.textContent = errText(res.error);
+    }
   });
 
   stopBtn.addEventListener('click', async () => {
     saveToken();
+    setBusy(true);
+    msgEl.style.color = '#e0b050';
     msgEl.textContent = 'Stopping…';
     const res = await stopChaos(tokenInput.value.trim());
-    msgEl.textContent = res.ok ? '' : errText(res.error);
-    if (res.ok) render(res.status);
+    setBusy(false);
+    if (res.ok) {
+      render(res.status);
+      msgEl.style.color = '#7fd18b';
+      msgEl.textContent = '✓ Skies cleared. The dashboard will show the recovery.';
+    } else {
+      msgEl.style.color = '#ff8a7a';
+      msgEl.textContent = errText(res.error);
+    }
   });
 
   // Poll status while open so the countdown/auto-expire is visible.

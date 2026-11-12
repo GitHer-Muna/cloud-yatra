@@ -155,6 +155,7 @@ export function startChaos(
   now: number = Date.now(),
 ): ChaosStatus {
   reconcile(now);
+  const wasActive = state.active;
   const durationMs = clamp(opts.durationMs ?? DEFAULT_DURATION_MS, 1_000, MAX_DURATION_MS);
   const latencyMs = clamp(opts.latencyMs ?? DEFAULT_LATENCY_MS, 0, MAX_LATENCY_MS);
   const errorRate = clamp(opts.errorRate ?? DEFAULT_ERROR_RATE, 0, 1);
@@ -162,7 +163,8 @@ export function startChaos(
   state.until = now + durationMs;
   state.profile = { latencyMs, errorRate };
   state.startedBy = (opts.startedBy ?? 'admin').slice(0, 32);
-  record({ kind: 'chaos_start', ts: now, profile: state.profile });
+  // Repeat clicks extend the window but don't spam duplicate start annotations.
+  if (!wasActive) record({ kind: 'chaos_start', ts: now, profile: state.profile });
   return getStatus(now);
 }
 

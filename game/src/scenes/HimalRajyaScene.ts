@@ -106,6 +106,7 @@ export class HimalRajyaScene extends Phaser.Scene {
   private lastGuruAt = 0; // local throttle for spontaneous Guru Megh lines
   private nextGuruEncouragementAt = 0;
   private chaosWasActive = false; // tracks chaos transitions for Guru Megh incident narration
+  private chaosBanner?: Phaser.GameObjects.Text;
   private saidFirstBell = false;
   private cuttableHintShown = false;
 
@@ -539,10 +540,46 @@ export class HimalRajyaScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * A small, non-blocking top-centre banner while Chaos Mode is active, so players and the
+   * audience can SEE the backend is under a deliberate storm (gameplay is unaffected).
+   */
+  private showChaosBanner(active: boolean, remainingMs: number): void {
+    if (!this.sys.isActive()) return;
+    if (!active) {
+      if (this.chaosBanner?.visible) {
+        this.tweens.add({ targets: this.chaosBanner, alpha: 0, duration: 400, onComplete: () => this.chaosBanner?.setVisible(false) });
+      }
+      return;
+    }
+    if (!this.chaosBanner) {
+      this.chaosBanner = this.add
+        .text(VIEW_WIDTH / 2, 64, '', {
+          fontFamily: 'system-ui, sans-serif',
+          fontSize: '15px',
+          color: '#fff4e0',
+          backgroundColor: 'rgba(150, 30, 30, 0.85)',
+          padding: { x: 14, y: 6 },
+          align: 'center',
+        })
+        .setOrigin(0.5, 0)
+        .setScrollFactor(0)
+        .setDepth(2400)
+        .setAlpha(0);
+    }
+    const secs = Math.max(0, Math.ceil(remainingMs / 1000));
+    this.chaosBanner.setText(`⚡ Cloud storm · backend chaos test · ${secs}s — watch the dashboard`);
+    if (!this.chaosBanner.visible || this.chaosBanner.alpha < 1) {
+      this.chaosBanner.setVisible(true);
+      this.tweens.add({ targets: this.chaosBanner, alpha: 1, duration: 300 });
+    }
+  }
+
   /** Poll backend chaos status; narrate the start and the recovery as a cloud-storm. */
   private async pollChaos(): Promise<void> {
     if (this.gameOver || this.levelComplete) return;
     const status = await getChaosStatus();
+    this.showChaosBanner(status.active, status.remainingMs);
     if (status.active && !this.chaosWasActive) {
       this.chaosWasActive = true;
       this.guruMoment('incident', 'storm');
