@@ -8,10 +8,10 @@
  * plane (so the operator can always see state and turn it off), and it NEVER touches any
  * external service — the fault is entirely within our own backend, by design.
  *
- * State is in-isolate (module scope). Cloudflare may run several isolates, so chaos is
- * "mostly on" during a demo rather than globally atomic — which is exactly what we want:
- * a visible, bounded perturbation, not an outage. The authoritative signal for the
- * dashboard is the `cy_chaos_active` gauge + the `/chaos/events` annotation feed.
+ * State is shared across Worker isolates through one D1 row (see syncChaos/persistChaos);
+ * each isolate keeps a ~2s in-memory cache so gameplay requests stay cheap. The
+ * authoritative signal for the dashboard is the `cy_chaos_active` gauge + the
+ * `/chaos/events` annotation feed.
  *
  * SAFETY: gated behind CHAOS_ADMIN_TOKEN (a Wrangler secret). With no token configured the
  * control endpoints refuse to start chaos (503 chaos_disabled), so a forgotten deploy can
@@ -65,6 +65,78 @@ const ring: ChaosEvent[] = [];
 function record(ev: ChaosEvent): void {
   ring.push(ev);
   while (ring.length > MAX_RING) ring.shift();
+}
+
+// --- Cross-isolate sharing via D1 -------------------------------------------------------
+// The in-memory `state` above is a per-isolate CACHE of one shared D1 row (chaos_state).
+// syncChaos() refreshes it (at most every SYNC_TTL_MS per isolate); persistChaos() writes
+// it after start/stop. All D1 errors are swallowed: chaos is a demo feature and must never
+// break gameplay routes (e.g. before migration 0003 has been applied).
+const SYNC_TTL_MS = 2_000;
+let lastSync = 0;
+
+interface ChaosRow {
+  until: number;
+  latency_ms: number;
+  error_rate: number;
+  started_by: string | null;
+  events: string;
+}
+
+export async function syncChaos(
+  db: D1Database,
+  now: number = Date.now(),
+  force = false,
+): Promise<void> {
+  if (!force && now - lastSync < SYNC_TTL_MS) return;
+  lastSync = now;
+  try {
+    const row = await db
+      .prepare('SELECT until, latency_ms, error_rate, started_by, events FROM chaos_state WHERE id = 1')
+      .first<ChaosRow>();
+    if (!row) return;
+    let events: ChaosEvent[] = [];
+    try {
+      const parsed: unknown = JSON.parse(row.events);
+      if (Array.isArray(parsed)) events = parsed as ChaosEvent[];
+    } catch {
+      /* keep empty */
+    }
+    // A window that ended on its own leaves no stop marker; synthesize one deterministically
+    // so every isolate reports the same annotation.
+    if (row.until > 0 && row.until <= now && events[events.length - 1]?.kind === 'chaos_start') {
+      events.push({ kind: 'chaos_expire', ts: row.until });
+    }
+    ring.length = 0;
+    ring.push(...events.slice(-MAX_RING));
+    const live = row.until > now;
+    state.active = live;
+    state.until = live ? row.until : 0;
+    state.profile = { latencyMs: row.latency_ms, errorRate: row.error_rate };
+    state.startedBy = live ? row.started_by : null;
+  } catch {
+    /* table missing or D1 hiccup: keep the local cache */
+  }
+}
+
+export async function persistChaos(db: D1Database, now: number = Date.now()): Promise<void> {
+  lastSync = now;
+  try {
+    await db
+      .prepare(
+        'INSERT OR REPLACE INTO chaos_state (id, until, latency_ms, error_rate, started_by, events) VALUES (1, ?, ?, ?, ?, ?)',
+      )
+      .bind(
+        state.active ? state.until : 0,
+        state.profile.latencyMs,
+        state.profile.errorRate,
+        state.startedBy,
+        JSON.stringify(ring),
+      )
+      .run();
+  } catch {
+    /* best effort */
+  }
 }
 
 /** Lazily expire the window. Call before reading state so status is always truthful. */
@@ -171,4 +243,5 @@ export function __resetChaos(): void {
   state.startedBy = null;
   state.injected = 0;
   ring.length = 0;
+  lastSync = 0;
 }

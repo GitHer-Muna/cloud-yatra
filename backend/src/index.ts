@@ -38,6 +38,8 @@ import {
   getStatus,
   isActive,
   recentEvents,
+  syncChaos,
+  persistChaos,
   startChaos,
   stopChaos,
 } from './chaos';
@@ -130,6 +132,7 @@ export default {
     // while an admin-triggered window is active. Control/observability routes are never
     // perturbed. This is the "watch the dashboard react" demo signal.
     let chaosInjected = false;
+    await syncChaos(env.DB);
     const chaos = decide(route);
     if (chaos.active) {
       chaosInjected = true;
@@ -316,8 +319,10 @@ async function handle(req: Request, env: Env, c: Ctx): Promise<Response> {
       c.log.warn('chaos_unauthorized', { route: pathname });
       return json({ error: 'unauthorized' }, 401, req, env);
     }
+    await syncChaos(env.DB, Date.now(), true);
     if (pathname === '/chaos/stop') {
       const status = stopChaos();
+      await persistChaos(env.DB);
       setGauge('cy_chaos_active', 0, {}, 'Chaos mode active (1=on)');
       c.log.warn('chaos_stop', {});
       return json({ ok: true, status }, 200, req, env);
@@ -329,6 +334,7 @@ async function handle(req: Request, env: Env, c: Ctx): Promise<Response> {
       errorRate: toNum(body.errorRate),
       startedBy: typeof body.startedBy === 'string' ? body.startedBy : 'admin',
     });
+    await persistChaos(env.DB);
     setGauge('cy_chaos_active', 1, {}, 'Chaos mode active (1=on)');
     c.log.warn('chaos_start', { remainingMs: status.remainingMs, profile: status.profile });
     return json({ ok: true, status }, 200, req, env);

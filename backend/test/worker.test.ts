@@ -59,6 +59,7 @@ beforeEach(async () => {
     'agg_cause',
     'agg_kind',
     'agg_level',
+    'chaos_state',
   ]) {
     await env.DB.prepare(`DELETE FROM ${t}`).run();
   }
@@ -517,6 +518,18 @@ const TOKEN = { 'X-Chaos-Token': 'test-admin-token' };
 
 describe('Chaos Mode', () => {
   beforeEach(() => __resetChaos());
+
+  it('shares an active window with other isolates through D1', async () => {
+    await callH('POST', '/chaos/start', TOKEN, { durationMs: 60000, errorRate: 0 });
+    __resetChaos(); // simulate a different, cold isolate that has no in-memory state
+    const s = (await (await call('GET', '/chaos/status')).json()) as { active: boolean };
+    expect(s.active).toBe(true);
+    __resetChaos();
+    await callH('POST', '/chaos/stop', TOKEN);
+    __resetChaos();
+    const after = (await (await call('GET', '/chaos/status')).json()) as { active: boolean };
+    expect(after.active).toBe(false);
+  });
 
   it('status is inactive by default and is unauthenticated', async () => {
     const res = await call('GET', '/chaos/status');
