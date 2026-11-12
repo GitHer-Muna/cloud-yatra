@@ -135,7 +135,7 @@ function buildPanel(): Panel {
   const errText = (e?: string): string => {
     switch (e) {
       case 'unauthorized':
-        return 'Wrong admin token.';
+        return 'Token rejected — it must exactly match the CHAOS_ADMIN_TOKEN secret on the Worker.';
       case 'disabled':
         return 'Chaos disabled on server (no CHAOS_ADMIN_TOKEN set).';
       case 'no_token':

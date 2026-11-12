@@ -210,22 +210,17 @@ function stripAnalyticsFromJson(text: string): string {
 
   // Stop the SPA preloading the stack's installed APP plugins. `settings.apps` lists every
   // app plugin installed on the (authenticated) Grafana stack — Asserts, IRM, k8s, SLO,
-  // Synthetic Monitoring, the Adaptive* apps, etc. On boot, `preloadPlugins` fetches
-  // `/api/plugins/<id>/settings` for every app with `preload: true`. A PUBLIC-dashboard
-  // viewer has no session, so each of those fetches returns 401 → a stream of red
-  // "GET /api/plugins/<id>/settings 401 (Unauthorized)" console errors, plus the matching
-  // `pluginType: 'app'` "PluginMeta: empty result" warnings. OUR dashboard uses only PANEL
-  // and DATASOURCE plugins (timeseries, stat, table, geomap, logs, Infinity, the Video
-  // panel) — never any of these apps. So force `preload: false` on every app: the SPA then
-  // never requests their settings/metas, and the console stays clean. We keep each app's
-  // entry (shape intact) rather than deleting it, so nothing that merely references an app
-  // id breaks; we only stop the eager preload fetch.
+  // Synthetic Monitoring, the Adaptive* apps, etc. On boot the SPA fetches
+  // `/api/plugins/<id>/settings` for apps with `preload: true` AND (Grafana 13+) for every
+  // app that registers UI extensions, regardless of `preload`. A PUBLIC-dashboard viewer
+  // has no session, so those fetches fail and each logs a red request error plus a
+  // "PluginSettings: getting legacy plugin settings failed" error. OUR dashboard uses only
+  // PANEL and DATASOURCE plugins (timeseries, stat, table, geomap, logs, Infinity, the
+  // Video panel) — never any app. So drop the app list entirely (exactly what a Grafana
+  // with no app plugins installed sends): the SPA has nothing to preload, and the console
+  // stays clean. Panel/datasource plugin lists are untouched.
   if (settings.apps && typeof settings.apps === 'object') {
-    for (const app of Object.values(settings.apps as Record<string, unknown>)) {
-      if (app && typeof app === 'object') {
-        (app as Record<string, unknown>).preload = false;
-      }
-    }
+    settings.apps = {};
   }
 
   return JSON.stringify(data);

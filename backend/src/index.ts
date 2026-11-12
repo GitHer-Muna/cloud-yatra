@@ -236,7 +236,7 @@ async function handle(req: Request, env: Env, c: Ctx): Promise<Response> {
     if (env.METRICS_TOKEN) {
       const auth = req.headers.get('Authorization') ?? '';
       const provided = auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : '';
-      if (!provided || !timingSafeEqual(provided, env.METRICS_TOKEN)) {
+      if (!provided || !timingSafeEqual(provided, env.METRICS_TOKEN.trim())) {
         return new Response('unauthorized', { status: 401, headers: corsHeaders(req, env) });
       }
     }
@@ -424,7 +424,9 @@ function toNum(v: unknown): number | undefined {
  * length-aware constant-time comparison to avoid trivial timing leaks.
  */
 function isAuthorized(req: Request, env: Env): boolean {
-  const expected = env.CHAOS_ADMIN_TOKEN ?? '';
+  // Trim the stored secret too: a value pasted into the Cloudflare dashboard can carry a
+  // trailing newline/space, which would otherwise make every correct token "wrong".
+  const expected = (env.CHAOS_ADMIN_TOKEN ?? '').trim();
   if (!expected) return false;
   const auth = req.headers.get('Authorization') ?? '';
   const bearer = auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : '';

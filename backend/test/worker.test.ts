@@ -574,6 +574,18 @@ describe('Chaos Mode', () => {
     expect(res.status).toBe(401);
   });
 
+  it('accepts the right token even if the stored secret has a trailing newline', async () => {
+    const req = new Request(BASE + '/chaos/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Chaos-Token': 'test-admin-token' },
+      body: JSON.stringify({ durationMs: 60000, errorRate: 0 }),
+    });
+    const ctx = createExecutionContext();
+    const res = await worker.fetch(req, { ...env, CHAOS_ADMIN_TOKEN: 'test-admin-token\n' }, ctx);
+    await waitOnExecutionContext(ctx);
+    expect(res.status).toBe(200);
+  });
+
   it('starts chaos with the admin token and reports active status', async () => {
     const res = await callH('POST', '/chaos/start', TOKEN, { durationMs: 60000, errorRate: 0 });
     expect(res.status).toBe(200);
@@ -732,14 +744,20 @@ describe('Grafana proxy — analytics stripped from boot/settings JSON', () => {
     expect(s.defaultDatasource).toBe('-- Grafana --');
   });
 
-  it('forces preload:false on every app plugin so the SPA never fetches their settings', async () => {
+  it('drops the app-plugin list so the SPA never preloads app settings (incl. extension apps)', async () => {
     const upstreamBody = JSON.stringify({
       settings: {
         apps: {
           'grafana-asserts-app': { id: 'grafana-asserts-app', preload: true },
           'grafana-irm-app': { id: 'grafana-irm-app', preload: true },
-          'clexporter-app': { id: 'clexporter-app', preload: false },
+          // preload:false but registers extensions — Grafana 13 still fetches its settings.
+          'grafana-adaptivelogs-app': {
+            id: 'grafana-adaptivelogs-app',
+            preload: false,
+            extensions: { addedLinks: [{ title: 'x' }] },
+          },
         },
+        panels: { timeseries: { id: 'timeseries' } },
         defaultDatasource: '-- Grafana --',
       },
     });
@@ -752,13 +770,11 @@ describe('Grafana proxy — analytics stripped from boot/settings JSON', () => {
     const res = await call('GET', '/bootdata');
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
-      settings: { apps: Record<string, { preload: boolean }>; defaultDatasource: string };
+      settings: { apps: Record<string, unknown>; panels: Record<string, unknown>; defaultDatasource: string };
     };
-    const apps = body.settings.apps;
-    expect(apps['grafana-asserts-app'].preload).toBe(false);
-    expect(apps['grafana-irm-app'].preload).toBe(false);
-    expect(apps['clexporter-app'].preload).toBe(false);
-    // Non-app settings pass through untouched.
+    expect(body.settings.apps).toEqual({});
+    // Panel plugins and other settings pass through untouched.
+    expect(body.settings.panels.timeseries).toBeDefined();
     expect(body.settings.defaultDatasource).toBe('-- Grafana --');
   });
 
