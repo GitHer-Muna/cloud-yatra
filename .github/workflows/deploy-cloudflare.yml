@@ -4,8 +4,8 @@
 # Cloudflare Pages. It runs only after the build + tests pass.
 #
 # Enable it by adding two repository secrets (Settings → Secrets and variables → Actions):
-#   CLOUDFLARE_API_TOKEN  — a token with the "Edit Cloudflare Pages" permission
-#   CLOUDFLARE_ACCOUNT_ID — your Cloudflare account ID
+#   CLOUDFLARE_API_TOKEN: a token with the "Edit Cloudflare Pages" permission
+#   CLOUDFLARE_ACCOUNT_ID: your Cloudflare account ID
 name: Deploy to Cloudflare Pages
 
 on:
