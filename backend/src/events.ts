@@ -1,5 +1,5 @@
 /**
- * events.ts — the SERVER-SIDE copy of the telemetry vocabulary + validation.
+ * events.ts — the server-side copy of the telemetry vocabulary + validation.
  *
  * Kept deliberately in sync with game/src/telemetry/events.ts so the Worker accepts
  * exactly the events the game emits and rejects anything malformed or oversized. This is

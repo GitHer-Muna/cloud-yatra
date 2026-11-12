@@ -1,21 +1,19 @@
 /**
- * NepaliAudio.ts — 100% ORIGINAL, procedurally-synthesised audio for Cloud Yatra.
+ * NepaliAudio.ts — original, procedurally synthesised audio.
  *
- * There are NO audio files anywhere in this project: every sound is
- * generated live in the browser with the Web Audio API. The music is an ORIGINAL,
- * anthem-style theme for the fictional kingdom "Himal Rajya" — a proud, march-like
- * melody (NOT Nepal's real national anthem, which we must never copy) over Nepali-folk
- * instrumentation:
- *   - A MADAL-like hand-drum groove (a low "dhaa" + a high "tin"), the backbone of
+ * There are no audio files: every sound is generated in the browser with the Web Audio
+ * API. The music is an original, anthem-style theme for the fictional kingdom "Himal
+ * Rajya" (not Nepal's national anthem) over Nepali-folk instrumentation:
+ *   - A madal-like hand-drum groove (a low "dhaa" + a high "tin"), the backbone of
  *     Nepali folk rhythm.
- *   - The anthem melody drawn from a PENTATONIC scale (the mode most Nepali folk tunes
+ *   - The anthem melody drawn from a pentatonic scale (the mode most Nepali folk tunes
  *     use), phrased like a bansuri (bamboo flute) line.
  *   - A soft drone (tanpura-like) underneath for warmth.
  *
  * SFX (jump, collect, slash, stomp, damage, complete, bell) are short synth blips in the
  * same scale so everything feels of a piece.
  *
- * DESIGN NOTES:
+ * Design notes:
  *   - Notes are scheduled ahead on the AudioContext clock, so timing is rock-solid and
  *     independent of the game frame rate.
  *   - Browsers require a user gesture before audio can start; call `resume()` from a
@@ -37,7 +35,7 @@ const SCALE_HZ = [
 ];
 
 /**
- * Each region gets a DISTINCT musical character so the three geographic zones of Nepal
+ * Each region gets a distinct musical character so the three geographic zones of Nepal
  * feel different as you climb — all from the same pentatonic scale so they stay of a
  * piece (no jarring key change), but with different phrasing, tempo, timbre and rhythm:
  *
@@ -48,7 +46,7 @@ const SCALE_HZ = [
  *   - HIMAL (high Himalaya): sparse and airy. Slower, higher/thinner phrasing with more
  *     rests and a quieter drum — the stillness and thin air of altitude.
  *
- * `melody` holds indices into SCALE_HZ; `-1` is a REST (silence on that step). `rest`
+ * `melody` holds indices into SCALE_HZ; `-1` is a rest (silence on that step). `rest`
  * lists extra grid steps to silence for space. `octave` shifts the flute up/down.
  */
 interface RegionMusic {
@@ -62,17 +60,9 @@ interface RegionMusic {
 }
 
 /**
- * THE THEME OF HIMAL RAJYA — an ORIGINAL, anthem-style patriotic melody.
- *
- * IMPORTANT (originality + cultural respect rules): this is NOT Nepal's real national
- * anthem ("Sayaun Thunga Phool Ka"), which is an official state composition we must never
- * copy or re-arrange. Instead this is a brand-new, original march-like theme written for
- * the fictional cloud-kingdom "Himal Rajya". It is phrased to FEEL ceremonial/national —
- * a proud, stepwise climb that resolves firmly to the tonic (the classic anthem cadence)
- * — while staying in the same D pentatonic scale as the rest of the game's audio so it
- * sits naturally with the SFX. All three regions share this ONE recognisable theme (so
- * it reads as the kingdom's anthem throughout the climb) and differ only in tempo,
- * timbre and octave. 100% original.
+ * The theme of Himal Rajya: an original, march-like melody in the same D pentatonic scale
+ * as the rest of the audio. It is not Nepal's national anthem. All three regions share
+ * this one theme and differ in tempo, timbre and octave.
  *
  * Scale index reference: 0=D3 1=E3 2=F#3 3=A3 4=B3 5=D4 6=E4 7=F#4 8=A4 9=B4 10=D5.
  */

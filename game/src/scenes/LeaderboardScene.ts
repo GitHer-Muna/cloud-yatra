@@ -6,7 +6,7 @@
  * a run, their row is highlighted in gold.
  *
  * Data source: the shared backend leaderboard (Cloudflare Worker + D1) when configured,
- * MERGED with a zero-cost local (browser-stored) board so it always works offline and
+ * merged with a zero-cost local (browser-stored) board so it always works offline and
  * never depends on a server being reachable.
  */
 import Phaser from 'phaser';
@@ -220,11 +220,9 @@ export class LeaderboardScene extends Phaser.Scene {
       myTotal = r.total;
     }
 
-    // Ensure we run AFTER create() has finished and the scene is RUNNING. On the
-    // There is no network await, so without this yield the code below
-    // would execute while the scene is still initializing — at which point
-    // scene.isActive() is false and the old guard bailed out, leaving the board stuck on
-    // "Summoning the pilgrims…". A single microtask hop guarantees the scene is live.
+    // Run after create() has finished and the scene is RUNNING. Without a network await
+    // the code below would execute while the scene is still initializing (isActive() is
+    // false). A single microtask hop guarantees the scene is live.
     await Promise.resolve();
 
     // Bail only if the scene was actually shut down/destroyed before we got here (e.g. the

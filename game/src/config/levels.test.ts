@@ -68,7 +68,7 @@ describe('three-region route accessibility', () => {
   });
 
   it('keeps every platform layer reachable from the ground with the double jump', () => {
-    // The player can jump once from the ground and once more in mid-air (PLAYER.maxJumps).
+    // The player can jump once from the ground and once more in mid-air (player.maxJumps).
     // Together those reach `doubleJumpCeiling`, so no platform — however high a layer it
     // sits on — should be out of reach for a player collecting blooms/bells up there.
     expect(PLAYER.maxJumps).toBeGreaterThanOrEqual(2);

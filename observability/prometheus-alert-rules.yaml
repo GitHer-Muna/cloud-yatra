@@ -7,7 +7,7 @@
 #
 # These are the same five rules as grafana-alerts.yaml (Grafana provisioning format, for
 # Terraform/file provisioning). They run on the Worker's /metrics, scraped by the Grafana
-# Cloud "Metrics Endpoint" integration (job="cloud-yatra-api"). Thresholds are demo-tuned.
+# Cloud "Metrics Endpoint" integration. Thresholds are tuned for low traffic.
 groups:
   - name: cloud-yatra-reliability
     interval: 1m

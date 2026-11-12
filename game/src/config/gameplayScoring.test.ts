@@ -106,9 +106,8 @@ describe('reward economy', () => {
 });
 
 describe('life economy is survivable-but-mortal', () => {
-  // The player used to be effectively immortal because every 12-bloom garland AND every
-  // bell granted +1 life, outpacing the sparse, slow hazards. These tests pin the tuned
-  // economy so a regression can't quietly make Yatri unkillable again.
+  // Granting a life for every garland and every bell would outpace the hazards and make
+  // Yatri effectively immortal. These tests pin the tuned economy.
 
   it('grants a life only every Nth garland, not every one', () => {
     expect(SCORING.garlandsPerLife).toBeGreaterThanOrEqual(2);

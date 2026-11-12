@@ -10,12 +10,12 @@
 #   • Terraform / grafanactl: provision this file directly.
 #   • Local Grafana: drop in provisioning/alerting/ and restart.
 #
-# BEFORE IMPORT: replace PROM_DATASOURCE_UID with your Prometheus datasource UID
+# before IMPORT: replace PROM_DATASOURCE_UID with your Prometheus datasource UID
 #   (Connections → Data sources → your "…-prom" → copy the uid from the URL), and set a
 #   contact point under Alerting → Contact points so notifications have somewhere to go.
 #
 # These encode the RED method + SRE multi-window burn alerting, which is the industry
-# standard (Google SRE workbook). Thresholds are demo-tuned; raise the `for:` durations in
+# standard (Google SRE workbook). Thresholds are tuned for low traffic; raise the `for:` durations in
 # production so a single blip doesn't page.
 
 apiVersion: 1
@@ -163,8 +163,8 @@ groups:
               conditions:
                 - evaluator: { type: lt, params: [1] }
 
-      # 5) Chaos Mode active (informational). Confirms the demo fault-injection is live so
-      #    reviewers see the alert fire and resolve during the "watch it react" demo.
+      # 5) Chaos Mode active (informational). Confirms the fault injection is live so
+      #    the alert fires and resolves during a Chaos Mode run.
       - uid: cy-chaos-active
         title: Cloud Yatra · Chaos Mode active (demo)
         condition: C

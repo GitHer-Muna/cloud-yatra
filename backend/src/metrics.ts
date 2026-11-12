@@ -1,8 +1,8 @@
 /**
  * metrics.ts — a tiny Prometheus-text metrics registry exposed at GET /metrics.
  *
- * Workers are stateless and short-lived, so these counters reflect the CURRENT isolate's
- * lifetime (good enough for a live demo and for a Grafana scrape/agent to rate()). The
+ * Workers are stateless and short-lived, so these counters reflect the current isolate's
+ * lifetime (enough for a Grafana scrape/agent to rate()). The
  * durable, authoritative counts live in D1 and are surfaced via GET /stats.
  *
  * Low cardinality by design: labels are bounded (route, status_class, type, cause). No
@@ -123,11 +123,11 @@ function fmtLabels(labels: Labels): string {
 /**
  * Render the registry for a scrape.
  *
- * - `'prometheus'` (default): classic Prometheus text format 0.0.4. That format has NO
+ * - `'prometheus'` (default): classic Prometheus text format 0.0.4. That format has no
  *   exemplar syntax, so exemplars are omitted — a `# {trace_id=...}` suffix there makes
  *   strict parsers (incl. Grafana Cloud's Metrics Endpoint validator) reject the whole body.
  * - `'openmetrics'`: OpenMetrics 1.0 with trace exemplars on histogram buckets. OpenMetrics
- *   names a counter FAMILY without `_total` (the sample keeps it) and ends with `# EOF`.
+ *   names a counter family without `_total` (the sample keeps it) and ends with `# EOF`.
  *   Served only when the scraper asks for it via `Accept: application/openmetrics-text`.
  */
 export type MetricsFormat = 'prometheus' | 'openmetrics';

@@ -1,9 +1,9 @@
 /**
  * ids.ts — anonymous identifiers for telemetry.
  *
- * PRIVACY FIRST:
+ * PRIVACY first:
  *  - `sessionId`: random UUID created fresh each page load; memory only; not a person.
- *  - `playerId`: OPTIONAL, OFF by default; only read from localStorage if present. Never
+ *  - `playerId`: optional, OFF by default; only read from localStorage if present. Never
  *    auto-created, and never a real identity.
  *
  * We never collect names, emails, IPs, or browser fingerprints here.
@@ -24,11 +24,11 @@ const PLAYER_ID_KEY = 'cloud-yatra.playerId';
 const SESSION_ID_KEY = 'cloud-yatra.sessionId';
 
 /**
- * The anonymous per-tab session id, shared by the telemetry pipeline AND the embedded
+ * The anonymous per-tab session id, shared by the telemetry pipeline and the embedded
  * Grafana dashboard (which reads the same sessionStorage key to filter "Your Run" panels).
  *
  * It is created once per tab and persisted in sessionStorage so that:
- *  - every telemetry event in this tab carries the SAME session id, and
+ *  - every telemetry event in this tab carries the same session id, and
  *  - the dashboard iframe can be told exactly which run to show (var-session=<id>).
  *
  * sessionStorage is per-tab and cleared when the tab closes — still anonymous, still not a

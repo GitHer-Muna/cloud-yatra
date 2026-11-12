@@ -35,58 +35,34 @@ const config: Phaser.Types.Core.GameConfig = {
   backgroundColor: PALETTE.skyLow,
   pixelArt: false,
   roundPixels: true, // draw sprites at integer positions → no sub-pixel shimmer
-  // ─── Responsive, consistent input on every browser (esp. Chrome) ───────────────────
-  // IMPORTANT: we DO NOT average the frame delta ('smoothStep' is OFF). Delta-smoothing
-  // blends each frame's delta with recent frames, which SMEARS the time applied to
-  // movement for a frame or two after any jitter. On Chrome — whose rAF cadence is
-  // noticeably jitterier than other browsers on a WebGL canvas doing lots of procedural
-  // fills — that smearing read as laggy, "sticky" controls: you press → Yatri barely
-  // moves for a beat → then catches up. Using the RAW per-frame delta makes a key press
-  // translate to movement on the very next frame, which is what the other browsers were
-  // already doing well.
+  // Responsive, consistent input
+  // The frame delta is not averaged ('smoothStep' is off): delta-smoothing smears movement
+  // for a frame or two after any jitter and reads as laggy controls. The raw per-frame
+  // delta makes a key press move Yatri on the very next frame.
   fps: {
-    min: 20, // a lower clamp floor: only truly huge stalls (>50ms) are capped, so a normal
-             // Chrome frame is NEVER shortened — the old 30 floor (33ms) clipped Chrome's
-             // slightly-long frames and made Yatri move LESS than real time (the "hard to
-             // move / so slow to go forward" feeling). 20 ≈ 50ms still blocks tunneling.
+    min: 20, // clamp floor: only big stalls (>50ms) are capped, so normal frames keep
+             // real-time movement while very long frames still can't tunnel through walls.
     target: 60, // the rate the game feel is tuned around
     smoothStep: false, // RAW delta → immediate, 1-frame-latency input response
   },
   render: {
     antialias: true,
     // 'default' (not 'high-performance') avoids forcing a discrete-GPU switch on some
-    // laptops — notably under Edge — which can cause periodic frame stalls. Benign and
-    // consistent across browsers; only affects which GPU the browser picks.
+    // laptops, which can cause periodic frame stalls.
     powerPreference: 'default',
-    // NOTE: `desynchronized` was intentionally REMOVED. It's a low-latency hint designed
-    // for stylus/drawing apps that bypasses the normal compositor. On a WebGL canvas that
-    // Phaser clears every frame it can cause flicker/tearing (per Chrome's own docs, it
-    // needs preserveDrawingBuffer to avoid the display controller reading an empty buffer),
-    // and its behavior differs by browser/GPU/compositor — which made the experience
-    // inconsistent (smooth in Brave, worse in Edge/Firefox). Dropping it puts every browser
-    // on the standard, well-tested compositing path for the most CONSISTENT feel everywhere.
+    // `desynchronized` is deliberately not set: the low-latency hint bypasses the normal
+    // compositor and can flicker or tear on a WebGL canvas that is cleared every frame,
+    // with behaviour that varies by browser and GPU.
   },
   physics: {
     default: 'arcade',
     arcade: {
       gravity: { x: 0, y: GRAVITY_Y },
       debug: false,
-      // VARIABLE timestep (fixedStep:false) is the key to smooth, consistent motion.
-      //
-      // Phaser's DEFAULT (fixedStep:true) advances physics in fixed 1/60s chunks and runs
-      // as many as fit the elapsed time each frame — so depending on real frame timing it
-      // runs 0 steps (Yatri briefly freezes → "slow"), 1 step (normal), or 2 steps (Yatri
-      // lurches forward → "fast"). On any display that isn't a perfectly-even 60Hz (every
-      // real browser, and all 120/144Hz screens) that quantization is the exact "sometimes
-      // fast, sometimes slow, inconsistent" judder.
-      //
-      // With fixedStep:false, physics advances by the REAL elapsed delta exactly ONCE per
-      // frame (position += velocity × realSeconds), so movement/jump/fall are perfectly
-      // proportional to wall-clock time at ANY refresh rate — no lurches, no freezes, fully
-      // consistent. Combined with RAW (un-smoothed) deltas and the low fps.min:20 clamp
-      // above, a key press now moves Yatri the correct amount on the very next frame, which
-      // is what fixed the Chrome "sluggish / hard to move" feel. The only risk (tunneling
-      // through a thin platform on a giant delta) is bounded by the fps.min:20 clamp.
+      // Variable timestep: physics advances by the real elapsed delta once per frame, so
+      // movement is proportional to wall-clock time at any refresh rate. Phaser's fixed
+      // 1/60s stepping would run 0, 1 or 2 steps per frame on displays that are not an even
+      // 60Hz, which shows up as judder. Tunneling on large deltas is bounded by fps.min.
       fixedStep: false,
     },
   },
@@ -103,8 +79,7 @@ game.registry.set('reducedMotion', prefersReducedMotion);
 // Make the canvas keyboard-focusable and gate the game's key capture on focus, so the
 // game and the embedding page can coexist on ONE scrollable page:
 //   • The page scrolls normally with arrows / Space / PageUp-Down / touchpad UNTIL the
-//     player clicks or taps the game. (We do NOT auto-focus on load — that previously
-//     trapped the keyboard in the game immediately and made the page feel unscrollable.)
+//     player clicks or taps the game (no auto-focus on load, so the page stays scrollable).
 //   • Clicking/tapping the game focuses it; while focused, the scene captures the movement
 //     keys (see HimalRajyaScene) so arrows/Space drive Yatri, not the page.
 //   • Clicking/tapping anywhere outside the game (e.g. scrolling to the dashboard) blurs

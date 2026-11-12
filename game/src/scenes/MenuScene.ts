@@ -9,7 +9,7 @@
  *   • One obvious ▶ START GAME button. You must click START (or press Enter) to play.
  *   • A tiny controls line. Nothing text-heavy.
  *
- * The name is REQUIRED: Start is disabled and the field nudges the player until a
+ * The name is required: Start is disabled and the field nudges the player until a
  * non-empty name is entered (see startGame/hasValidName). This keeps the shared
  * leaderboard meaningful (no anonymous "Yatri" floods).
  */
@@ -43,7 +43,7 @@ export class MenuScene extends Phaser.Scene {
   private nameHit?: Phaser.GameObjects.Rectangle;
   /**
    * A real but visually hidden <input> overlaid on the Phaser-drawn name field, used on
-   * EVERY device. It makes keyboard entry robust (keystrokes go to a real DOM input, not
+   * every device. It makes keyboard entry robust (keystrokes go to a real DOM input, not
    * dependent on the canvas holding focus) and accessible, and on touch it opens the OS
    * keyboard. Its value mirrors into `playerName`; it is removed on scene shutdown.
    */
@@ -79,13 +79,9 @@ export class MenuScene extends Phaser.Scene {
     this.playerName = this.loadName();
     this.focused = false;
 
-    // Phaser reuses the SAME scene instance across restarts (Leaderboard → Menu → …), so
-    // our GameObject fields still point at the PREVIOUS run's objects — which Phaser has
-    // already destroyed. If we don't clear them, drawNameField()→redrawField()→
-    // refreshStartButton() runs before drawStartButton() recreates the button and the
-    // `if (!this.startBg) return` guards pass on STALE destroyed objects, so
-    // `startLabel.setColor()` touches a null canvas → "drawImage of null" crash. Resetting
-    // the references here makes the guards behave the same as on a fresh first load.
+    // Phaser reuses the scene instance across restarts, so GameObject fields still point at
+    // destroyed objects from the previous run. Clearing them keeps the `if (!this.startBg)`
+    // guards valid until drawStartButton() recreates the button.
     this.nameValueText = undefined;
     this.caret = undefined;
     this.fieldBox = undefined;
@@ -273,8 +269,8 @@ export class MenuScene extends Phaser.Scene {
     hit.on('pointerdown', (p: Phaser.Input.Pointer) => {
       p.event.stopPropagation();
       this.setFocused(true);
-      // Focus the real hidden <input> on EVERY device. This makes keyboard entry robust:
-      // it no longer depends on the Phaser canvas holding keyboard focus (a real DOM input
+      // Focus the real hidden <input> on every device. This makes keyboard entry robust:
+      // it doesn't depend on the Phaser canvas holding keyboard focus (a real DOM input
       // reliably receives keystrokes), and on touch devices the OS keyboard opens too.
       this.ensureHiddenInput().focus();
     });
@@ -372,7 +368,7 @@ export class MenuScene extends Phaser.Scene {
     }
 
     const hasName = this.playerName.length > 0;
-    // Placeholder only when empty AND not focused; once focused it's a real empty field.
+    // Placeholder only when empty and not focused; once focused it's a real empty field.
     const showPlaceholder = !hasName && !this.focused;
     this.nameValueText.setText(hasName ? this.playerName : showPlaceholder ? 'Yatri' : '');
     this.nameValueText.setColor(hasName ? '#10233b' : '#9aa6b4');
@@ -471,8 +467,7 @@ export class MenuScene extends Phaser.Scene {
     } else {
       this.paintStart(0x45515f, 1); // greyed-out
       // Keep the disabled label legible: a near-white label on the grey fill clears WCAG AA
-      // (~4.5:1), where the previous #c3ccd6 sat around 2.8:1. Don't drop the fill to 0.7
-      // alpha either (that further reduced contrast against the panel behind it).
+      // (~4.5:1). Keep the fill alpha at 0.9; lower values reduce contrast against the panel.
       this.startBg.setAlpha(0.9);
       this.startLabel.setColor('#eef2f6');
       this.startHint.setText('Enter your name first ↑');
@@ -488,7 +483,7 @@ export class MenuScene extends Phaser.Scene {
       ? 'Move  ◀ ▶     Jump  ⤒  (tap again in the air to double-jump)     Khukuri  🗡'
       : 'Move  ← →     Jump  ↑  (press again in the air to double-jump)     Khukuri  F';
 
-    // The controls string is longer than the panel is wide, so it MUST wrap — otherwise it
+    // The controls string is longer than the panel is wide, so it must wrap — otherwise it
     // spills outside the box. Word-wrap to the panel width and center each line. We anchor
     // the block by its TOP (origin y=0) and compute its height so the second line (the
     // flowers/bells hint) sits just below it, with both kept inside PANEL_BOTTOM.
@@ -565,7 +560,7 @@ export class MenuScene extends Phaser.Scene {
   // ---------------------------------------------------------------- input + flow
 
   private wireInput(): void {
-    // Keystrokes only edit the name WHILE the field is focused (click-to-type).
+    // Keystrokes only edit the name while the field is focused (click-to-type).
     // Enter always starts the game (whether focused or not).
     this.input.keyboard?.on('keydown', (ev: KeyboardEvent) => {
       if (ev.key === 'Enter') {
@@ -596,7 +591,7 @@ export class MenuScene extends Phaser.Scene {
       }
     });
 
-    // A click blurs the name field ONLY if it was not on the field itself. We check what
+    // A click blurs the name field only if it was not on the field itself. We check what
     // is under the pointer (rather than relying on stopPropagation, which does not stop
     // this scene-level input event) so that clicking the field focuses it and keeps it
     // focused instead of immediately blurring.
@@ -615,7 +610,7 @@ export class MenuScene extends Phaser.Scene {
 
   private startGame(): void {
     const name = this.resolveName();
-    // Name is REQUIRED. If empty, focus the field and nudge the hint — do NOT start.
+    // Name is required. If empty, focus the field and nudge the hint — do not start.
     if (!name) {
       this.setFocused(true);
       if (this.fieldHintText) {

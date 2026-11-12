@@ -1,8 +1,7 @@
 /**
- * FpsSampler.ts — samples average FPS periodically (NOT per-frame).
+ * FpsSampler.ts — samples average FPS periodically (not per-frame).
  *
- * WHY SAMPLED: emitting a metric every frame would flood telemetry and blow up
- * cardinality/volume (violating the low-volume rule). Instead we read Phaser's
+ * Sampled because emitting a metric every frame would flood telemetry. It reads Phaser's
  * running FPS every ~2s and emit one averaged number. The scene calls `tick()` each
  * frame (cheap counter), and the sampler emits only when the interval elapses.
  */

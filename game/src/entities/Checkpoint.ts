@@ -62,11 +62,9 @@ export class Checkpoint extends Phaser.Physics.Arcade.Sprite {
 
     const x = this.worldX + 2;
     const top = this.groundTopY - 128;
-    // Draw the pennant ONCE in LOCAL coordinates (hoist at local x=0) and position the
-    // graphics object at the pole. Previously a 60ms loop timer cleared and fully re-drew
-    // the double pennon ~16×/second forever (and was never removed on scene shutdown,
-    // stacking per checkpoint). Now we draw once and flutter via a cheap GPU-side scaleX
-    // yoyo pivoted at the pole — zero per-frame CPU redraw cost.
+    // Draw the pennant once in local coordinates (hoist at local x=0) and position the
+    // graphics object at the pole; the flutter is a cheap scaleX yoyo pivoted at the pole,
+    // so there is no per-frame redraw.
     this.pennant.setPosition(x, top);
     this.redrawPennant();
 
@@ -101,10 +99,10 @@ export class Checkpoint extends Phaser.Physics.Arcade.Sprite {
   private redrawPennant(): void {
     const g = this.pennant;
     g.clear();
-    // Nepal's flag carries TWO DISTINCT white emblems: a crescent MOON on the upper
+    // Nepal's flag carries two DISTINCT white emblems: a crescent MOON on the upper
     // pennon and a SUN on the lower, larger pennon. We draw them differently so the
     // national symbol reads correctly (drawing the same dot on both would misrepresent it).
-    // Coordinates are LOCAL to the graphics object (hoist at x=0, top at y=0); the object
+    // Coordinates are local to the graphics object (hoist at x=0, top at y=0); the object
     // is positioned at the pole and fluttered via a scaleX tween.
     const drawPennant = (topY: number, height: number, emblem: 'moon' | 'sun') => {
       const x = 0;

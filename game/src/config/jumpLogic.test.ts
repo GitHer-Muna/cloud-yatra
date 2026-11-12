@@ -63,8 +63,8 @@ describe('resolveJump', () => {
 
   it('REGRESSION: after a stomp bounce (jumpsUsed=1, airborne, no coyote) the air jump is usable', () => {
     // A stomp sets jumpsUsed=1 and launches Yatri upward off the ground. The player must
-    // still be able to use the remaining air jump — the earlier bug set jumpsUsed=0, which
-    // made BOTH gates fail (no coyote → no ground jump; jumpsUsed<1 → no double jump).
+    // still be able to use the remaining air jump. Resetting jumpsUsed to 0 here would make
+    // both gates fail (no coyote → no ground jump; jumpsUsed<1 → no double jump).
     const d = resolveJump({
       ...base,
       onGround: false,

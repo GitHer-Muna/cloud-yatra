@@ -1,6 +1,6 @@
 # Deploy the Cloud Yatra game client to Cloudflare Pages.
 #
-# This is a STATIC-ONLY deploy (Vite build → game/dist), which is free and unlimited on
+# This is a static-only deploy (Vite build → game/dist), which is free and unlimited on
 # Cloudflare Pages. It runs only after the build + tests pass.
 #
 # Enable it by adding two repository secrets (Settings → Secrets and variables → Actions):
@@ -54,7 +54,7 @@ jobs:
           VITE_GRAFANA_GRAND_URL: ${{ vars.VITE_GRAFANA_GRAND_URL }}
         run: npm run build
 
-      # Wrangler v4 no longer auto-creates the Pages project on first deploy, so ensure it
+      # Wrangler v4 does not auto-create the Pages project on first deploy, so ensure it
       # exists. We check first and only create when missing, so steady-state deploys stay
       # fully green (no "already exists" error annotation). Static Pages projects are free.
       - name: Ensure Pages project exists

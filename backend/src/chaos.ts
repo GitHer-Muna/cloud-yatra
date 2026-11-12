@@ -1,12 +1,11 @@
 /**
- * chaos.ts — Chaos Mode: an admin-gated, self-only fault injector for the live demo.
+ * chaos.ts — Chaos Mode: an admin-gated, self-only fault injector.
  *
- * This is Cloud Yatra's signature "watch the dashboard react" feature. An operator flips
- * chaos ON for a bounded window (~60s, auto-expiring). While active, the Worker injects
- * extra latency and a fraction of synthetic 503s onto the GAMEPLAY ingest routes ONLY
- * (/event, /events, /score). It NEVER touches /healthz, /metrics, or the /chaos/* control
- * plane (so the operator can always see state and turn it off), and it NEVER touches any
- * external service — the fault is entirely within our own backend, by design.
+ * An operator enables chaos for a bounded, auto-expiring window (~60s). While active, the
+ * Worker injects extra latency and a fraction of synthetic 503s onto the gameplay ingest
+ * routes only (/event, /events, /score). It never touches /healthz, /metrics, or the
+ * /chaos/* control plane (so the operator can always see state and turn it off), and never
+ * touches any external service.
  *
  * State is shared across Worker isolates through one D1 row (see syncChaos/persistChaos);
  * each isolate keeps a ~2s in-memory cache so gameplay requests stay cheap. The
@@ -42,9 +41,9 @@ interface ChaosEvent {
   profile?: ChaosProfile;
 }
 
-/** Hard ceilings so a typo can't turn a demo into a real outage. */
+/** Hard ceilings so a typo can't turn a drill into a real outage. */
 const MAX_DURATION_MS = 120_000; // never longer than 2 minutes
-const DEFAULT_DURATION_MS = 60_000; // ~60s per the product brief
+const DEFAULT_DURATION_MS = 60_000; // ~60s window
 const MAX_LATENCY_MS = 3_000;
 const DEFAULT_LATENCY_MS = 600;
 const DEFAULT_ERROR_RATE = 0.25;
@@ -68,9 +67,9 @@ function record(ev: ChaosEvent): void {
 }
 
 // --- Cross-isolate sharing via D1 -------------------------------------------------------
-// The in-memory `state` above is a per-isolate CACHE of one shared D1 row (chaos_state).
+// The in-memory `state` above is a per-isolate cache of one shared D1 row (chaos_state).
 // syncChaos() refreshes it (at most every SYNC_TTL_MS per isolate); persistChaos() writes
-// it after start/stop. All D1 errors are swallowed: chaos is a demo feature and must never
+// it after start/stop. All D1 errors are swallowed: chaos is a non-essential feature and must never
 // break gameplay routes (e.g. before migration 0003 has been applied).
 const SYNC_TTL_MS = 2_000;
 let lastSync = 0;

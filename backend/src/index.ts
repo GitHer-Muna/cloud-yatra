@@ -1,10 +1,8 @@
 /**
  * index.ts — the Cloud Yatra backend Worker entrypoint.
  *
- * Ops note: the deploy-worker CI (push to backend/**) re-applies D1 migrations to the
- * remote database before deploying, so a redeploy heals a remote schema that has drifted
- * out of sync with migrations/ (the cause of /stats & /leaderboard returning internal_error
- * while /healthz stays ok). `wrangler d1 migrations apply` is idempotent — safe to re-run.
+ * The deploy-worker workflow applies D1 migrations before deploying; applying them is
+ * idempotent, so a redeploy also repairs a remote schema that has drifted from migrations/.
  *
  * Routes:
  *   GET  /healthz       → liveness + D1 reachability probe
@@ -130,7 +128,7 @@ export default {
 
     // Chaos Mode: on gameplay routes only, inject bounded latency and/or a synthetic 503
     // while an admin-triggered window is active. Control/observability routes are never
-    // perturbed. This is the "watch the dashboard react" demo signal.
+    // perturbed.
     let chaosInjected = false;
     await syncChaos(env.DB);
     const chaos = decide(route);
@@ -229,7 +227,7 @@ async function handle(req: Request, env: Env, c: Ctx): Promise<Response> {
   }
 
   if (pathname === '/metrics' && method === 'GET') {
-    // Optional auth: Grafana Cloud's "Metrics Endpoint" integration REQUIRES the scraped
+    // Optional auth: Grafana Cloud's "Metrics Endpoint" integration requires the scraped
     // URL to be authenticated (it refuses unauthenticated public URLs). When METRICS_TOKEN
     // is set, require `Authorization: Bearer <token>`. When unset, /metrics stays public
     // (e.g. for a self-hosted Prometheus or Alloy scrape).
@@ -240,11 +238,9 @@ async function handle(req: Request, env: Env, c: Ctx): Promise<Response> {
         return new Response('unauthorized', { status: 401, headers: corsHeaders(req, env) });
       }
     }
-    // Always assert liveness on the scrape path itself. `cy_api_up` was previously set
-    // only inside /healthz, but on Workers each isolate has its own metric registry — a
-    // scrape can land on an isolate that never served /healthz, leaving the gauge absent
-    // and tripping the "worker down" alert (noData=Alerting) on a perfectly healthy API.
-    // Setting it here guarantees the liveness gauge is present on every scrape.
+    // Set liveness on the scrape path itself: each isolate has its own metric registry,
+    // so a scrape can land on an isolate that never served /healthz. Setting it here keeps
+    // the gauge present on every scrape (the "worker down" alert relies on it).
     setGauge('cy_api_up', 1, {}, 'Worker liveness (1=up)');
     const format = metricsFormatFor(req.headers.get('Accept'));
     return new Response(renderMetrics(format), {

@@ -1,7 +1,7 @@
 # Continuous Integration — quality gate for every push and pull request.
 #
 # Unlike the deploy workflows (which run only on pushes to main that touch their package and
-# require Cloudflare secrets), this workflow runs on EVERY push and PR to verify the whole
+# require Cloudflare secrets), this workflow runs on every push and PR to verify the whole
 # repo stays healthy: lint, type-check, and tests for both the game and the backend Worker.
 # It needs no secrets and never deploys, so it is safe to run on forks and PRs.
 name: CI

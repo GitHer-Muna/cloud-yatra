@@ -2,7 +2,7 @@
  * env.ts — the Worker's runtime bindings and configuration surface.
  *
  * `DB` is the Cloudflare D1 (SQLite) binding declared in wrangler.toml. The GRAFANA_*
- * values are OPTIONAL secrets; when unset, the Grafana push is simply skipped and the
+ * values are optional secrets; when unset, the Grafana push is simply skipped and the
  * Worker still logs to Cloudflare Workers Logs and serves /metrics for a pull scrape.
  */
 export interface Env {
@@ -22,7 +22,7 @@ export interface Env {
 
   // First-party passthrough target for Faro RUM ingest. The Faro collector host
   // (faro-collector-prod-*.grafana.net) is blocked by browser ad/tracker shields, so the
-  // game points VITE_FARO_URL at `${WORKER}/faro` and the Worker forwards to this real
+  // game points VITE_FARO_URL at `${worker}/faro` and the Worker forwards to this real
   // collector URL from its own origin. Public-by-design (same class as VITE_FARO_URL); the
   // app key is already in the URL path. Unset = /faro returns 404 and the game uses its
   // direct collector URL instead.
@@ -37,7 +37,7 @@ export interface Env {
   GRAFANA_OTLP_TOKEN?: string; // Grafana Cloud access policy token
 
   // Chaos Mode admin gate. When unset, the /chaos control plane refuses to start chaos
-  // (read-only /chaos/status + /chaos/events still work). Set as a Wrangler SECRET.
+  // (read-only /chaos/status + /chaos/events still work). Set as a Wrangler secret.
   CHAOS_ADMIN_TOKEN?: string;
 
   // Optional bearer token that protects GET /metrics. Required by Grafana Cloud's

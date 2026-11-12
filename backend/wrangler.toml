@@ -1,7 +1,7 @@
 #:schema node_modules/wrangler/config-schema.json
 # Cloud Yatra backend Worker.
 #
-# This is a SEPARATE Cloudflare Worker from the static Pages site (cloud-yatra). The Pages
+# This is a separate Cloudflare Worker from the static Pages site (cloud-yatra). The Pages
 # project keeps serving the game unchanged; this Worker adds a small HTTP API backed by a
 # free Cloudflare D1 (SQLite) database for shared telemetry + a cross-player leaderboard.
 #
@@ -41,15 +41,15 @@ SERVICE_NAME = "cloud-yatra-api"
 # serves it under /dash/* with frame-blocking headers stripped so the game can iframe it.
 GRAFANA_PROXY_BASE = "https://curioushalibut2108.grafana.net"
 # First-party passthrough target for Faro RUM ingest. The game points VITE_FARO_URL at
-# ${WORKER}/faro and the Worker forwards here, so RUM is sent from this (first-party) origin
+# ${worker}/faro and the Worker forwards here, so RUM is sent from this (first-party) origin
 # instead of the faro-collector host that browser ad/tracker shields block. This is a
 # write-only RUM INGEST endpoint — its key only permits sending telemetry, never reading, and
 # it already ships in the public browser bundle, so it is not a secret. Point it at your own
 # Grafana Faro receiver URL. Unset = /faro returns 404 and the browser posts RUM directly.
 FARO_UPSTREAM = "https://faro-collector-prod-ap-south-1.grafana.net/collect/dd6661dd58b770f59b0d0bd72ec44511"
-# Grafana Cloud push endpoints are OPTIONAL. Leave empty to disable the push (the Worker
+# Grafana Cloud push endpoints are optional. Leave empty to disable the push (the Worker
 # still logs to Cloudflare Workers Logs and exposes /metrics for a pull scrape). Set these
-# as Wrangler SECRETS, not here:  GRAFANA_LOKI_URL, GRAFANA_LOKI_USER, GRAFANA_LOKI_TOKEN,
+# as Wrangler secretS, not here:  GRAFANA_LOKI_URL, GRAFANA_LOKI_USER, GRAFANA_LOKI_TOKEN,
 #                                  GRAFANA_OTLP_URL,  GRAFANA_OTLP_TOKEN
-# Chaos Mode admin gate (also a SECRET; unset = chaos control plane disabled):
+# Chaos Mode admin gate (also a secret; unset = chaos control plane disabled):
 #                                  CHAOS_ADMIN_TOKEN

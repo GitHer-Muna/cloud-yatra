@@ -1,21 +1,20 @@
 /**
- * Yatri.ts — the playable character: YATRI, an original Nepali traveler in a
+ * Yatri.ts — the playable character: Yatri, an original Nepali traveler in a
  * traditional gunyu-cholo (crimson blouse + saffron wrap-skirt with a green hem), a red
  * patuka sash, a dhaka-weave shawl, hair gathered in a bun with a red tika — and she
- * carries a KHUKURI, the iconic curved Nepali blade, which she can swing to cut through
+ * carries a khukuri, the iconic curved Nepali blade, which she can swing to cut through
  * certain obstacles on the path.
  *
- * ARCHITECTURE (kept deliberately simple + robust):
- *  - Yatri is a plain Arcade physics SPRITE, so the physics body auto-aligns to the
- *    sprite with no manual offset math.
- *  - All per-frame animation uses `setScale` only, which pivots around the sprite's
- *    centre origin and does NOT move the physics body — so collisions stay aligned and
- *    the figure never jitters. (We never move the sprite position/origin for animation.)
- *  - The KHUKURI SWING is a short-lived separate blade sprite drawn in front of the
- *    Yatri; while it is active the scene can query `getAttackHitbox()` to cut obstacles.
- *  - TELEMETRY-READY: the Yatri never touches the network. It calls an optional `onEvent`
- *    callback for meaningful moments (jump, land, damaged, died, respawn, attack).
- *  - ART: 100% original, drawn in code (no external files).
+ * Design:
+ *  - Yatri is a plain Arcade physics sprite, so the body aligns to the sprite without
+ *    manual offsets.
+ *  - Per-frame animation uses `setScale` only (pivoting on the centre origin), so the
+ *    physics body never moves for animation.
+ *  - The khukuri swing is a short-lived blade sprite; while active, `getAttackHitbox()`
+ *    lets the scene cut obstacles.
+ *  - Yatri never touches the network; it reports moments (jump, land, damaged, died,
+ *    respawn, attack) through an optional `onEvent` callback.
+ *  - All art is original and drawn in code.
  */
 import Phaser from 'phaser';
 import { PLAYER, type YatriState } from '../config/playerConfig';
@@ -317,7 +316,7 @@ export class Yatri extends Phaser.Physics.Arcade.Sprite {
     this.setVelocityY(-PLAYER.jumpVelocity * 0.72);
     this.isJumpingUp = true;
     // The bounce counts as the "first" jump, leaving exactly one air jump available. (Setting
-    // this to 0 would make BOTH gates fail — canGroundJump needs coyote grace, canDoubleJump
+    // this to 0 would make both gates fail — canGroundJump needs coyote grace, canDoubleJump
     // needs jumpsUsed>=1 — so the player couldn't jump at all until landing.)
     this.jumpsUsed = 1;
     this.emit_('stomp');
@@ -341,7 +340,7 @@ export class Yatri extends Phaser.Physics.Arcade.Sprite {
   }
 
   /**
-   * Falling into the void: ALWAYS costs a life (ignores invulnerability — there is no
+   * Falling into the void: always costs a life (ignores invulnerability — there is no
    * "recovering" from the bottom of the world). Returns true if a life was lost.
    */
   takeFallDamage(): boolean {
@@ -382,7 +381,7 @@ export class Yatri extends Phaser.Physics.Arcade.Sprite {
 
   /**
    * Grant bonus lives from the reward economy (prayer bells, bloom garlands), capped at
-   * PLAYER.maxLives. Returns the number of lives ACTUALLY added (0 if already at the cap),
+   * player.maxLives. Returns the number of lives actually added (0 if already at the cap),
    * so the scene can show the right feedback ("+1 life" vs "already full").
    */
   gainLife(amount = 1): number {
@@ -428,7 +427,7 @@ export class Yatri extends Phaser.Physics.Arcade.Sprite {
       this.emit_('state_change', next);
     }
 
-    // Face direction via flip (pivots around centre origin; does NOT move the body).
+    // Face direction via flip (pivots around centre origin; does not move the body).
     this.setFlipX(this.facing === -1);
 
     // All animation is scale-only, pivoting around the centre origin — the body never
@@ -625,9 +624,9 @@ export class Yatri extends Phaser.Physics.Arcade.Sprite {
   }
 
   /**
-   * Build the transient KHUKURI blade texture used during a swing. The khukuri is the
+   * Build the transient khukuri blade texture used during a swing. The khukuri is the
    * iconic Nepali knife: a pale bone/horn handle, a brass guard, and a broad steel blade
-   * that curves forward with a downward-angled belly. Drawn pointing to the RIGHT (the
+   * that curves forward with a downward-angled belly. Drawn pointing to the right (the
    * sprite is flipped for a left-facing swing). 100% original art.
    */
   private static ensureBladeTexture(scene: Phaser.Scene): void {

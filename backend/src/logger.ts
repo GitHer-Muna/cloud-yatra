@@ -2,7 +2,7 @@
  * logger.ts — structured JSON logging + optional Grafana Cloud push (logs & traces).
  *
  * Every request gets a correlationId. Logs are emitted as single-line JSON to the console
- * (captured by Cloudflare Workers Logs) AND, when GRAFANA_LOKI_* is configured, pushed to
+ * (captured by Cloudflare Workers Logs) and, when GRAFANA_LOKI_* is configured, pushed to
  * Grafana Cloud Loki. A minimal OTLP trace span is pushed when GRAFANA_OTLP_* is set.
  *
  * All pushes are best-effort and fire via ctx.waitUntil so they never block or fail the

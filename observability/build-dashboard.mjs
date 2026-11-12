@@ -3,7 +3,7 @@
  * build-dashboard.mjs — generate the ONE canonical Cloud Yatra dashboard.
  *
  * There is a single source of truth: `cloud-yatra-observatory.json` (rich, every signal,
- * every signal). This script derives the PUBLIC, embeddable dashboard from it so we never
+ * every signal). This script derives the public, embeddable dashboard from it so we never
  * hand-maintain two files. It writes:
  *   - cloud-yatra-observatory.json         (canonical: datasource template vars kept for a
  *                                           normal authenticated import / "map datasources")
@@ -12,7 +12,7 @@
  *
  * Public dashboards (Grafana "Share externally") CANNOT use template variables, so for the
  * public copy we:
- *   - drop the game Video panel + the per-session "YOUR RUN" row (per-player belongs in the
+ *   - drop the game Video panel + the per-session "your RUN" row (per-player belongs in the
  *     game page, which knows the session; public dashboards can't filter per viewer),
  *   - inline `${api_base_url}` and `$faro_app_id` to literals,
  *   - replace `${DS_*}` datasource refs with this stack's real datasource names,
@@ -178,7 +178,7 @@ function buildPublic(grand) {
 
   // Drop the two rows (and their child panels) that can't/shouldn't be public:
   //   - "PLAY CLOUD YATRA" (the Video panel game embed) — the game is already on the page.
-  //   - "YOUR RUN" (per-session) — needs the `session` variable, impossible on public.
+  //   - "your RUN" (per-session) — needs the `session` variable, impossible on public.
   // Rows are flat markers; a row "owns" every panel until the next row marker.
   const dropRowTitles = [/PLAY CLOUD YATRA/i, /YOUR RUN/i];
   const kept = [];
@@ -193,10 +193,10 @@ function buildPublic(grand) {
   }
   panels = kept;
 
-  // Remove the old header text panel(s) at y=0; we prepend our own branded header.
+  // Replace the source's header text panel(s) at y=0 with the public branded header.
   panels = panels.filter((p) => !(p.type === 'text' && p.gridPos && p.gridPos.y === 0));
 
-  // Keep ONLY panels that actually render on a Grafana Cloud public dashboard. Public
+  // Keep only panels that actually render on a Grafana Cloud public dashboard. Public
   // dashboards expose a limited datasource set: the Infinity datasource (our D1 analytics)
   // works, but Prometheus/Loki/Tempo queries are withheld on public shares, so those panels
   // would render empty/error. We drop them here so the public embed is complete and clean;
@@ -212,11 +212,11 @@ function buildPublic(grand) {
   };
   panels = panels.filter(publicRenderable);
 
-  // Prune rows that no longer have any child panels after the datasource filter.
+  // Prune rows that have no child panels after the datasource filter.
   panels = pruneEmptyRows(panels);
 
-  // Re-title rows so each section matches the D1-only content it actually holds now (the
-  // metric/RUM panels were filtered out, so the source titles like "service pulse" or
+  // Re-title rows so each section matches the D1-only content it holds (the
+  // metric/RUM panels are filtered out, so the source titles like "service pulse" or
   // "frame rate" would be misleading on the public copy). Keyed by the source row title.
   const PUBLIC_ROW_TITLES = {
     'LIVE NOW': 'LIVE NOW · service pulse',
@@ -301,7 +301,7 @@ function reflow(panels) {
 }
 
 // --- run ------------------------------------------------------------------------------
-// Canonical SOURCE: the rich, authenticated master (game embed + per-session YOUR RUN +
+// Canonical SOURCE: the rich, authenticated master (game embed + per-session your RUN +
 // every signal, with datasource template inputs for a normal "map datasources" import).
 const SOURCE = 'cloud-yatra-observatory.json';
 const grand = JSON.parse(readFileSync(path.join(dir, SOURCE), 'utf8'));

@@ -60,15 +60,14 @@ export interface LevelConfig {
 // Shared scoring (level-independent).
 export const SCORING = {
   scorePerBloom: 10,
-  // Combo tuned to be ACTUALLY reachable in a clean run: a wider window to chain the
+  // Combo tuned to be actually reachable in a clean run: a wider window to chain the
   // next bloom, and a bigger step so the x4 cap arrives in 5 blooms (not 7). This makes
   // the headline multiplier — and Guru Megh's "combo streak" cheer — visible in normal play.
   comboWindowMs: 3500,
   comboStep: 0.75,
   comboMax: 4,
   timeBonusMax: 500,
-  // Lower than before so simply surviving no longer dwarfs actual collecting at the end
-  // of a level (it used to be 100/life → up to 600, more than the whole bloom haul).
+  // Kept modest so surviving doesn't outweigh actual collecting at the end of a level.
   livesBonus: 60,
   bellPoints: 50,
   levelClearBonus: 300, // awarded per level cleared
@@ -88,10 +87,8 @@ export const SCORING = {
   garlandsPerLife: 2,
   garlandBonusPoints: 150, // points awarded alongside the garland life
   garlandCapConvertPoints: 100, // extra points when a garland completes but lives are full
-  // A prayer bell is a rare blessing: it restores a life ONLY when the player is at or
-  // below this many lives (a clutch save), otherwise it converts to a large point bonus.
-  // Previously every bell granted +1 life unconditionally, which (with garlands) made the
-  // player effectively immortal.
+  // A prayer bell restores a life only when the player is at or below this many lives
+  // (a clutch save); otherwise it converts to a large point bonus.
   bellLifeBonus: 1,
   bellLifeThreshold: 1,
   bellCapConvertPoints: 150, // extra points when a bell is found but lives are full (or not low)

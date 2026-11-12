@@ -1,8 +1,8 @@
 /**
  * MistWisp.ts — the original, predictable hazard of Himal Rajya.
  *
- * CONCEPT: a "Mist Wisp" is a cold mountain-fog mote that drifts back and forth
- * along a fixed horizontal path at constant speed. NOT an enemy with intelligence —
+ * concept: a "Mist Wisp" is a cold mountain-fog mote that drifts back and forth
+ * along a fixed horizontal path at constant speed. Not an enemy with intelligence —
  * no chasing, no pathfinding. Beginner-friendly: watch it, learn the pattern, time
  * your move. Touching one costs the Yatri a life. Art is 100% original, drawn in code.
  */

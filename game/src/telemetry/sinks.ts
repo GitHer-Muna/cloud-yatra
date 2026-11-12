@@ -116,7 +116,7 @@ export class FaroSink implements TelemetrySink {
  *   - BATCHES events (default up to 20, or every ~4s) so we make few, small requests and
  *     stay well inside Cloudflare's free tier. No per-frame requests ever.
  *   - OFFLINE-SAFE: a failed send simply drops that batch (telemetry is best-effort); it
- *     NEVER throws into gameplay and NEVER blocks. The game plays identically if the
+ *     never throws into gameplay and never blocks. The game plays identically if the
  *     backend is down or unreachable.
  *   - flush() uses sendBeacon when possible so the final batch survives the page hiding
  *     (e.g. the victory → leaderboard transition).

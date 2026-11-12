@@ -90,7 +90,7 @@ export async function ingest(
  * read them instead of scanning the append-only `events` table. Only called for newly
  * inserted (non-duplicate) events, keeping the counts exactly in step with `events`.
  *
- * Mirrors the GROUP BY classification the old full-scan stats() used:
+ * Classification (equivalent to a GROUP BY over `events`):
  *   agg_type  — every event, keyed by type
  *   agg_cause — player_died events, keyed by COALESCE(cause,'unknown')
  *   agg_kind  — collectible_collected events, keyed by COALESCE(kind,'unknown')
@@ -161,7 +161,7 @@ async function updateSession(
   const progress = num(a, 'progressPct') ?? 0;
   const inputMode = str(a, 'inputMode', 16);
   // Funnel flags: a session "reached" a region the first time it emits any event tagged
-  // with that level_id (matches the old `WHERE level_id=...` COUNT(DISTINCT) semantics).
+  // with that level_id.
   const reachedHills = ev.levelId === 'hills' ? 1 : 0;
   const reachedHimal = ev.levelId === 'himal' ? 1 : 0;
 
@@ -297,7 +297,7 @@ export interface RecentRow {
 }
 
 /**
- * The most RECENTLY active N runs, newest first — a live "who's climbing right now" feed
+ * The most recently active N runs, newest first — a live "who's climbing right now" feed
  * for the public dashboard (liveness the top-scores leaderboard can't show on its own).
  *
  * Reads the small `scores` table (best-per-name), ordered by updated_at DESC, so it stays
@@ -317,9 +317,9 @@ export async function recent(env: Env, limit = 10): Promise<RecentRow[]> {
 }
 
 /**
- * Live "service pulse" — a small set of DURABLE, accurate liveness metrics for the public
+ * Live "service pulse" — a small set of durable, accurate liveness metrics for the public
  * "LIVE NOW" dashboard row and the in-game strip. Everything here is computed from D1 (the
- * durable store), NOT from the Worker's per-isolate Prometheus counters, which reset with
+ * durable store), not from the Worker's per-isolate Prometheus counters, which reset with
  * each short-lived isolate and would read near-zero on a fresh one. Prometheus-only RED
  * metrics (p95 latency, error rate) deliberately stay on the authenticated Grand dashboard
  * where they're aggregated correctly — we never fake them here.
@@ -466,11 +466,8 @@ export interface Stats {
  * Aggregate dashboard stats, read from the small incremental rollup tables (migration
  * 0002) instead of scanning the append-only `events` table.
  *
- * Why: the previous implementation ran ~16 queries per call, most of them full-table scans
- * or GROUP BYs over `events` (whose row count only grows), plus four COUNT(DISTINCT
- * session_id) funnel scans. The in-page mini-observatory and the Grafana panels poll /stats
- * from every open tab, so on Cloudflare D1's free tier those reads blew the daily row-read
- * cap (error 7500) and blanked the dashboard mid-demo. Now every figure below reads either a
+ * /stats is polled from every open tab, so scanning `events` (whose row count only grows)
+ * would exhaust D1's daily row-read cap on the free tier. Every figure below reads either a
  * tiny keyed aggregate table (agg_type/agg_cause/agg_kind/agg_level — bounded by the number
  * of distinct low-cardinality values) or the small per-session `sessions` table. The only
  * query that still touches `events` is avgFps, which is time-bounded to the last hour and
@@ -539,8 +536,8 @@ export async function stats(env: Env): Promise<Stats> {
     ).results ?? [];
 
   // Funnel from the small sessions table (per-session flags), not DISTINCT scans of events.
-  // started/completed are ">0" because those columns count the respective events per session,
-  // so ">0" is equivalent to the old COUNT(DISTINCT session_id WHERE type=...).
+  // started/completed use ">0" because those columns count the respective events per
+  // session, which is equivalent to COUNT(DISTINCT session_id WHERE type = ...).
   const funnelRow =
     (await one<{ started: number; hills: number; himal: number; completed: number }>(
       `SELECT

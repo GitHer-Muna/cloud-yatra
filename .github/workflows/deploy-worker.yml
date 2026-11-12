@@ -1,6 +1,6 @@
 # Deploy the Cloud Yatra backend Worker (Cloudflare Worker + D1) to Cloudflare.
 #
-# This is SEPARATE from the Pages deploy (deploy-cloudflare.yml). It runs only when files
+# This is separate from the Pages deploy (deploy-cloudflare.yml). It runs only when files
 # under backend/** change. It type-checks, tests (in the real workerd runtime), applies any
 # new D1 migrations to the remote database, and deploys the Worker.
 #
@@ -52,9 +52,9 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         # Normally migrations must apply before deploy. But a D1 FREE-TIER daily row-read/
         # write limit (Cloudflare error 7500) is a transient quota condition that resets at
-        # midnight UTC and is unrelated to the Worker code — it should NOT block deploying
-        # an otherwise-healthy Worker. So: run migrations; if they fail ONLY because of the
-        # rate limit, emit a warning and continue; any OTHER failure still fails the job.
+        # midnight UTC and is unrelated to the Worker code — it should not block deploying
+        # an otherwise-healthy Worker. So: run migrations; if they fail only because of the
+        # rate limit, emit a warning and continue; any other failure still fails the job.
         run: |
           set +e
           out="$(npx wrangler d1 migrations apply cloud-yatra --remote 2>&1)"
@@ -77,7 +77,7 @@ jobs:
           workingDirectory: backend
           command: deploy
 
-      # Optional Worker secrets. Each is pushed ONLY when the matching repository secret is
+      # Optional Worker secrets. Each is pushed only when the matching repository secret is
       # non-empty, so the deploy stays green whether or not you've set them, and an unset
       # value never wipes an existing Worker secret. To enable any of these, add the secret
       # under Settings → Secrets and variables → Actions, then re-run this workflow

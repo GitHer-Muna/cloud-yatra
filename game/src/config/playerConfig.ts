@@ -7,7 +7,7 @@
 export const PLAYER = {
   // Movement feel.
   moveSpeed: 230, // horizontal px/s top speed. Movement eases in/out via accel/decel below
-  // (not instant), so it no longer feels twitchy even at this speed — and the widest
+  // (not instant), so it doesn't feel twitchy even at this speed — and the widest
   // platform gap (225px) clears with real margin (flight ≈ 276px at JV=600).
   // How quickly Yatri ramps up to / slows down from top speed (px/s²). A short ramp removes
   // the "instant snap" that felt over-sensitive, while staying responsive.
@@ -19,9 +19,9 @@ export const PLAYER = {
   //   max height = 600²/(2·1000) = 180px  per first jump (clears a full platform layer)
   //   air-time   = 2·600/1000    = 1.2s
   //   h-flight   = 230·1.2       = 276px  (widest platform gap ≈225px → clears it, ~18px margin)
-  // A single jump reaches the lower/mid ledges directly; the DOUBLE JUMP (below) stacks on
-  // top so the HIGHEST layers (tallest platform ≈220px) are reachable with real margin —
-  // the player actually jumps UP to the pickup. The levels.test.ts accessibility checks
+  // A single jump reaches the lower/mid ledges directly; the DOUBLE jump (below) stacks on
+  // top so the highest layers (tallest platform ≈220px) are reachable with real margin —
+  // the player actually jumps up to the pickup. The levels.test.ts accessibility checks
   // derive their bounds from these values so no gap/rise exceeds what the jumps can clear.
   jumpVelocity: 600, // upward impulse for the first (ground) jump (bigger = higher)
   airControl: 0.9,
@@ -70,7 +70,7 @@ export const PLAYER = {
 
   /**
    * Culturally-accurate palette for the YATRI — a Nepali traveler dressed in a
-   * traditional GUNYU-CHOLO, carrying a KHUKURI.
+   * traditional GUNYU-CHOLO, carrying a khukuri.
    *  - cholo: a fitted blouse (deep Nepali red / crimson) with gold trim at the cuffs.
    *  - gunyu / patuki: a pleated wrap-skirt in warm saffron/orange with a green sari-style
    *    hem border (the classic red-green-gold Newari/hill palette).

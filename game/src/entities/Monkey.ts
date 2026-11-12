@@ -3,9 +3,7 @@
  * hopping back and forth. Predictable (no chasing/pathfinding), like the other hazards —
  * watch its pace and time your move. Touch costs the Yatri a life.
  *
- * Replaces the earlier placeholder (a brown-tinted MistWisp) with distinct, readable
- * original art + a little hop so it clearly reads as a monkey on the jungle path. 100%
- * original art, drawn in code.
+ * Original art drawn in code, with a little hop so it clearly reads as a monkey.
  */
 import Phaser from 'phaser';
 

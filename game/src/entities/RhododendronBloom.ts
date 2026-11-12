@@ -2,12 +2,12 @@
  * RhododendronBloom.ts — the main collectible of Cloud Yatra (the "lali gurans", Nepal's
  * national flower). Collecting blooms builds the combo and completes garlands (+1 life).
  *
- * CONCEPT: a flower GROWS FROM THE GROUND — it is NOT a coin floating in the sky. The
+ * concept: a flower GROWS FROM the GROUND — it is not a coin floating in the sky. The
  * sprite is drawn as a flower head on a short stem and is placed so the base of the stem
  * sits ON the walking surface (origin at the bottom-centre). The player collects it by
  * simply walking past it on the trail.
  *
- * SIZE: the flower head is sized to read clearly but stay PROPORTIONATE to the ~45×60px
+ * SIZE: the flower head is sized to read clearly but stay proportionate to the ~45×60px
  * traveller — roughly half her height. A soft pulsing glow marks it as a pickup. 100%
  * original art.
  */
@@ -18,7 +18,7 @@ const TEXTURE_KEY = 'rhodo-bloom';
 // Native texture canvas. The flower head occupies the TOP portion; a short stem drops to
 // the bottom so the plant visually "grows" from the ground it is placed on. The canvas is
 // sized with enough headroom at the top that the full flower head (petals + white halo)
-// fits WITHOUT clipping at the canvas edge — the head's radius with halo is ~18px, so the
+// fits without clipping at the canvas edge — the head's radius with halo is ~18px, so the
 // head centre must sit at least that far below the top.
 const TEX_SIZE = 40;
 // Head centre, measured from the TOP of the canvas. Chosen so the head (petal ring 8 +
@@ -46,7 +46,7 @@ export class RhododendronBloom extends Phaser.Physics.Arcade.Sprite {
 
   /**
    * @param x  world x of the plant.
-   * @param y  the SURFACE top the flower grows from (its stem base rests here).
+   * @param y  the surface top the flower grows from (its stem base rests here).
    */
   constructor(scene: Phaser.Scene, x: number, y: number, variant: BloomVariant = 'rhododendron') {
     RhododendronBloom.ensureTexture(scene, variant);
@@ -72,7 +72,7 @@ export class RhododendronBloom extends Phaser.Physics.Arcade.Sprite {
 
     scene.add.existing(this);
     scene.physics.add.existing(this);
-    // Origin at the BOTTOM-centre so the stem base sits exactly on the surface `y`.
+    // Origin at the bottom-centre so the stem base sits exactly on the surface `y`.
     this.setOrigin(0.5, 1);
     this.setDepth(3); // above terrain and the player
 
@@ -110,7 +110,7 @@ export class RhododendronBloom extends Phaser.Physics.Arcade.Sprite {
   }
 
   /**
-   * Extend the pickup hitbox DOWNWARD by `px` pixels (the visual stays put). Used when a
+   * Extend the pickup hitbox downward by `px` pixels (the visual stays put). Used when a
    * bloom sits on an elevated platform: a player jumping up from the ground below should
    * collect it as the jump arc reaches the ledge, without having to land perfectly on top.
    */
@@ -171,7 +171,7 @@ export class RhododendronBloom extends Phaser.Physics.Arcade.Sprite {
     g.fillTriangle(cx - 1, headY + 12, cx - 12, headY + 9, cx - 2, headY + 3);
     g.fillTriangle(cx + 1, headY + 16, cx + 12, headY + 13, cx + 2, headY + 7);
 
-    // Five bold petals with a WHITE outline each so the flower reads on any backdrop.
+    // Five bold petals with a white outline each so the flower reads on any backdrop.
     const petal = (fill: number, r: number) => {
       for (let i = 0; i < 5; i++) {
         const a = (i / 5) * Math.PI * 2 - Math.PI / 2;

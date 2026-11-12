@@ -1,7 +1,7 @@
 -- Cloud Yatra D1 schema (migration 0001).
 --
 -- Design goals:
---   * Persist EVERY gameplay signal (jumps, cuts, collisions, flowers, bells, deaths,
+--   * Persist every gameplay signal (jumps, cuts, collisions, flowers, bells, deaths,
 --     progress, guru moments, perf, heartbeats) as append-only rows for deep analytics.
 --   * Keep a per-session rollup so the dashboard can show sessions/engagement cheaply.
 --   * Keep a real cross-player leaderboard (best score per pilgrim name).

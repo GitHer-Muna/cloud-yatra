@@ -2,9 +2,9 @@
  * PrayerBell.ts — a rare, high-value pickup: a golden temple/prayer bell. Each one is a
  * blessing worth +1 life, placed along the trail to reward exploring.
  *
- * CONCEPT: the bell rests ON the walking surface (origin at the bottom-centre), not
+ * concept: the bell rests ON the walking surface (origin at the bottom-centre), not
  * floating in the sky. It is a little larger than a bloom because it is rare and valuable,
- * but it stays PROPORTIONATE to the ~45×60px traveller. A gold pulsing glow and a subtle
+ * but it stays proportionate to the ~45×60px traveller. A gold pulsing glow and a subtle
  * glint mark it as a pickup. 100% original art.
  */
 import Phaser from 'phaser';
@@ -18,7 +18,7 @@ export class PrayerBell extends Phaser.Physics.Arcade.Sprite {
 
   /**
    * @param x  world x of the bell.
-   * @param y  the SURFACE top the bell rests on (its base sits here).
+   * @param y  the surface top the bell rests on (its base sits here).
    */
   constructor(scene: Phaser.Scene, x: number, y: number) {
     PrayerBell.ensureTexture(scene);
@@ -40,7 +40,7 @@ export class PrayerBell extends Phaser.Physics.Arcade.Sprite {
     this.glow = glow;
     scene.add.existing(this);
     scene.physics.add.existing(this);
-    // Origin at the BOTTOM-centre so the bell base rests exactly on the surface `y`.
+    // Origin at the bottom-centre so the bell base rests exactly on the surface `y`.
     this.setOrigin(0.5, 1);
     this.setDepth(3);
 
@@ -63,7 +63,7 @@ export class PrayerBell extends Phaser.Physics.Arcade.Sprite {
   }
 
   /**
-   * Extend the pickup hitbox DOWNWARD by `px` pixels (the visual stays put), so a bell on
+   * Extend the pickup hitbox downward by `px` pixels (the visual stays put), so a bell on
    * an elevated ledge can be collected by a jump rising from the ground below.
    */
   extendPickupDownward(px: number): void {

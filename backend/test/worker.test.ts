@@ -74,8 +74,8 @@ describe('CORS + routing', () => {
 
   it('allows credentials so sendBeacon (credentials: include) passes preflight', async () => {
     // navigator.sendBeacon always sends with credentials mode "include"; the preflight
-    // must echo a concrete origin AND Access-Control-Allow-Credentials: true or the
-    // browser blocks the score submit. Regression guard for the empty-leaderboard bug.
+    // must echo a concrete origin and Access-Control-Allow-Credentials: true or the
+    // browser blocks the score submit.
     const res = await call('OPTIONS', '/score');
     expect(res.status).toBe(204);
     expect(res.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:5173');
@@ -155,7 +155,7 @@ describe('/event validation + ingest', () => {
   });
 
   it('does not dedupe distinct sessions that share a correlationId + type + tMs', async () => {
-    // Regression guard: the idempotency key for correlationId-tagged events must include
+    // The idempotency key for correlationId-tagged events must include
     // sessionId, so two genuinely different players' events can't collide into one.
     const a = makeEvent({
       type: 'player_jump',
@@ -323,7 +323,7 @@ describe('/stats', () => {
   it('serves byType/byLevel/byKind/funnel from the incremental rollups across sessions', async () => {
     // Two distinct sessions crossing multiple regions. This exercises the aggregate tables
     // (agg_type/agg_cause/agg_kind/agg_level) + the per-session funnel flags, and asserts
-    // the values match what the old events-table GROUP BY/COUNT(DISTINCT) produced.
+    // the values match an events-table GROUP BY / COUNT(DISTINCT).
     await call('POST', '/events', [
       // Session A: terai → hills → himal, dies twice, completes, collects a flower + a bell.
       makeEvent({ type: 'game_started', sessionId: 'sess-a-0001', levelId: 'terai', tMs: 1 }),
@@ -354,7 +354,7 @@ describe('/stats', () => {
     expect(byCause.eagle).toBe(2);
     expect(byCause.rockfall).toBe(1);
 
-    // collectsByKind includes bells, exactly as the old grouping by the `kind` column did.
+    // collectsByKind includes bells (grouped by the `kind` column).
     const byKind = Object.fromEntries(s.collectsByKind.map((r: any) => [r.kind, r.count]));
     expect(byKind.marigold).toBe(1);
     expect(byKind.prayer_bell).toBe(1);
@@ -654,9 +654,9 @@ describe('Grafana dashboard proxy', () => {
   // The Grafana public-dashboard SPA probes the authenticated-only app-platform resource
   // APIs (/apis/<group>.grafana.app/...). A public viewer can't authenticate, so the real
   // Grafana returns 401 — which makes the browser log a red network error and the SPA log
-  // "PluginMeta: failed to load plugin metas". We instead answer with a VALID EMPTY 200 in
+  // "PluginMeta: failed to load plugin metas". We instead answer with a valid empty 200 in
   // the Kubernetes list/discovery shape, so the SPA resolves cleanly (same end state as its
-  // bootdata fallback) with NO console error. No upstream hop either.
+  // bootdata fallback) with no console error. No upstream hop either.
   it('answers the /apis group-discovery probe with a valid empty 200 (no console error)', async () => {
     const res = await call('GET', '/apis/dashboard.grafana.app/');
     expect(res.status).toBe(200);

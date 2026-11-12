@@ -1,28 +1,22 @@
 /**
  * grafanaProxy.ts — a narrow reverse proxy that lets the game page embed the real Grafana
- * public dashboard in an iframe BELOW the game, on the game's own origin.
+ * public dashboard in an iframe below the game, on the game's own origin.
  *
- * WHY THIS EXISTS
- * Grafana Cloud serves its dashboards (including public ones) with CSP
- * `frame-ancestors 'none'` and `X-Frame-Options: deny`, so a browser refuses to render
- * `<iframe src="https://<stack>.grafana.net/public-dashboards/...">` on another origin. The
- * only ways around that are an account-level Grafana setting (support ticket) or serving
- * the dashboard from the SAME origin as the embedding page. This proxy does the latter: the
- * Worker fetches the public dashboard from Grafana server-side and re-serves it from its own
- * origin with the frame-blocking headers removed. The dashboard HTML is served at
- * `/public-dashboards/<token>` (the Grafana boot script matches that pathname), and the
- * SPA's root-absolute calls (`/api`, `/bootdata`, …) are proxied at the Worker root too, so
- * the game page can iframe `${WORKER}/public-dashboards/<token>` with no browser refusal.
+ * Grafana Cloud serves dashboards with CSP `frame-ancestors 'none'` and
+ * `X-Frame-Options: deny`, so they cannot be iframed on another origin. The Worker fetches
+ * the public dashboard server-side and re-serves it from its own origin with the
+ * frame-blocking headers removed, so the game page can iframe
+ * `${worker}/public-dashboards/<token>`.
  *
- * SCOPE + SAFETY
- *  - PUBLIC dashboards only. There is no authentication to forward — the proxy never sees
+ * Scope and safety
+ *  - public dashboards only. There is no authentication to forward — the proxy never sees
  *    or needs a Grafana cookie, token, or credential. It cannot reach anything that isn't
  *    already public at the `/public-dashboards/<token>` + `/api/public/...` endpoints.
  *  - Method-limited to GET/HEAD/POST (the public panel-query endpoint uses POST).
  *  - Path-limited to the Grafana paths a public dashboard actually uses. The SPA fetches
- *    with ROOT-absolute paths (/api, /public, /avatar, /public-dashboards) that ignore
- *    <base href>, so we proxy those prefixes at the Worker ROOT. Static JS/CSS/img load
- *    from Grafana's absolute CDN (grafana-assets.grafana.net) and are NOT proxied.
+ *    with root-absolute paths (/api, /public, /avatar, /public-dashboards) that ignore
+ *    <base href>, so we proxy those prefixes at the Worker root. Static JS/CSS/img load
+ *    from Grafana's absolute CDN (grafana-assets.grafana.net) and are not proxied.
  *  - The dashboard HTML is served at /public-dashboards/<token> (root, not under /dash)
  *    because the Grafana boot script matches window.location.pathname against
  *    /public-dashboards/.* to derive its public context.
@@ -34,15 +28,11 @@ import type { Env } from './env';
 
 const PREFIX = '/dash';
 
-// Grafana SPA root-absolute prefixes. The public-dashboard app issues fetch('/api/...'),
-// fetch('/bootdata'), etc. with ROOT-absolute paths that ignore <base href> and hit the
-// Worker ROOT — so we must proxy them at the root, or the boot sequence gets this API's
-// {"error":"not_found"} and shows "Failed to load Grafana". We ALSO serve the dashboard
-// HTML at /public-dashboards/<token> (the boot script matches window.location.pathname
-// against /public-dashboards/.* to derive its public context). `/bootdata` is the initial
-// boot-data fetch (__grafana_boot_data_promise); `/apis/` is the newer resource API. None
-// of these collide with this API's own routes (/healthz, /metrics, /stats, /leaderboard,
-// /recent, /session, /score, /event, /events, /chaos/*), which use entirely different path names.
+// Grafana SPA root-absolute prefixes. The public-dashboard app fetches `/api/...`,
+// `/bootdata`, etc. with root-absolute paths that ignore <base href>, so they are proxied at
+// the Worker root. The dashboard HTML is also served at /public-dashboards/<token> because
+// the boot script matches window.location.pathname against it. None of these collide with
+// this API's own routes.
 const GRAFANA_ROOT_PREFIXES = [
   '/api/',
   '/apis/',
@@ -61,32 +51,15 @@ export function isProxyRequest(pathname: string): boolean {
   return GRAFANA_ROOT_PREFIXES.some((p) => pathname.startsWith(p));
 }
 
-// Answer the Grafana SPA's authenticated-only probes with a response that resolves CLEANLY
-// for a PUBLIC viewer (instead of the 401 the real Grafana gives), so the SPA logs nothing.
-// Returns null for any path that is NOT one of these probes (so normal proxying proceeds).
-// The path is the request path minus an optional /dash prefix (the SPA issues these as
-// root-absolute fetches). Two families are handled:
-//
-//  • `/api/plugins/<id>/settings` → a 404 "plugin not found" (see inline note). Avoids the
-//    red 401 the public viewer would otherwise get for every preloaded app plugin.
-//  • `/apis/*.grafana.app/...` (app-platform resource API) → a VALID EMPTY 200, in the
-//    Kubernetes-style shape the SPA expects:
-//     - `/apis/<group>/<version>/namespaces/<ns>/metas` (and other list endpoints) → an empty
-//       `List`: `{ kind, apiVersion, items: [] }`. The SPA reads `.items` and finds nothing to
-//       add on top of bootdata.
-//     - `/apis/<group>.grafana.app/` (group discovery root) → an empty `APIGroupDiscoveryList`
-//       so version discovery succeeds with no groups.
+// Answers the Grafana SPA's authenticated-only probes with a response that resolves cleanly
+// for a public viewer (the real Grafana returns 401), so the SPA logs nothing. Returns null
+// for any other path. Handles `/api/plugins/<id>/settings` (404 "plugin not found") and
+// `/apis/*.grafana.app/...` (an empty Kubernetes-style `List` or `APIGroupDiscoveryList`).
 function quietApiResponse(path: string): Response | null {
   const p = path.startsWith(`${PREFIX}/`) ? path.slice(PREFIX.length) : path;
 
-  // `/api/plugins/<id>/settings` — the SPA's `getPluginSettings` → `getLegacySettings`
-  // fetches these during `preloadPlugins`. For a PUBLIC viewer the real Grafana returns 401
-  // (no session), which the browser prints as a red "401 (Unauthorized)" line. Answer with a
-  // 404 "plugin not found" instead: `getPluginSettings` treats a 404 as "this plugin has no
-  // stored settings", caches null, and resolves WITHOUT logging an error (a 404 is an
-  // expected not-configured state; a 401 is an auth failure it surfaces). Combined with the
-  // bootdata `preload: false` rewrite this should rarely fire, but it guards any settings
-  // fetch the SPA still issues (e.g. for a panel plugin referenced by the dashboard).
+  // The SPA's `getPluginSettings` treats a 404 as "no stored settings" and resolves without
+  // logging, whereas a 401 is surfaced as an auth failure.
   if (/^\/api\/plugins\/[^/]+\/settings\/?$/.test(p)) {
     return new Response(
       JSON.stringify({ message: 'Plugin not found, no installed plugin with that id' }),
@@ -137,7 +110,7 @@ function stripFrameHeaders(h: Headers): void {
 }
 
 /**
- * Rewrite Grafana's boot/settings JSON to DISABLE every third-party analytics + telemetry
+ * Rewrite Grafana's boot/settings JSON to disable every third-party analytics + telemetry
  * integration the public dashboard would otherwise try to load. Those scripts
  * (Google Analytics, Rudderstack → FullStory, and Grafana's own embedded Faro
  * "grafanaJavascriptAgent") are routinely blocked by browser shields and ad/tracker
@@ -162,7 +135,7 @@ function stripAnalyticsFromJson(text: string): string {
 
 /**
  * The public-dashboard HTML document ALSO inlines the boot settings
- * (`window.grafanaBootData = { …, settings: {…}, … }`), and the SPA reads those BEFORE it
+ * (`window.grafanaBootData = { …, settings: {…}, … }`), and the SPA reads those before it
  * ever requests `/bootdata`. Without this, Google Analytics loads, Grafana's own Faro agent
  * starts (its CSP instrumentation injects the `grafana-csp-check.invalid` probe and its
  * blocked collector floods "Permanent delivery failure"), regardless of the JSON rewrite.
@@ -308,17 +281,9 @@ function sanitizeBootData(root: Record<string, unknown>): void {
     }
   }
 
-  // Stop the SPA preloading the stack's installed APP plugins. `settings.apps` lists every
-  // app plugin installed on the (authenticated) Grafana stack — Asserts, IRM, k8s, SLO,
-  // Synthetic Monitoring, the Adaptive* apps, etc. On boot the SPA fetches
-  // `/api/plugins/<id>/settings` for apps with `preload: true` AND (Grafana 13+) for every
-  // app that registers UI extensions, regardless of `preload`. A PUBLIC-dashboard viewer
-  // has no session, so those fetches fail and each logs a red request error plus a
-  // "PluginSettings: getting legacy plugin settings failed" error. OUR dashboard uses only
-  // PANEL and DATASOURCE plugins (timeseries, stat, table, geomap, logs, Infinity, the
-  // Video panel) — never any app. So drop the app list entirely (exactly what a Grafana
-  // with no app plugins installed sends): the SPA has nothing to preload, and the console
-  // stays clean. Panel/datasource plugin lists are untouched.
+  // Drop the app-plugin list: a public viewer has no session, so the SPA's preload of
+  // `/api/plugins/<id>/settings` for each installed app would fail and log errors. The
+  // dashboard uses only panel and datasource plugins, which are left untouched.
   if (settings.apps && typeof settings.apps === 'object') {
     settings.apps = {};
   }
@@ -353,24 +318,15 @@ export async function handleProxy(req: Request, env: Env): Promise<Response> {
 
   const url = new URL(req.url);
 
-  // The Grafana public-dashboard SPA probes the authenticated-only app-platform resource
-  // APIs (/apis/*.grafana.app) on load — API-group discovery and panel plugin metas. A
-  // public dashboard has no session, so the REAL Grafana returns 401; the SPA catches it and
-  // falls back to its embedded bootdata, which is why the dashboard still renders. BUT the
-  // browser prints that 401 as a red network error and the SPA logs `PluginMeta: failed to
-  // load plugin metas`, which looks alarming in a demo.
-  //
-  // Instead of relaying/returning a 401, answer these probes with a VALID EMPTY 200 in the
-  // Kubernetes-style shape the SPA expects. The SPA then resolves successfully with "no
-  // extra plugin metas / no extra group versions" — the exact same end state as the bootdata
-  // fallback, but with NO thrown error, NO red console line, and NO error log. Everything the
-  // dashboard needs to render comes from bootdata either way; these endpoints only ever add
-  // (here: nothing) on top of it.
+  // The SPA probes authenticated-only app-platform APIs (/apis/*.grafana.app) on load. The
+  // real Grafana answers a public viewer with 401, which the browser logs as a red error even
+  // though the SPA falls back to its bootdata. Answering with a valid empty 200 reaches the
+  // same end state without the console noise.
   const quiet = quietApiResponse(url.pathname);
   if (quiet) return quiet;
   // Two shapes reach here:
   //   1) /dash/<rest>        → the dashboard HTML entry (and anything anchor-relative).
-  //   2) /api|/public|/avatar → the SPA's ROOT-absolute fetches (panel queries, settings,
+  //   2) /api|/public|/avatar → the SPA's root-absolute fetches (panel queries, settings,
   //      assets) that ignore <base href>. Pass these straight through to Grafana.
   // In both cases the upstream path is the request path minus an optional /dash prefix.
   const path = url.pathname.startsWith(`${PREFIX}/`)
@@ -396,9 +352,9 @@ export async function handleProxy(req: Request, env: Env): Promise<Response> {
 
   const resHeaders = new Headers(upstream.headers);
   stripFrameHeaders(resHeaders);
-  // The Workers runtime transparently DECOMPRESSES the upstream body when we read/stream it,
+  // The Workers runtime transparently decompresses the upstream body when we read/stream it,
   // but the upstream's `Content-Encoding` (gzip/br) + `Content-Length` headers describe the
-  // ORIGINAL compressed bytes. Forwarding them tells the browser to decode an already-
+  // original compressed bytes. Forwarding them tells the browser to decode an already-
   // decoded body → garbage → the Grafana app can't parse its JS and shows "Error loading
   // Grafana". Strip both so the browser reads the body as-is (Cloudflare re-applies its own
   // content-encoding on the way out).
@@ -433,7 +389,7 @@ export async function handleProxy(req: Request, env: Env): Promise<Response> {
     return new Response(stripAnalyticsFromHtml(await upstream.text()), { status: 200, headers: resHeaders });
   }
 
-  // The SPA fetches with ROOT-absolute paths (/api, /public, /avatar) which we proxy at the
+  // The SPA fetches with root-absolute paths (/api, /public, /avatar) which we proxy at the
   // Worker root, and its static assets load from Grafana's absolute CDN. So the document can
   // be served as-is; no <base href> rewrite is needed. We only strip the frame headers.
   return new Response(upstream.body, { status: upstream.status, headers: resHeaders });

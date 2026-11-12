@@ -7,11 +7,11 @@
  *   - session + page meta
  * PLUS we forward our own gameplay events + sampled FPS via a FaroSink (see sinks).
  *
- * PUBLIC-BY-DESIGN: Faro's collector URL and app key are PUBLIC browser config (not
- * secrets) — they only allow WRITING RUM data to your app receiver. They come from
+ * public-BY-DESIGN: Faro's collector URL and app key are public browser config (not
+ * secrets) — they only allow writing RUM data to your app receiver. They come from
  * `VITE_FARO_URL` / `VITE_FARO_APP_KEY`, injected at build time by Vite.
  *
- * INERT WHEN UNSET: if the env vars are missing (local dev without a key), initFaro()
+ * INERT when UNSET: if the env vars are missing (local dev without a key), initFaro()
  * returns null and the game runs normally with console telemetry only — nothing is
  * sent anywhere. This lets us build/verify without a Grafana account and switch it on
  * later by just supplying the public key.
@@ -57,7 +57,7 @@ export function initFaro(appVersion = '0.1.0'): Faro | null {
       // Errors, web vitals, session, console, etc. (Faro's standard web set.)
       ...getWebInstrumentations(),
       // HTTP/XHR tracing adds browser request timing and trace correlation. Faro auto-
-      // excludes its OWN collector URL (now the Worker's first-party `/faro` path) from
+      // excludes its OWN collector URL (the Worker's first-party `/faro` path) from
       // tracing, derived from the configured transport — so ingest isn't self-traced. The
       // config-level `ignoreUrls` below additionally excludes the dashboard-proxy traffic.
       new TracingInstrumentation(),

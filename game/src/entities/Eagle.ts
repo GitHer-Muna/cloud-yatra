@@ -99,9 +99,9 @@ export class Eagle extends Phaser.Physics.Arcade.Sprite {
       this.setFlipX(true);
     }
     // Vertical swoop arc based on horizontal progress — a single smooth rise-and-fall over
-    // the patrol span. This is the ONLY motion: the eagle glides.
+    // the patrol span. This is the only motion: the eagle glides.
     //
-    // NO per-frame rotation/tilt flap. Rotating this tiny 58×34 bitmap a few degrees back
+    // no per-frame rotation/tilt flap. Rotating this tiny 58×34 bitmap a few degrees back
     // and forth every frame (under antialias + roundPixels, then camera-upscaled) made its
     // edges shimmer — which read as the eagle "blinking" and looking washed-out/faded.
     // Gliding without the micro-rotation keeps the silhouette crisp and solid at all times.

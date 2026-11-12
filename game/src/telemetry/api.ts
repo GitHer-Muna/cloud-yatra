@@ -1,7 +1,7 @@
 /**
  * api.ts — the browser's thin client for the optional Cloud Yatra backend Worker.
  *
- * The game works with NO backend: if VITE_API_BASE_URL is empty, apiBase() returns null
+ * The game works with no backend: if VITE_API_BASE_URL is empty, apiBase() returns null
  * and every helper here falls back to the local, offline-safe behavior. When a backend IS
  * configured, these helpers talk to the Cloudflare Worker (telemetry ingest + a real,
  * shared, cross-player leaderboard) while keeping the local board as a resilient fallback.
@@ -52,7 +52,7 @@ interface RemoteEntry {
 }
 
 /**
- * Fetch the shared leaderboard from the backend, MERGED with the local board + legends so
+ * Fetch the shared leaderboard from the backend, merged with the local board + legends so
  * the player's own offline runs still appear. On any failure (offline, Worker down, CORS),
  * silently fall back to the purely local board — the board is never broken.
  */
@@ -92,7 +92,7 @@ export async function fetchLeaderboard(limit = 20, timeoutMs = 2500): Promise<Ra
 }
 
 /**
- * Submit a completed run to the backend (best-per-name) AND always record it locally so
+ * Submit a completed run to the backend (best-per-name) and always record it locally so
  * the player's run persists offline. Fire-and-forget to the network; never blocks or
  * throws into gameplay.
  *
@@ -149,10 +149,9 @@ export function submitScore(
 }
 
 // --- Chaos Mode client -----------------------------------------------------------------
-// Chaos Mode is the admin-only "watch the dashboard react" demo control. These helpers
-// talk to the backend's /chaos/* endpoints. The start/stop calls require an admin token
-// (NOT a secret baked into the build — it's entered by the operator at demo time and held
-// only in memory / sessionStorage). Everything is offline-safe: with no backend configured
+// Admin-only Chaos Mode control. These helpers talk to the backend's /chaos/* endpoints.
+// The start/stop calls require an admin token (not baked into the build — the operator
+// enters it at runtime and it is held only in memory / sessionStorage). Everything is offline-safe: with no backend configured
 // the helpers resolve to an inert, inactive status and never throw into the UI.
 
 export interface ChaosStatus {

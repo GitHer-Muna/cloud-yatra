@@ -1,7 +1,7 @@
 /**
  * faroProxy.ts — a first-party passthrough for Grafana Faro RUM ingest.
  *
- * WHY THIS EXISTS
+ * Why this exists
  * The Faro Web SDK posts RUM data to a Grafana Cloud collector host
  * (`faro-collector-prod-<region>.grafana.net`). That hostname matches the tracker/ad
  * blocklists used by Brave Shields, Edge Tracking Prevention, uBlock, etc., so the browser
@@ -9,13 +9,13 @@
  * exhausted". The data is OUR OWN first-party RUM, not third-party tracking, but the blockers
  * can't tell them apart by hostname.
  *
- * THE FIX
+ * HOW
  * Serve Faro ingest from the Worker's OWN origin (same origin as the game's API), which the
- * blockers don't treat as a tracker. The game points `VITE_FARO_URL` at `${WORKER}/faro`;
+ * blockers don't treat as a tracker. The game points `VITE_FARO_URL` at `${worker}/faro`;
  * this module forwards the body verbatim to the real collector configured in `FARO_UPSTREAM`
  * and returns a CORS-friendly response. No body inspection, no credentials — a dumb pipe.
  *
- * SCOPE + SAFETY
+ * Scope and safety
  *  - POST/OPTIONS only. Faro sends measurements as POST (fetch or navigator.sendBeacon).
  *  - The upstream collector URL already embeds the app key in its path, so no secret is
  *    added here. `FARO_UPSTREAM` is public-by-design config (same class as VITE_FARO_URL).
@@ -33,7 +33,7 @@ export function isFaroRequest(pathname: string): boolean {
 
 /**
  * Forward a Faro ingest request to the configured upstream collector. The game's
- * `VITE_FARO_URL` is set to `${WORKER}/faro`; the path after `/faro` (if any) and the query
+ * `VITE_FARO_URL` is set to `${worker}/faro`; the path after `/faro` (if any) and the query
  * string are appended to `FARO_UPSTREAM` so sub-paths pass through. Returns 404 when the
  * upstream isn't configured (the game then keeps using its direct collector URL).
  */
@@ -60,7 +60,7 @@ export async function handleFaro(req: Request, env: Env): Promise<Response> {
 
   // Forward the body verbatim. Faro uses application/json (fetch transport) or a text body
   // via sendBeacon; pass the Content-Type through so the collector parses it correctly.
-  // The collector also REQUIRES the `X-Faro-Session-Id` header (and may read other
+  // The collector also requires the `X-Faro-Session-Id` header (and may read other
   // `x-faro-*` headers) — it returns 400 "missing X-Faro-Session-Id header" without it — so
   // forward every `x-faro-*` request header too. Newer Faro SDKs also send an
   // `idempotency-key` header the collector uses to de-duplicate retried deliveries; forward

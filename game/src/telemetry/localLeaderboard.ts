@@ -12,7 +12,7 @@
  *   • getRankedBoard() merges your scores with the legends into one ranked list, and
  *     findRank() tells you where a given score sits — used to pin a "you are here" row.
  *
- * It stores scores for THIS browser only (localStorage), so the board is always available
+ * It stores scores for this browser only (localStorage), so the board is always available
  * with no network dependency.
  */
 export interface LeaderboardEntry {

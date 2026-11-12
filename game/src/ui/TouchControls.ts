@@ -1,8 +1,8 @@
 /**
  * TouchControls.ts — on-screen controls for touch devices so Cloud Yatra is playable on
  * phones/tablets (the game is otherwise keyboard-only). Renders a left/right D-pad on the
- * bottom-left, and JUMP + KHUKURI buttons on the bottom-right. Each button maintains a
- * boolean held-state that the scene merges into the Yatri's input flags — the SAME flags
+ * bottom-left, and jump + khukuri buttons on the bottom-right. Each button maintains a
+ * boolean held-state that the scene merges into the Yatri's input flags — the same flags
  * the keyboard produces, so gameplay logic is identical.
  *
  * Only shown when the device reports touch support (pointer: coarse / touch points), so
@@ -38,11 +38,11 @@ export class TouchControls {
     const gap = 18; // space between the two D-pad buttons
     const baseY = H - r - pad;
 
-    // Bottom-left: LEFT / RIGHT (well separated so a thumb doesn't hit both).
+    // Bottom-left: LEFT / right (well separated so a thumb doesn't hit both).
     this.makeButton(pad + r, baseY, r, '◀', ['left']);
     this.makeButton(pad + r * 3 + gap, baseY, r, '▶', ['right']);
 
-    // Bottom-right: KHUKURI (left of) + JUMP (far right, larger).
+    // Bottom-right: khukuri (left of) + jump (far right, larger).
     this.makeButton(W - pad - r * 3 - gap, baseY, r, '🗡', ['attack']);
     this.makeButton(W - pad - r, baseY - 8, r + 8, '⤒', ['up']);
   }
@@ -56,7 +56,7 @@ export class TouchControls {
     keys: Array<keyof TouchState>,
   ): void {
     // Use an Arc (circle) GameObject as the interactive target. Unlike a Container with a
-    // manual geometry hit-area (which is error-prone and was NOT registering touches on
+    // manual geometry hit-area (which is error-prone and was not registering touches on
     // mobile), an Arc has a correct built-in circular hit region, so presses always land.
     const circle = this.scene.add
       .circle(x, y, r, 0x10233b, 0.42)

@@ -1,6 +1,6 @@
 /**
  * CuttableObstacle.ts — an obstacle on the path that the Yatri can slash apart with her
- * KHUKURI. These are the natural tangles a hill traveler really clears with a khukuri:
+ * khukuri. These are the natural tangles a hill traveler really clears with a khukuri:
  *   - 'thorn'  : a thicket of thorn bush (kaande jhaadi) in the Terai lowlands.
  *   - 'bamboo' : a clump of tall bamboo (baans) barring the hill trail.
  *   - 'nettle' : a patch of stinging nettle / vines (sisnu) on the high path.
@@ -8,7 +8,7 @@
  *   - 'lahara' : a hanging forest creeper/vine curtain (lahara) on the hill trail.
  *
  * BEHAVIOUR:
- *   - It is a STATIC, immovable body sitting on the ground. Touching it (walking into it)
+ *   - It is a static, immovable body sitting on the ground. Touching it (walking into it)
  *     costs the Yatri a life — so it is a real obstacle, not just decoration.
  *   - A khukuri swing whose hitbox overlaps it CUTS it: it plays a quick fall-apart tween,
  *     awards points, and is removed so the path opens. This is the core new verb.
@@ -25,7 +25,7 @@ export class CuttableObstacle extends Phaser.Physics.Arcade.Sprite {
   private cutDone = false;
   readonly kind: CuttableKind;
   /**
-   * True once the player has had the first, harmless warning bump against THIS obstacle.
+   * True once the player has had the first, harmless warning bump against this obstacle.
    * The scene uses it to escalate: the first contact teaches ("slash or jump"), but
    * continuing to shove into the same uncut tangle then costs a life.
    */
@@ -33,7 +33,7 @@ export class CuttableObstacle extends Phaser.Physics.Arcade.Sprite {
 
   constructor(scene: Phaser.Scene, x: number, groundTopY: number, kind: CuttableKind) {
     CuttableObstacle.ensureTexture(scene, kind);
-    // Anchor the sprite so its BOTTOM sits on the ground line.
+    // Anchor the sprite so its bottom sits on the ground line.
     super(scene, x, groundTopY, `${TEXTURE_PREFIX}${kind}`);
     this.kind = kind;
 

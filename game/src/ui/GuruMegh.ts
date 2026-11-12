@@ -33,8 +33,8 @@ export class GuruMegh {
     //   collectibles panel (which ends at y≈132; this panel is 68px tall so its top at
     //   y≈136 stays clear). Used for spontaneous encouragement.
     // 'bottom': a MID-LOWER band used whenever a centred status card (level-won /
-    //   game-over / milestone burst) is on screen. It is deliberately placed BELOW the
-    //   status card AND ABOVE the on-screen touch-control buttons (which start at y≈452),
+    //   game-over / milestone burst) is on screen. It is deliberately placed below the
+    //   status card and above the on-screen touch-control buttons (which start at y≈452),
     //   so Guru Megh never overlaps either. On a 540-tall view this lands at y≈386
     //   (panel spans ≈352–420).
     if (this.dock === 'bottom') {

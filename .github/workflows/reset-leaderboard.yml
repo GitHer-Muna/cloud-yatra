@@ -1,9 +1,9 @@
 # One-off maintenance: reset the shared leaderboard (D1 `scores` table).
 #
-# Runs ONLY when you trigger it by hand (workflow_dispatch) and requires you to type the
-# confirmation word, so it can never fire accidentally. It uses the SAME CLOUDFLARE_API_TOKEN
+# Runs only when you trigger it by hand (workflow_dispatch) and requires you to type the
+# confirmation word, so it can never fire accidentally. It uses the same CLOUDFLARE_API_TOKEN
 # repository secret that already deploys the Worker — so there's no local wrangler login and
-# no token pasted anywhere. It clears ONLY the `scores` table (the leaderboard); events,
+# no token pasted anywhere. It clears only the `scores` table (the leaderboard); events,
 # sessions, and daily_rollup are untouched.
 name: Reset leaderboard (D1 scores)
 
@@ -27,9 +27,8 @@ jobs:
       - name: Guard — require the confirmation word
         run: |
           # Accept the confirmation word in any casing, with surrounding whitespace
-          # trimmed, so "RESET", "reset", or " Reset " all work. The manual trigger +
-          # typing the word is already the deliberate "are you sure?" speed bump; we don't
-          # also need an exact-case match (which previously aborted a genuine "reset").
+          # trimmed, so "RESET", "reset", or " Reset " all work. The manual trigger plus
+          # typing the word is the "are you sure?" step.
           raw="${{ github.event.inputs.confirm }}"
           trimmed="$(echo "$raw" | xargs)"           # trim leading/trailing whitespace
           upper="$(echo "$trimmed" | tr '[:lower:]' '[:upper:]')"

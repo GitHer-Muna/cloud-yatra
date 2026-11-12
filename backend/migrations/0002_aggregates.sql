@@ -1,17 +1,13 @@
 -- Cloud Yatra D1 schema (migration 0002) — incremental aggregate rollups.
 --
--- WHY: /stats previously computed ~16 queries PER CALL, most of them full-table scans or
--- GROUP BYs over the append-only `events` table (COUNT(*), GROUP BY type/cause/kind/level,
--- and 4× COUNT(DISTINCT session_id) for the funnel). Every row-read scales with the total
--- events table size, and the in-page mini-observatory + Grafana panels poll /stats from
--- every open tab. On Cloudflare D1's free tier (a daily row-read cap) this exhausts the
--- budget and D1 starts returning error 7500, which blanks the dashboard tiles mid-demo.
+-- Computing /stats by scanning the append-only `events` table makes every call cost rows
+-- proportional to total history, and the dashboard polls /stats from every open tab. On
+-- D1's free tier (a daily row-read cap) that runs out quickly.
 --
--- FIX: maintain the same cumulative aggregates INCREMENTALLY as events arrive (exactly the
--- pattern `sessions` and `daily_rollup` already use), in tiny keyed rollup tables. /stats
--- then reads a handful of small tables (bounded by the number of distinct types/causes/
--- kinds/levels — all low-cardinality) instead of scanning all of `events`. The funnel is
--- derived from the small `sessions` table via per-session reached flags added here.
+-- Instead, the same cumulative aggregates are maintained incrementally as events arrive
+-- (the pattern `sessions` and `daily_rollup` already use), in small keyed rollup tables.
+-- /stats reads a handful of low-cardinality rows, and the progression funnel comes from
+-- per-session "reached" flags on `sessions`.
 --
 -- Idempotent + lossless: the aggregate tables are backfilled from the existing `events`
 -- rows at the bottom of this migration, so a deploy against a populated database keeps all
@@ -50,7 +46,7 @@ CREATE TABLE IF NOT EXISTS agg_level (
 -- Per-session funnel flags so the progression funnel is a cheap COUNT on the
 -- small `sessions` table instead of COUNT(DISTINCT session_id) scans over events.
 -- reached_hills / reached_himal are set the first time a session produces any
--- event tagged with that level_id (matching the old `WHERE level_id=...` semantics).
+-- event tagged with that level_id (equivalent to `WHERE level_id = ...`).
 -- ---------------------------------------------------------------------------
 ALTER TABLE sessions ADD COLUMN reached_hills INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE sessions ADD COLUMN reached_himal INTEGER NOT NULL DEFAULT 0;
