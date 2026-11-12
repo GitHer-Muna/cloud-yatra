@@ -156,10 +156,102 @@ function stripAnalyticsFromJson(text: string): string {
     return text; // not JSON — leave as-is
   }
   if (data === null || typeof data !== 'object') return text;
+  sanitizeBootData(data as Record<string, unknown>);
+  return JSON.stringify(data);
+}
 
+/**
+ * The public-dashboard HTML document ALSO inlines the boot settings
+ * (`window.grafanaBootData = { …, settings: {…}, … }`), and the SPA reads those BEFORE it
+ * ever requests `/bootdata`. Without this, Google Analytics loads, Grafana's own Faro agent
+ * starts (its CSP instrumentation injects the `grafana-csp-check.invalid` probe and its
+ * blocked collector floods "Permanent delivery failure"), regardless of the JSON rewrite.
+ * Find each inline `settings: {` object, parse it, apply the same sanitiser, and splice it
+ * back. Any object that doesn't parse is left untouched, so the page can never be broken.
+ */
+export function stripAnalyticsFromHtml(html: string): string {
+  const re = /\bsettings:\s*\{/g;
+  let out = '';
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html))) {
+    const start = m.index + m[0].length - 1; // position of '{'
+    const end = matchingBrace(html, start);
+    if (end < 0) break;
+    const raw = html.slice(start, end + 1);
+    let obj: unknown;
+    try {
+      obj = JSON.parse(raw);
+    } catch {
+      continue; // not a JSON literal — leave as-is
+    }
+    if (!obj || typeof obj !== 'object') continue;
+    sanitizeBootData({ settings: obj });
+    out += html.slice(last, start) + JSON.stringify(obj).replace(/</g, '\\u003c');
+    last = end + 1;
+    re.lastIndex = end + 1;
+  }
+  return out + html.slice(last);
+}
+
+/** Index of the `}` closing the `{` at `open`, honouring JSON strings/escapes; -1 if none. */
+function matchingBrace(s: string, open: number): number {
+  let depth = 0;
+  let inStr = false;
+  for (let i = open; i < s.length; i++) {
+    const c = s[i];
+    if (inStr) {
+      if (c === '\\') i++;
+      else if (c === '"') inStr = false;
+      continue;
+    }
+    if (c === '"') inStr = true;
+    else if (c === '{') depth++;
+    else if (c === '}' && --depth === 0) return i;
+  }
+  return -1;
+}
+
+/**
+ * OpenFeature flags the public SPA evaluates via `POST /ofrep/v1/evaluate/flags`. Grafana
+ * Cloud turns on `plugins.useMTPlugins`, which makes the SPA query the authenticated
+ * plugin-meta API; for a public viewer that returns nothing and logs a burst of
+ * "PluginMeta: plugin meta yielded an empty result … falling back to bootdata" warnings.
+ * With the flag off it reads plugin metadata straight from bootdata — same end result,
+ * silent console.
+ */
+const FLAG_OVERRIDES: Record<string, boolean> = { 'plugins.useMTPlugins': false };
+
+export function overrideOfrepFlags(text: string): string {
+  let data: unknown;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return text;
+  }
+  const apply = (f: Record<string, unknown>): void => {
+    const key = typeof f.key === 'string' ? f.key : '';
+    if (key in FLAG_OVERRIDES) {
+      f.value = FLAG_OVERRIDES[key];
+      f.variant = FLAG_OVERRIDES[key] ? 'enabled' : 'disabled';
+      f.reason = 'STATIC';
+    }
+  };
+  if (data && typeof data === 'object') {
+    const d = data as Record<string, unknown>;
+    if (Array.isArray(d.flags)) {
+      for (const f of d.flags) if (f && typeof f === 'object') apply(f as Record<string, unknown>);
+    } else if (typeof d.key === 'string') {
+      apply(d);
+    }
+  }
+  return JSON.stringify(data);
+}
+
+/** Sanitise a parsed boot payload in place (`{settings, user, …}` or a bare settings object). */
+function sanitizeBootData(root: Record<string, unknown>): void {
   // Grafana's boot payload nests config under `settings`; the /api/frontend/settings
   // endpoint returns the settings object at the top level. Handle both.
-  const root = data as Record<string, unknown>;
   const settings =
     root.settings && typeof root.settings === 'object'
       ? (root.settings as Record<string, unknown>)
@@ -222,8 +314,6 @@ function stripAnalyticsFromJson(text: string): string {
   if (settings.apps && typeof settings.apps === 'object') {
     settings.apps = {};
   }
-
-  return JSON.stringify(data);
 }
 
 /**
@@ -320,6 +410,19 @@ export async function handleProxy(req: Request, env: Env): Promise<Response> {
     const original = await upstream.text();
     const rewritten = stripAnalyticsFromJson(original);
     return new Response(rewritten, { status: upstream.status, headers: resHeaders });
+  }
+
+  // OpenFeature flag evaluation: force the few flags that only produce console noise for a
+  // public viewer. Drop the ETag so the client never revalidates against the unmodified one.
+  const rel = url.pathname.startsWith(`${PREFIX}/`) ? url.pathname.slice(PREFIX.length) : url.pathname;
+  if (rel.startsWith('/ofrep/') && upstream.status === 200) {
+    resHeaders.delete('ETag');
+    return new Response(overrideOfrepFlags(await upstream.text()), { status: 200, headers: resHeaders });
+  }
+
+  // The HTML document inlines the boot settings too; sanitise them the same way.
+  if (upstream.status === 200 && (resHeaders.get('Content-Type') ?? '').includes('text/html')) {
+    return new Response(stripAnalyticsFromHtml(await upstream.text()), { status: 200, headers: resHeaders });
   }
 
   // The SPA fetches with ROOT-absolute paths (/api, /public, /avatar) which we proxy at the

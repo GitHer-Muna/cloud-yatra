@@ -5,7 +5,7 @@
  * auto-updates. A Grafana release can start calling a new endpoint or re-enable a feature our
  * Worker proxy neutralises, and the first sign is new red noise in the browser console. This
  * script loads the real page in headless Chromium, plays the game for a while, and FAILS
- * (non-zero exit) on any console error, uncaught page error, or failed / 4xx / 5xx request —
+ * (non-zero exit) on any console error or warning, uncaught page error, or failed / 4xx / 5xx request —
  * minus a short, documented allowlist of known-harmless Grafana behaviour. A scheduled
  * GitHub Action runs it daily so a regression is caught (and emailed) within a day.
  *
@@ -21,12 +21,11 @@ const playSeconds = Number(process.argv[3] ?? 40);
  * every entry — anything not matched here is treated as a real regression.
  */
 const ALLOWED = [
-  // Grafana deliberately loads a fake image inside a sandboxed srcdoc iframe to detect
-  // whether a Content Security Policy is active; the "violation" IS the probe. The code is
-  // served from Grafana's CDN, not through our proxy.
-  /grafana-csp-check\.invalid/,
   // Chaos Mode intentionally returns synthetic 503s on gameplay routes while a window is on.
   /\/(event|events|score) .*\b503\b|\b503\b .*\/(event|events|score)(\?|$)/,
+  // Headless Chromium renders WebGL in software (SwiftShader) and logs GPU driver
+  // performance notes; real browsers with a GPU never show these.
+  /GL Driver Message|GPU stall due to ReadPixels/,
 ];
 
 const problems = [];
@@ -42,6 +41,7 @@ const page = await browser.newPage({ viewport: { width: 1400, height: 900 } });
 
 page.on('console', (m) => {
   if (m.type() === 'error') note(`console.error: ${m.text().slice(0, 300)}`);
+  if (m.type() === 'warning') note(`console.warn: ${m.text().slice(0, 300)}`);
 });
 page.on('pageerror', (e) => note(`pageerror: ${String(e).slice(0, 300)}`));
 page.on('requestfailed', (r) => note(`request failed: ${r.url().slice(0, 200)} (${r.failure()?.errorText})`));

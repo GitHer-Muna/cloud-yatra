@@ -3,7 +3,7 @@
 # The embedded Grafana public dashboard runs Grafana Cloud's own (auto-updating) frontend.
 # A Grafana release can introduce new console errors without any change in this repo, so
 # this job loads the LIVE page daily in headless Chromium, plays the game for ~40s, and
-# fails on any console error, page error, or failed / 4xx / 5xx request (except a short,
+# fails on any console error or warning, page error, or failed / 4xx / 5xx request (except a short,
 # documented allowlist in tools/live-check/check.mjs). A failed scheduled run emails the
 # repo owner, so regressions surface within a day instead of during a demo.
 name: Live console check

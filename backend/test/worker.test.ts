@@ -768,6 +768,55 @@ describe('Grafana proxy — analytics stripped from boot/settings JSON', () => {
     expect(body.settings.panels.stat).toBeDefined();
   });
 
+  it('sanitises the boot settings inlined in the public-dashboard HTML document', async () => {
+    const html =
+      '<!DOCTYPE html><html><body><script nonce="n">window.grafanaBootData = {\n' +
+      '  navTree: [],\n' +
+      '  settings: {"googleAnalyticsId":"UA-1","rudderstackWriteKey":"rk","apps":{"x-app":{"id":"x-app"}},' +
+      '"grafanaJavascriptAgent":{"enabled":true,"cspInstrumentalizationEnabled":true},"note":"a}b\\"c"},\n' +
+      '  user: {"isSignedIn":false}\n};</script></body></html>';
+    fetchMock.activate();
+    fetchMock
+      .get('https://grafana.test')
+      .intercept({ path: /^\/public-dashboards\/tok/, method: 'GET' })
+      .reply(200, html, { headers: { 'Content-Type': 'text/html; charset=UTF-8' } });
+
+    const res = await call('GET', '/public-dashboards/tok?kiosk=1');
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    const json = body.slice(body.indexOf('settings: ') + 10, body.indexOf(',\n  user:'));
+    const s = JSON.parse(json) as Record<string, unknown>;
+    expect(s.googleAnalyticsId).toBe('');
+    expect(s.rudderstackWriteKey).toBe('');
+    expect(s.apps).toEqual({});
+    expect((s.grafanaJavascriptAgent as { enabled: boolean }).enabled).toBe(false);
+    expect(s.note).toBe('a}b"c'); // braces/quotes inside strings don't break the parser
+    expect(body).toContain('user: {"isSignedIn":false}');
+  });
+
+  it('turns off the plugins.useMTPlugins OpenFeature flag (PluginMeta warning source)', async () => {
+    fetchMock.activate();
+    fetchMock
+      .get('https://grafana.test')
+      .intercept({ path: '/ofrep/v1/evaluate/flags', method: 'POST' })
+      .reply(
+        200,
+        JSON.stringify({
+          flags: [
+            { key: 'plugins.useMTPlugins', value: true, reason: 'STATIC', variant: 'enabled' },
+            { key: 'other.flag', value: true },
+          ],
+        }),
+        { headers: { 'Content-Type': 'application/json', ETag: '"abc"' } },
+      );
+    const res = await call('POST', '/ofrep/v1/evaluate/flags', { context: {} });
+    expect(res.status).toBe(200);
+    expect(res.headers.get('ETag')).toBeNull();
+    const body = (await res.json()) as { flags: Array<{ key: string; value: unknown }> };
+    expect(body.flags.find((f) => f.key === 'plugins.useMTPlugins')?.value).toBe(false);
+    expect(body.flags.find((f) => f.key === 'other.flag')?.value).toBe(true);
+  });
+
   it('drops the app-plugin list so the SPA never preloads app settings (incl. extension apps)', async () => {
     const upstreamBody = JSON.stringify({
       settings: {

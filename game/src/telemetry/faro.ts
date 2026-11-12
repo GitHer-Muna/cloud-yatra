@@ -16,7 +16,7 @@
  * sent anywhere. This lets us build/verify without a Grafana account and switch it on
  * later by just supplying the public key.
  */
-import { initializeFaro, getWebInstrumentations, type Faro } from '@grafana/faro-web-sdk';
+import { initializeFaro, getWebInstrumentations, InternalLoggerLevel, type Faro } from '@grafana/faro-web-sdk';
 import { TracingInstrumentation } from '@grafana/faro-web-tracing';
 import { ReplayInstrumentation } from '@grafana/faro-instrumentation-replay';
 
@@ -46,6 +46,10 @@ export function initFaro(appVersion = '0.1.0'): Faro | null {
     // already auto-ignores its collector URL (the Worker `/faro` path); these patterns add
     // the dashboard reverse-proxy paths so the dashboard iframe's internal requests aren't
     // captured as the game's RUM. Patterns are matched against the full request URL.
+    // Faro's own diagnostics ("Delivery retries exhausted", "Permanent delivery failure")
+    // go to the player's console whenever a network or ad-blocker drops a batch. RUM is
+    // best-effort; keep the console clean for players.
+    internalLoggerLevel: InternalLoggerLevel.OFF,
     // Drop RUM items while offline instead of retrying (and spamming the console).
     beforeSend: (item) => (typeof navigator !== 'undefined' && navigator.onLine === false ? null : item),
     ignoreUrls: [/\/dash(\/|$)/, /\/public-dashboards\//, /\/apis\/.*\.grafana\.app/],
