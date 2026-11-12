@@ -226,10 +226,14 @@ function stripAnalyticsFromJson(text: string): string {
   return JSON.stringify(data);
 }
 
-/** True for the boot/settings endpoints whose JSON carries the analytics config. */
-function isBootOrSettings(path: string): boolean {
+/**
+ * True for the boot/settings endpoints whose JSON carries the analytics + app-plugin config.
+ * The public-dashboard SPA requests `/bootdata/<dashboard-token>` (with the page's query
+ * string), not just `/bootdata`, so match the whole `/bootdata` subtree.
+ */
+export function isBootOrSettings(path: string): boolean {
   const p = path.startsWith(`${PREFIX}/`) ? path.slice(PREFIX.length) : path;
-  return p === '/bootdata' || p === '/api/frontend/settings';
+  return p === '/bootdata' || p.startsWith('/bootdata/') || p === '/api/frontend/settings';
 }
 
 /**

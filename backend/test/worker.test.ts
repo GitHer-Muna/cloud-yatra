@@ -744,6 +744,30 @@ describe('Grafana proxy — analytics stripped from boot/settings JSON', () => {
     expect(s.defaultDatasource).toBe('-- Grafana --');
   });
 
+  it('also rewrites the per-dashboard /bootdata/<token> the public SPA actually requests', async () => {
+    const upstreamBody = JSON.stringify({
+      settings: {
+        apps: { 'grafana-pdc-app': { id: 'grafana-pdc-app', preload: true } },
+        googleAnalyticsId: 'G-REAL',
+        panels: { stat: { id: 'stat' } },
+      },
+    });
+    fetchMock.activate();
+    fetchMock
+      .get('https://grafana.test')
+      .intercept({ path: /^\/bootdata\/abc123/, method: 'GET' })
+      .reply(200, upstreamBody, { headers: { 'Content-Type': 'application/json' } });
+
+    const res = await call('GET', '/bootdata/abc123?kiosk=1&theme=dark&refresh=30s');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      settings: { apps: Record<string, unknown>; googleAnalyticsId: string; panels: Record<string, unknown> };
+    };
+    expect(body.settings.apps).toEqual({});
+    expect(body.settings.googleAnalyticsId).toBe('');
+    expect(body.settings.panels.stat).toBeDefined();
+  });
+
   it('drops the app-plugin list so the SPA never preloads app settings (incl. extension apps)', async () => {
     const upstreamBody = JSON.stringify({
       settings: {
