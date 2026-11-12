@@ -109,8 +109,11 @@ cloud-yatra/
 │   ├── build-dashboard.mjs  Generates the public dashboard from the source
 │   └── grafana-alerts.yaml  Importable Grafana-managed alert rules
 │
-└── .github/workflows/     CI/CD — a CI quality gate (lint, type-check, tests) plus deploy
-                           Pages, deploy the Worker, and a manual leaderboard-reset, from main
+├── tools/live-check/      Headless-browser check of the live site's console + network
+│
+└── .github/workflows/     CI/CD — a CI quality gate (lint, type-check, tests), deploy Pages,
+                           deploy the Worker, a manual leaderboard-reset, and a daily live
+                           console check that fails on any new browser-console error
 ```
 
 ## Running locally

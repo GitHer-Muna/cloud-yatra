@@ -1,0 +1,12 @@
+{
+  "name": "cloud-yatra-live-check",
+  "private": true,
+  "type": "module",
+  "description": "Loads the live game + embedded dashboard in a real browser and fails on new console errors or failed requests.",
+  "scripts": {
+    "check": "node check.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.58.0"
+  }
+}

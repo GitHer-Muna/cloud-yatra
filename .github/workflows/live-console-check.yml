@@ -1,0 +1,36 @@
+# Live console check — catches new browser-console errors on the deployed site.
+#
+# The embedded Grafana public dashboard runs Grafana Cloud's own (auto-updating) frontend.
+# A Grafana release can introduce new console errors without any change in this repo, so
+# this job loads the LIVE page daily in headless Chromium, plays the game for ~40s, and
+# fails on any console error, page error, or failed / 4xx / 5xx request (except a short,
+# documented allowlist in tools/live-check/check.mjs). A failed scheduled run emails the
+# repo owner, so regressions surface within a day instead of during a demo.
+name: Live console check
+
+on:
+  schedule:
+    - cron: '17 6 * * *' # daily, 06:17 UTC
+  workflow_dispatch: {}
+
+concurrency:
+  group: live-console-check
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: tools/live-check
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tools/live-check/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: node check.mjs https://cloud-yatra.pages.dev/ 40
