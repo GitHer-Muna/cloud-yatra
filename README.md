@@ -57,23 +57,26 @@ and the Grafana Cloud dashboards. The game runs fully on its own; the backend an
 add the shared leaderboard and the live observability view.
 
 ```
-Browser (Phaser game, Cloudflare Pages)            Cloudflare Worker (cloud-yatra-api)
-───────────────────────────────────────            ───────────────────────────────────
- Grafana Faro Web SDK                                Per request:
-  • Core Web Vitals, JS errors, sessions              • Prometheus metrics  (/metrics)
-  • custom gameplay events  ───────► Faro             • structured JSON log  ───────► Loki
-                                      │               • OTLP trace span      ───────► Tempo
-                                      ▼               • Cloudflare D1 (SQLite)
-                                Grafana Cloud  ◄── Infinity ◄── /stats, /leaderboard, /recent, /session, /pulse
-                                      │
-                       Dashboards (versioned JSON) + SLOs + alert rules
+  Browser ─ Phaser game on Cloudflare Pages
+     │  Faro Web SDK: web vitals, JS errors, sessions, gameplay events
+     │  gameplay events + scores (batched)
+     ▼
+  Cloudflare Worker (cloud-yatra-api) ──────────► Cloudflare D1 (SQLite)
+     │  /faro      first-party Faro passthrough ─────────────► Grafana Faro (Loki)
+     │  per request: structured JSON log ────────────────────► Loki
+     │               OTLP trace span ────────────────────────► Tempo
+     │  /metrics   ◄── scraped every minute by Grafana Cloud ─ Prometheus
+     │  /stats /leaderboard /recent /session /pulse ◄── Infinity data source
+     │  /public-dashboards …  reverse proxy so the public dashboard can be framed
+     ▼
+  Grafana Cloud: Live Observatory dashboard, SLOs, alert rules
 ```
 
 The project covers the four telemetry signals plus reliability tooling:
 
 | Signal | Source | Implementation |
 | --- | --- | --- |
-| Metrics | Worker `/metrics` | Prometheus counters and a request-duration histogram (RED method, p50/p90/p99 via `histogram_quantile`) |
+| Metrics | Worker `/metrics`, scraped by the Grafana Cloud Metrics Endpoint integration | Prometheus counters and a request-duration histogram (RED method, p50/p90/p99 via `histogram_quantile`) |
 | Logs | Worker → Loki | One structured JSON log per request, each with a `correlationId` |
 | Traces | Worker → Tempo | A per-request OTLP span; latency buckets carry trace exemplars |
 | RUM | Browser → Faro | Web vitals, JS errors, sessions, custom gameplay events, sampled FPS |
@@ -89,7 +92,7 @@ metric label), and only a coarse edge country is recorded.
 ```
 cloud-yatra/
 ├── game/                  Frontend — Phaser 3 + TypeScript + Vite (static client)
-│   ├── index.html         Page shell (responsive container, canvas, dashboard link)
+│   ├── index.html         Page shell: header, game stage, embedded dashboard, styles
 │   └── src/
 │       ├── main.ts        Phaser bootstrap: scenes, scale, physics, Faro, chaos panel
 │       ├── config/        Constants, level data, player tuning, scoring
@@ -156,8 +159,19 @@ Routes:
   `/chaos/status`, `/chaos/events`
 - `POST` — `/event`, `/events`, `/score`, `/chaos/start`, `/chaos/stop`
 
-See `backend/wrangler.toml` for the D1 binding and the optional Grafana push and Chaos Mode
-secrets. Secrets are set with `wrangler secret put` and are never committed.
+See `backend/wrangler.toml` for the D1 binding and public settings. Secrets are never
+committed; they live in GitHub Actions secrets and the **Deploy backend Worker** workflow
+pushes them to the Worker:
+
+| Worker secret | Purpose |
+| --- | --- |
+| `METRICS_TOKEN` | Bearer token required by `/metrics` (the Metrics Endpoint scrape job uses it). |
+| `CHAOS_ADMIN_TOKEN` | Enables the Chaos Mode control plane. |
+| `GRAFANA_LOKI_URL`, `_USER`, `_TOKEN` | Push backend logs to Loki. |
+| `GRAFANA_OTLP_URL`, `_USER`, `_TOKEN` | Push backend traces to Tempo. |
+
+Change a secret in GitHub, then re-run the workflow; values edited directly in Cloudflare
+are overwritten on the next deploy.
 
 ## Observability
 
@@ -187,6 +201,10 @@ not possible on the public dashboard (public dashboards can't use template varia
 identify a viewer); it lives in the authenticated source dashboard, driven by a `session`
 variable.
 
+Metrics reach Grafana through the **Metrics Endpoint** integration (Connections → Add new
+connection → Metrics Endpoint): a scrape job for `https://<worker>/metrics` with Bearer
+authentication using `METRICS_TOKEN`.
+
 `observability/prometheus-alert-rules.yaml` holds the alert rules in standard Prometheus
 format: import it with Alerting → Alert rules → Import to Grafana-managed rules → Prometheus
 YAML file, and pick the Prometheus data source. `observability/grafana-alerts.yaml` has the
@@ -211,8 +229,9 @@ How to tell it is working:
 
 - The panel shows `ACTIVE · Ns left` with a red dot and a confirmation message.
 - A red "Cloud storm" banner appears at the top of the game, and Guru Megh narrates the storm.
-- Within 10–30 seconds the dashboard's error-rate and latency panels rise, a red Chaos Mode
-  annotation appears, and the "Chaos Mode active" alert fires.
+- Within one or two scrape intervals (about 1–2 minutes) the dashboard's error-rate and
+  latency panels rise, a red Chaos Mode annotation appears, and the "Chaos Mode active"
+  alert fires.
 - When the window ends (or you press Stop), the banner fades, Guru Megh announces clear skies,
   and the panels recover.
 
