@@ -61,18 +61,22 @@ export function initFaro(appVersion = '0.1.0'): Faro | null {
       // tracing, derived from the configured transport — so ingest isn't self-traced. The
       // config-level `ignoreUrls` below additionally excludes the dashboard-proxy traffic.
       new TracingInstrumentation(),
-      // Replay is intentionally sampled: canvas recording makes Phaser sessions useful,
-      // while 10% keeps trial volume bounded. All form/input text remains masked.
+      // Replay is intentionally sampled (10%) and records the page DOM (HUD overlays,
+      // dashboard, Chaos panel). Canvas recording is OFF: rrweb captures every WebGL draw
+      // call of the Phaser canvas with no sampling, producing multi-MB batches that the
+      // collector rejects with 413 (console errors + lost RUM). All form/input text is masked.
       new ReplayInstrumentation({
         maskAllInputs: true,
         maskTextSelector: '.grafana-mask, [contenteditable]',
         blockSelector: '.grafana-block, input[type="hidden"]',
         ignoreSelector: '.grafana-ignore',
-        recordCanvas: true,
+        recordCanvas: false,
         samplingRate: 0.1,
         inactivityThresholdMs: 60000,
         recordAfter: 'DOMContentLoaded',
         sanitizeMetaHref: true,
+        // Belt and braces: never ship a single replay event larger than 256 KB.
+        beforeSend: (event) => (JSON.stringify(event).length > 256_000 ? null : event),
       }),
     ],
   });
