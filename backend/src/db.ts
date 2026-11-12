@@ -576,7 +576,14 @@ export async function stats(env: Env): Promise<Stats> {
   const levelById = new Map(byLevel.map((r) => [r.level, r]));
   const regions = REGION_NAMES.map(([id, region]) => {
     const r = levelById.get(id);
-    return { region, events: r?.events ?? 0, deaths: r?.deaths ?? 0, completions: r?.completions ?? 0 };
+    // The summit finish is recorded under 'himal_rajya'; count it as clearing the Himal.
+    const summit = id === 'himal' ? (levelById.get('himal_rajya')?.completions ?? 0) : 0;
+    return {
+      region,
+      events: r?.events ?? 0,
+      deaths: r?.deaths ?? 0,
+      completions: (r?.completions ?? 0) + summit,
+    };
   });
 
   const avgFpsRow = await one<{ v: number | null }>(
