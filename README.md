@@ -100,7 +100,7 @@ cloud-yatra/
 │       └── telemetry/     Event schema, sinks (console/Faro/HTTP), backend + chaos client
 │
 ├── backend/               Optional backend — Cloudflare Worker + D1
-│   ├── migrations/        D1 schema (events, sessions, scores, daily_rollup)
+│   ├── migrations/        D1 schema (events, sessions, scores, rollups, chaos state)
 │   └── src/               Router, DB, event validation, metrics, logger, CORS, chaos,
 │                          dashboard + Faro reverse proxies
 │
@@ -192,13 +192,25 @@ them.
 
 ### Chaos Mode
 
-Chaos Mode is an admin-only, self-contained fault injector built into the Worker. Set the
-`CHAOS_ADMIN_TOKEN` secret, then in the running game press `Shift+C`, enter the token, and
-start a roughly 60-second window. The Worker adds latency and a fraction of synthetic `503`s
-to the gameplay routes only — never to health, metrics, control, or any external service. The
-dashboard's chaos row and a red annotation react, the "Chaos Mode active" alert fires and
-then resolves, and Guru Megh narrates the storm and its clearing. With no token set, the
-control plane is disabled.
+Chaos Mode is an admin-only, self-contained fault injector built into the Worker. It exists so
+the dashboard can be shown catching a real incident and its recovery, not just calm traffic.
+Set the `CHAOS_ADMIN_TOKEN` secret, then in the running game press `Shift+C`, enter the token,
+and start a roughly 60-second window. The Worker adds latency (+600 ms) and about 25%
+synthetic `503`s to the gameplay routes only — never to health, metrics, control, or any
+external service — and gameplay keeps working. The window is stored in D1, so every Worker
+instance sees the same state; pressing Start again extends it rather than starting a second
+one.
+
+How to tell it is working:
+
+- The panel shows `ACTIVE · Ns left` with a red dot and a confirmation message.
+- A red "Cloud storm" banner appears at the top of the game, and Guru Megh narrates the storm.
+- Within 10–30 seconds the dashboard's error-rate and latency panels rise, a red Chaos Mode
+  annotation appears, and the "Chaos Mode active" alert fires.
+- When the window ends (or you press Stop), the banner fades, Guru Megh announces clear skies,
+  and the panels recover.
+
+With no token set, the control plane is disabled.
 
 ## Configuration
 
