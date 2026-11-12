@@ -1,19 +1,19 @@
 /**
- * chaosPanel.ts — a tiny, admin-only DOM overlay to drive Chaos Mode during a live demo.
+ * chaosPanel.ts — a tiny, admin-only DOM overlay to drive Chaos Mode.
  *
- * WHY A DOM OVERLAY (not an in-game button): Chaos Mode is an operator tool, not gameplay.
+ * Why a DOM overlay (not an in-game button): Chaos Mode is an operator tool, not gameplay.
  * Keeping it out of the Phaser scene graph means it can't clash with touch controls, the
  * name field, or the cultural art, and it stays genuinely out of a normal player's way.
  *
- * ADMIN-ONLY BY DESIGN:
+ * Admin-only by design:
  *   - Hidden by default. Opens only via a secret key chord (Shift+C) — not discoverable by
  *     a casual player, and absent entirely when no backend is configured.
- *   - Start/Stop require the Worker's CHAOS_ADMIN_TOKEN, entered here at demo time and held
- *     only in sessionStorage (cleared when the tab closes). It is NOT a build-time secret.
+ *   - Start/Stop require the Worker's CHAOS_ADMIN_TOKEN, entered here and held
+ *     only in sessionStorage (cleared when the tab closes). It is not a build-time secret.
  *   - The backend is the real gate: without a matching token the Worker returns 401/503, so
  *     this panel can never actually perturb anything it isn't authorized for.
  *
- * OFFLINE-SAFE: if no backend is configured, the panel never mounts.
+ * Offline-safe: if no backend is configured, the panel never mounts.
  */
 import { getChaosStatus, startChaos, stopChaos, hasBackend, type ChaosStatus } from './api';
 
@@ -86,27 +86,31 @@ function buildPanel(): Panel {
       Deliberately slows our own backend (+latency, ~25% errors) for ~60s so the live
       dashboard shows an incident and its recovery. Gameplay keeps working.
     </div>
-    <label style="display:block;margin-bottom:6px;color:#9fb4c7">Admin token</label>
-    <input data-cy="token" type="password" autocomplete="off" spellcheck="false"
-      placeholder="CHAOS_ADMIN_TOKEN"
+    <form data-cy="form" autocomplete="off">
+    <input type="text" name="username" value="chaos-admin" autocomplete="username" hidden />
+    <label for="cy-chaos-token" style="display:block;margin-bottom:6px;color:#9fb4c7">Admin token</label>
+    <input id="cy-chaos-token" data-cy="token" type="password" autocomplete="current-password" spellcheck="false"
+      placeholder="Admin token"
       style="width:100%;box-sizing:border-box;padding:7px 9px;margin-bottom:10px;border-radius:7px;border:1px solid #37506b;background:#0f1620;color:#e8eef5" />
     <div style="display:flex;gap:8px">
-      <button data-cy="start" style="flex:1;padding:8px;border:0;border-radius:7px;background:#c0392b;color:#fff;cursor:pointer;font-weight:600">Start ~60s</button>
-      <button data-cy="stop" style="flex:1;padding:8px;border:0;border-radius:7px;background:#2e4257;color:#e8eef5;cursor:pointer;font-weight:600">Stop</button>
+      <button type="submit" data-cy="start" style="flex:1;padding:8px;border:0;border-radius:7px;background:#c0392b;color:#fff;cursor:pointer;font-weight:600">Start ~60s</button>
+      <button type="button" data-cy="stop" style="flex:1;padding:8px;border:0;border-radius:7px;background:#2e4257;color:#e8eef5;cursor:pointer;font-weight:600">Stop</button>
     </div>
+    </form>
     <div data-cy="msg" style="min-height:16px;margin-top:8px;color:#e0b050;font-size:12px"></div>
     <div style="margin-top:8px;color:#6b7f93;font-size:11px">Shift+C to toggle · Esc to close</div>
   `;
 
   const q = <T extends HTMLElement>(sel: string): T => root.querySelector(`[data-cy="${sel}"]`) as T;
   const tokenInput = q<HTMLInputElement>('token');
+  const form = q<HTMLFormElement>('form');
   const startBtn = q<HTMLButtonElement>('start');
   const stopBtn = q<HTMLButtonElement>('stop');
   const statusEl = q<HTMLDivElement>('status');
   const msgEl = q<HTMLDivElement>('msg');
   const dot = q<HTMLSpanElement>('dot');
 
-  // Restore a previously entered token (session only — cleared when the tab closes).
+  // Restore a stored token (session only — cleared when the tab closes).
   try {
     tokenInput.value = sessionStorage.getItem(TOKEN_KEY) ?? '';
   } catch {
@@ -135,9 +139,9 @@ function buildPanel(): Panel {
   const errText = (e?: string): string => {
     switch (e) {
       case 'unauthorized':
-        return 'Token rejected — it must exactly match the CHAOS_ADMIN_TOKEN secret on the Worker.';
+        return 'Token rejected. Check the admin token and try again.';
       case 'disabled':
-        return 'Chaos disabled on server (no CHAOS_ADMIN_TOKEN set).';
+        return 'Chaos Mode is not enabled on the server.';
       case 'no_token':
         return 'Enter the admin token first.';
       case 'no_backend':
@@ -153,7 +157,8 @@ function buildPanel(): Panel {
     startBtn.style.opacity = stopBtn.style.opacity = busy ? '0.6' : '1';
   };
 
-  startBtn.addEventListener('click', async () => {
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
     saveToken();
     setBusy(true);
     msgEl.style.color = '#e0b050';
