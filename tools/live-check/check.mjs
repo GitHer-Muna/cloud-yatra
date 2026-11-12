@@ -38,6 +38,14 @@ const browser = await chromium.launch(
   process.env.CHROME ? { executablePath: process.env.CHROME } : {},
 );
 const page = await browser.newPage({ viewport: { width: 1400, height: 900 } });
+// FORCE_REPLAY=1 exercises the 10%-sampled session-replay branch on every run.
+if (process.env.FORCE_REPLAY) {
+  await page.addInitScript(() => {
+    const r = Math.random;
+    let n = 0;
+    Math.random = () => (n++ < 40 ? 0.01 + n / 10000 : r()); // only Faro init
+  });
+}
 
 page.on('console', (m) => {
   if (m.type() === 'error') note(`console.error: ${m.text().slice(0, 300)}`);
