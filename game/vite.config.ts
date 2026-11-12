@@ -12,11 +12,11 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: false,
     // Phaser is a single ~1.2 MB engine that can't be meaningfully sub-split; it's isolated
     // in its own long-cached vendor chunk below. Raise the warning limit just above it so
     // the build log stays clean — app code (the chunk that actually changes) stays well
-    // under the default 500 KB and is reported honestly.
+    // under the default 500 KB.
     chunkSizeWarningLimit: 1300,
     rollupOptions: {
       output: {
