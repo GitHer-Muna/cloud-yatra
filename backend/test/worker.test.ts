@@ -804,6 +804,7 @@ describe('Grafana proxy — analytics stripped from boot/settings JSON', () => {
         JSON.stringify({
           flags: [
             { key: 'plugins.useMTPlugins', value: true, reason: 'STATIC', variant: 'enabled' },
+            { key: 'grafana.newTextPanel', value: true },
             { key: 'other.flag', value: true },
           ],
         }),
@@ -814,6 +815,7 @@ describe('Grafana proxy — analytics stripped from boot/settings JSON', () => {
     expect(res.headers.get('ETag')).toBeNull();
     const body = (await res.json()) as { flags: Array<{ key: string; value: unknown }> };
     expect(body.flags.find((f) => f.key === 'plugins.useMTPlugins')?.value).toBe(false);
+    expect(body.flags.find((f) => f.key === 'grafana.newTextPanel')?.value).toBe(false);
     expect(body.flags.find((f) => f.key === 'other.flag')?.value).toBe(true);
   });
 

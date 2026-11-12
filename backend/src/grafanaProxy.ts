@@ -219,8 +219,16 @@ function matchingBrace(s: string, open: number): number {
  * "PluginMeta: plugin meta yielded an empty result … falling back to bootdata" warnings.
  * With the flag off it reads plugin metadata straight from bootdata — same end result,
  * silent console.
+ *
+ * `grafana.newTextPanel` renders every text panel inside a CSP-sandboxed srcdoc iframe that
+ * fires a deliberately-blocked probe image (`grafana-csp-check.invalid`), which the browser
+ * logs as a red CSP error. Our text panels are plain HTML, which the classic text panel
+ * renders identically without the sandbox.
  */
-const FLAG_OVERRIDES: Record<string, boolean> = { 'plugins.useMTPlugins': false };
+const FLAG_OVERRIDES: Record<string, boolean> = {
+  'plugins.useMTPlugins': false,
+  'grafana.newTextPanel': false,
+};
 
 export function overrideOfrepFlags(text: string): string {
   let data: unknown;
