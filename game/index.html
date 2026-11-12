@@ -3,19 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Cloud Yatra — Himal Rajya</title>
+    <title>Cloud Yatra · a Nepal platformer</title>
     <meta
       name="description"
-      content="Cloud Yatra — an original 2D browser platformer. Play Yatri, a Nepali traveler climbing from the Terai jungle through the middle hills to the Himalayan summit. Collect blooms, plant the pennant, and heed Guru Megh the cloud-sage."
+      content="Cloud Yatra is a 2D browser platformer set in Nepal. Play Yatri, a Nepali traveller climbing from the Terai jungle through the Pahad hills to the Himalayan summit. Gather lali gurans, plant the pennant, and listen to Guru Megh the cloud-sage."
     />
     <meta name="theme-color" content="#0e1726" />
 
     <!-- Social link preview -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Cloud Yatra — Himal Rajya" />
+    <meta property="og:title" content="Cloud Yatra · a Nepal platformer" />
     <meta
       property="og:description"
-      content="Climb from the Terai jungle to the Himalayan summit as Yatri. An original Nepal-inspired platformer."
+      content="Climb from the Terai jungle to the Himalayan summit as Yatri, with a live Grafana dashboard that moves as you play."
     />
     <meta name="twitter:card" content="summary" />
 
@@ -74,6 +74,54 @@
         font-size: clamp(22px, 3.4vw, 32px);
         letter-spacing: 0.02em;
         color: var(--accent);
+      }
+      #cy-hero .cy-flags {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        margin-bottom: 10px;
+      }
+      #cy-hero .cy-flags span {
+        width: 18px;
+        height: 12px;
+        border-radius: 1px 1px 3px 3px;
+        transform-origin: top center;
+        animation: cy-flutter 3.2s ease-in-out infinite;
+      }
+      #cy-hero .cy-flags span:nth-child(1) {
+        background: #1f6feb;
+      }
+      #cy-hero .cy-flags span:nth-child(2) {
+        background: #f5f5f5;
+        animation-delay: -0.6s;
+      }
+      #cy-hero .cy-flags span:nth-child(3) {
+        background: #dc143c;
+        animation-delay: -1.2s;
+      }
+      #cy-hero .cy-flags span:nth-child(4) {
+        background: #2ea043;
+        animation-delay: -1.8s;
+      }
+      #cy-hero .cy-flags span:nth-child(5) {
+        background: #f6b73c;
+        animation-delay: -2.4s;
+      }
+      @keyframes cy-flutter {
+        0%,
+        100% {
+          transform: skewX(0deg);
+        }
+        50% {
+          transform: skewX(-8deg) scaleY(0.92);
+        }
+      }
+      #cy-hero .cy-hero-np {
+        margin-left: 6px;
+        font-size: 0.62em;
+        font-weight: 600;
+        color: var(--muted);
+        white-space: nowrap;
       }
       #cy-hero .cy-hero-kicker {
         margin: 6px 0 0;
@@ -419,8 +467,9 @@
   </head>
   <body>
     <header id="cy-hero">
-      <h1>Cloud Yatra</h1>
-      <p class="cy-hero-kicker">A Himalayan platformer with a live observability dashboard</p>
+      <div class="cy-flags" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+      <h1>Cloud Yatra <span class="cy-hero-np" lang="ne">क्लाउड यात्रा</span></h1>
+      <p class="cy-hero-kicker">Namaste! A journey across Nepal, from the Terai to the Himalaya</p>
       <ul class="cy-keys" aria-label="Controls">
         <li><kbd>←</kbd><kbd>→</kbd>move</li>
         <li><kbd>↑</kbd><kbd>Space</kbd>jump · double-jump</li>
@@ -430,7 +479,7 @@
     </header>
 
     <!-- Phaser injects its <canvas> here (see src/main.ts), replacing the loader. -->
-    <div id="game-root" role="application" aria-label="Cloud Yatra — a Nepali platformer game. Use arrow keys or WASD to move, up or space to jump, F to use the khukuri. On touch devices, on-screen buttons appear.">
+    <div id="game-root" role="application" aria-label="Cloud Yatra, a Nepali platformer game. Use arrow keys or WASD to move, up or space to jump, F to use the khukuri. On touch devices, on-screen buttons appear.">
       <div id="cy-loading">Loading Cloud Yatra…</div>
     </div>
 
@@ -446,7 +495,7 @@
       <div class="cy-observatory-heading">
         <div>
           <h2 id="cy-observatory-title">Cloud Yatra · Live Observatory</h2>
-          <p>The real Grafana dashboard, live below the game — metrics, logs, traces, SLOs and RUM, updating in near-real time as people play.</p>
+          <p>The real Grafana Cloud dashboard. Every jump, bloom and lost life you play above lands here within seconds, alongside players from everywhere else.</p>
         </div>
         <a id="cy-dash-open" class="cy-dash-open" href="#" target="_blank" rel="noopener" hidden>
           <span>Open full dashboard</span>
@@ -469,14 +518,14 @@
         <span class="cy-dash-cta-icon" aria-hidden="true">📊</span>
         <span class="cy-dash-cta-text">
           <span class="cy-dash-cta-title">Open the live Grafana dashboard</span>
-          <span class="cy-dash-cta-sub">The game embedded at the top, with live metrics, logs, traces, SLOs and RUM below — updating in real time as people play.</span>
+          <span class="cy-dash-cta-sub">Live gameplay analytics, the shared leaderboard and Chaos Mode, updating as people play.</span>
         </span>
         <span class="cy-dash-cta-arrow" aria-hidden="true">↗</span>
       </a>
     </section>
 
     <footer id="cy-footer">
-      Original art and music generated in code ·
+      Made with care in Nepal · every sprite and note is drawn in code ·
       <a href="https://github.com/GitHer-Muna/cloud-yatra" target="_blank" rel="noopener">Source on GitHub</a>
     </footer>
 
@@ -579,7 +628,7 @@
             if (!loaded && cta && openUrl) cta.hidden = false;
           }, 6000);
         } else if (cta && openUrl) {
-          // No proxy available (no API base or no public token) — link out instead.
+          // No proxy available (no API base or no public token), so link out instead.
           cta.hidden = false;
         }
       }

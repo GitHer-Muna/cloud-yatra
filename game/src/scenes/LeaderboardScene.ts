@@ -63,7 +63,7 @@ export class LeaderboardScene extends Phaser.Scene {
 
     // Title.
     this.add
-      .text(VIEW_WIDTH / 2, panelY + 34, 'Himal Rajya — Top Pilgrims', {
+      .text(VIEW_WIDTH / 2, panelY + 34, 'Himal Rajya · Top Pilgrims', {
         fontFamily: FONT,
         fontSize: '30px',
         color: GOLD,
@@ -231,7 +231,7 @@ export class LeaderboardScene extends Phaser.Scene {
     this.listContainer.removeAll(true);
 
     if (status === 'empty' || entries.length === 0) {
-      this.setMessage(top, 'No completed journeys yet — be the first to reach the summit!');
+      this.setMessage(top, 'No completed journeys yet. Be the first to reach the summit!');
       return;
     }
 
@@ -292,7 +292,7 @@ export class LeaderboardScene extends Phaser.Scene {
       else {
         const ahead = entries[Math.max(0, myRank - 2)];
         const gap = ahead ? ahead.score - this.score : 0;
-        msg = `#${myRank} of ${myTotal} — ${gap > 0 ? `${gap} pts` : 'a push'} to climb higher!`;
+        msg = `#${myRank} of ${myTotal}: ${gap > 0 ? `${gap} pts` : 'a push'} to climb higher!`;
       }
       const banner = this.add
         .text(VIEW_WIDTH / 2, top - 16, msg, {

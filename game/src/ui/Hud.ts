@@ -111,12 +111,12 @@ export class Hud {
       fontStyle: 'bold',
     };
     this.bloomText = scene.add
-      .text(x + 34, y + 17, 'Blooms 0  —  12 to +1 ❤', textStyle)
+      .text(x + 34, y + 17, 'Blooms 0  ·  12 to +1 ❤', textStyle)
       .setOrigin(0, 0.5)
       .setScrollFactor(0)
       .setDepth(1000);
     this.bellText = scene.add
-      .text(x + 34, y + 41, 'Bells 0  —  each = +1 ❤', textStyle)
+      .text(x + 34, y + 41, 'Bells 0  ·  each = +1 ❤', textStyle)
       .setOrigin(0, 0.5)
       .setScrollFactor(0)
       .setDepth(1000);
@@ -128,7 +128,7 @@ export class Hud {
     const into = count % garlandSize;
     const toGo = into === 0 && count > 0 ? 0 : garlandSize - into;
     const hint = toGo === 0 ? 'garland!' : `${toGo} to +1 ❤`;
-    this.bloomText.setText(`Blooms ${count}  —  ${hint}`);
+    this.bloomText.setText(`Blooms ${count}  ·  ${hint}`);
     this.bloomText.setScale(1.18);
     this.scene.tweens.add({ targets: this.bloomText, scale: 1, duration: 160 });
   }
@@ -136,7 +136,7 @@ export class Hud {
   /** Update the bell counter. */
   setBells(count: number): void {
     if (!this.bellText) return;
-    this.bellText.setText(`Bells ${count}  —  each = +1 ❤`);
+    this.bellText.setText(`Bells ${count}  ·  each = +1 ❤`);
     this.bellText.setScale(1.2);
     this.scene.tweens.add({ targets: this.bellText, scale: 1, duration: 160 });
   }

@@ -198,7 +198,7 @@ export class MenuScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(10);
     this.add
-      .text(VIEW_WIDTH / 2, 106, 'Climb from the Terai jungle to the Himalayan summit — guided by Guru Megh', {
+      .text(VIEW_WIDTH / 2, 106, 'Namaste! Climb from the Terai jungle to the Himalayan summit with Guru Megh', {
         fontFamily: 'system-ui, sans-serif',
         fontSize: '15px',
         color: '#ffffff',

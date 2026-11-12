@@ -22,55 +22,59 @@ export interface GuruResponse {
 
 const WELCOME: Record<string, string[]> = {
   terai: [
-    'Namaste, Yatri. I am Guru Megh, the cloud-sage. Follow the pennants through the warm Terai jungle toward the END flag.',
-    'Welcome, traveller. Gather the blooms, watch the trail, and keep moving—I will cheer you onward.',
+    'Namaste, Yatri! I am Guru Megh, the cloud-sage. The Terai is warm and green; follow the pennants north toward the END flag.',
+    'Swagatam, traveller. Gather the sayapatri blooms, watch the sal forest, and keep moving. I will cheer you on.',
   ],
   hills: [
-    'You have climbed into the middle hills, Yatri. The terraces are steep, but your feet are sure—onward to the next pennant.',
-    'The hills welcome you, brave traveller. Keep climbing; the summit is nearer than you think.',
+    'Welcome to the Pahad, Yatri. Rice terraces climb these hills like stairs to the sky. Your feet are sure, so onward!',
+    'The middle hills greet you with prayer flags and temple bells. Bistarai, bistarai: step by step, the summit nears.',
   ],
   himal: [
-    'The high Himalaya at last! The air is thin, but your spirit is strong. Carry your courage to the summit.',
-    'Snow and bright peaks surround you now. This is the final climb—Guru Megh believes in you.',
+    'The high Himal at last! Sagarmatha watches over this land. The air is thin, but your spirit is strong.',
+    'Snow and bright peaks surround you now. This is the final climb, and Guru Megh believes in you.',
   ],
 };
 
 const HINTS: Record<string, string[]> = {
   terai: [
     'Watch the drifting mist, slash the tangles with your khukuri, and keep walking toward the next pennant.',
-    'Gather the marigold blooms for a garland and keep your eyes on the trail ahead.',
+    'Gather the marigolds, called sayapatri here. Every twelve blooms make a garland, as at Tihar.',
+    'Did you know? The one-horned rhino roams these Terai grasslands. Tread lightly, Yatri.',
   ],
   hills: [
     'Plant the pennants as you climb and keep your eyes on the END flag.',
     'Mind the eagles and falling stones. Patience, then courage.',
+    'Lali gurans, the red rhododendron, is the national flower of Nepal. These hills blaze with it in spring.',
   ],
   himal: [
     'Breathe, step, breathe again. The prayer flags at the summit are waiting.',
     'Collect the blue poppies and let each one warm your resolve. Almost there!',
+    'Dal bhat power, twenty-four hour! The porters say it, and it carries them to the top.',
   ],
 };
 
 const DEATHS = [
-  'A stumble is not the end of a journey, traveller. Rise and begin again; Guru Megh is here.',
+  'A stumble is not the end of a yatra, traveller. Rise and begin again; Guru Megh is here.',
   'The mountain humbles us so we may climb wiser. Return to the trail with courage.',
+  'Aattinu hunna, Yatri: do not lose heart. Even the high peaks were climbed one step at a time.',
 ];
 
 const COMPLETIONS = [
-  'One region crossed with grace, Yatri! Rest a breath, then follow the next trail toward the summit.',
+  'Shabash, Yatri! One region crossed with grace. Rest a breath, then take the next trail north.',
   'Beautifully done, traveller. Carry this courage forward into the next region.',
 ];
 
 const CELEBRATIONS: Record<string, string[]> = {
-  garland_completed: ['A full garland of blooms! May its blessing shield you onward, brave traveller.'],
+  garland_completed: ['A full mala of blooms! May its blessing shield you onward, brave traveller.'],
   found_prayer_bell: ['A prayer bell rings for you! The mountain itself blesses your path.'],
   combo_streak: ['What a dazzling streak! Keep that rhythm, traveller.'],
   checkpoint_reached: ['The pennant flies! Should you stumble, you will rise again right here.'],
-  eagle_defeated: ['A clean strike! The high road is open—what courage!'],
+  eagle_defeated: ['A clean strike! The high road is open. What courage!'],
 };
 
 const GENERAL_CHEERS = [
-  'Wonderful, Yatri! Every small triumph lights the trail ahead.',
-  'Beautifully done, traveller. Guru Megh rejoices with you—onward!',
+  'Shabash, Yatri! Every small triumph lights the trail ahead.',
+  'Ramro! Beautifully done, traveller. Guru Megh rejoices with you. Onward!',
 ];
 
 // Chaos Mode narration: a cloud-sage framing of a backend "storm" (injected latency and
@@ -78,12 +82,12 @@ const GENERAL_CHEERS = [
 // 'recovered' when the skies clear.
 const INCIDENTS: Record<string, string[]> = {
   storm: [
-    'A storm gathers over the cloud-kingdom, Yatri—the messengers run slow. Walk on; it will pass.',
-    'The mountain winds are wild just now; our cloud-paths falter. Keep your rhythm—hold steady.',
+    'A storm gathers over the cloud-kingdom, Yatri. The messengers run slow. Walk on; it will pass.',
+    'The mountain winds are wild just now; our cloud-paths falter. Keep your rhythm and hold steady.',
   ],
   recovered: [
     'The storm has passed, traveller. The cloud-paths run clear again, and the messengers fly swift.',
-    'Blue sky returns over Himal Rajya. All is well once more—onward with a calm heart, Yatri.',
+    'Blue sky returns over Himal Rajya. All is well once more. Onward with a calm heart, Yatri.',
   ],
 };
 

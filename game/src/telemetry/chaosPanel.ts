@@ -147,7 +147,7 @@ function buildPanel(): Panel {
       case 'no_backend':
         return 'No backend configured.';
       default:
-        return 'Network error — try again.';
+        return 'Network error. Try again.';
     }
   };
 

@@ -383,7 +383,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.hud.setScore(this.score);
     this.hud.setLives(this.yatri.getLives());
     this.hud.setCombo(0);
-    this.hud.showIntro(2600, `Level ${this.level.index} — ${this.level.name}`, this.level.subtitle);
+    this.hud.showIntro(2600, `Level ${this.level.index} · ${this.level.name}`, this.level.subtitle);
 
     // The end-of-run / level status card. A Graphics "panel" sits behind the text and is
     // (re)drawn to fit, with an outcome-coloured accent bar — see styleStatusCard().
@@ -568,7 +568,7 @@ export class HimalRajyaScene extends Phaser.Scene {
         .setAlpha(0);
     }
     const secs = Math.max(0, Math.ceil(remainingMs / 1000));
-    this.chaosBanner.setText(`⚡ Cloud storm · backend chaos test · ${secs}s — watch the dashboard`);
+    this.chaosBanner.setText(`⚡ Cloud storm · backend chaos test · ${secs}s · watch the dashboard`);
     if (!this.chaosBanner.visible || this.chaosBanner.alpha < 1) {
       this.chaosBanner.setVisible(true);
       this.tweens.add({ targets: this.chaosBanner, alpha: 1, duration: 300 });
@@ -805,7 +805,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     const gained = low ? this.yatri.gainLife(SCORING.bellLifeBonus) : 0;
     if (gained > 0) {
       this.hud.setLives(this.yatri.getLives());
-      this.floatText(bell.x, bell.y, 'Prayer Bell — Blessing! +1 \u2764', '#f3c11b');
+      this.floatText(bell.x, bell.y, 'Prayer Bell · Blessing! +1 \u2764', '#f3c11b');
     } else {
       this.score += SCORING.bellCapConvertPoints;
       this.floatText(
@@ -986,7 +986,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.floatText(
       this.yatri.x,
       this.yatri.y - 56,
-      `Pilgrim's Grace — saved from ${cause}`,
+      `Pilgrim's Grace: saved from ${cause}`,
       '#f3c623',
     );
     this.statusText
@@ -1172,7 +1172,7 @@ export class HimalRajyaScene extends Phaser.Scene {
       const nextLevel = levelByIndex(this.level.index + 1);
       this.statusText
         .setText(
-          `🏆  LEVEL ${this.level.index} WON — ${this.level.name}!  (${secs}s)\n\n` +
+          `🏆  LEVEL ${this.level.index} WON · ${this.level.name}!  (${secs}s)\n\n` +
             `Run score: ${runScore}  (time +${timeBonus}, lives +${livesBonus})\n` +
             `Total journey: ${this.cumulativeScore}\n` +
             (newBest ? '⭐ NEW BEST!\n' : `Best: ${this.bestScore}\n`) +
@@ -1193,7 +1193,7 @@ export class HimalRajyaScene extends Phaser.Scene {
       this.submitFinalScore(timeMs);
       this.statusText
         .setText(
-          `🏔  SUMMIT REACHED — THE JOURNEY IS COMPLETE!  (${secs}s)\n\n` +
+          `🏔  SUMMIT REACHED · THE YATRA IS COMPLETE!  (${secs}s)\n\n` +
             `You climbed from the Terai jungle to the roof of Himal Rajya.\n\n` +
             `Final score: ${this.cumulativeScore}\n` +
             (newBest ? '⭐ NEW BEST!\n' : `Best: ${this.bestScore}\n`) +
@@ -1250,7 +1250,7 @@ export class HimalRajyaScene extends Phaser.Scene {
    * best combo, how many falls, and the time. Pure presentation — reads tracked counters.
    */
   private runSummaryLines(timeMs: number): string {
-    const region = this.level.name; // Terai Lowlands / Middle Hills / High Himalaya
+    const region = this.level.name; // Terai / Pahad / Himal display name
     const depth = Math.round(this.progressPct);
     const blooms = this.carriedBlooms + this.bloomsCollected;
     const bells = this.carriedBells + this.bellsCollected;
@@ -1402,7 +1402,7 @@ export class HimalRajyaScene extends Phaser.Scene {
     this.guru.sayAsync(this.guruLine('death', 'player_died'), 6000);
     this.statusText
       .setText(
-        `The journey pauses —\n${label}.\n\n` +
+        `The journey pauses.\n${label}.\n\n` +
           `This level: ${this.score}\n` +
           `Journey total: ${this.cumulativeScore + this.score}\n` +
           `Best: ${this.bestScore}\n\n` +

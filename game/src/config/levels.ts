@@ -100,7 +100,7 @@ const GROUND = 60;
 const TERAI: LevelConfig = {
   id: 'terai',
   index: 1,
-  name: 'Terai Lowlands',
+  name: 'Terai · the Lowland Jungle',
   subtitle: 'Through the sal forest & tall grass',
   worldWidth: 3400,
   parTimeMs: 82000, // Terai: the gentlest, most generous introduction
@@ -166,7 +166,7 @@ const TERAI: LevelConfig = {
 const HILLS: LevelConfig = {
   id: 'hills',
   index: 2,
-  name: 'Middle Hills',
+  name: 'Pahad · the Middle Hills',
   subtitle: 'Terraced paddy, temples & prayer flags',
   worldWidth: 3600,
   parTimeMs: 72000, // Hills: a step up — longer world, tighter time
@@ -223,8 +223,8 @@ const HILLS: LevelConfig = {
 const HIMAL: LevelConfig = {
   id: 'himal',
   index: 3,
-  name: 'High Himalaya',
-  subtitle: 'The final ascent to the summit',
+  name: 'Himal · the High Himalaya',
+  subtitle: 'Snow, prayer flags & the final ascent',
   worldWidth: 3800,
   parTimeMs: 64000, // Himal: the tightest, most urgent final ascent
   palette: {
