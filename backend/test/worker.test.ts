@@ -484,12 +484,35 @@ describe('/metrics', () => {
     expect(text).toContain('# TYPE cy_api_request_duration_ms histogram');
   });
 
-  it('emits an OpenMetrics trace_id exemplar on the duration histogram', async () => {
+  it('serves strict Prometheus text by default: no exemplars, valid content type', async () => {
+    // Prometheus text 0.0.4 has no exemplar syntax; a `# {...}` suffix there makes strict
+    // parsers (Grafana Cloud Metrics Endpoint's validator) reject the whole scrape.
+    await call('GET', '/healthz');
+    const res = await call('GET', '/metrics');
+    expect(res.headers.get('Content-Type')).toContain('text/plain; version=0.0.4');
+    const text = await res.text();
+    expect(text).not.toContain('# {');
+    expect(text).not.toContain('# EOF');
+    // Every non-comment line is `name{labels} value`.
+    for (const l of text.split('\n').filter((x) => x && !x.startsWith('#'))) {
+      expect(l).toMatch(/^[a-zA-Z_:][a-zA-Z0-9_:]*(\{.*\})? -?[0-9.e+Inf-]+$/);
+    }
+  });
+
+  it('emits an OpenMetrics trace_id exemplar on the duration histogram when asked', async () => {
     // Any handled request records the request duration with the request's traceId as an
     // exemplar, so at least one `_bucket` line carries a `# {trace_id="..."} <v> <ts>`
     // suffix that a latency panel can use to jump to the Tempo trace.
     await call('GET', '/healthz');
-    const text = await (await call('GET', '/metrics')).text();
+    const res = await callH('GET', '/metrics', {
+      Accept: 'application/openmetrics-text;version=1.0.0,text/plain;version=0.0.4;q=0.5',
+    });
+    expect(res.headers.get('Content-Type')).toContain('application/openmetrics-text');
+    const text = await res.text();
+    expect(text.trimEnd().endsWith('# EOF')).toBe(true);
+    // OpenMetrics: counter family declared without `_total`, samples keep it.
+    expect(text).toContain('# TYPE cy_api_requests counter');
+    expect(text).toContain('cy_api_requests_total{');
     const bucketLines = text
       .split('\n')
       .filter((l) => l.startsWith('cy_api_request_duration_ms_bucket'));

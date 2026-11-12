@@ -29,7 +29,7 @@ import type { Env } from './env';
 import { corsHeaders, preflight } from './cors';
 import { validateEvent, MAX_BATCH, type EventEnvelope } from './events';
 import { ingest, leaderboard, pulse, recent, sessionRollup, stats, submitScore } from './db';
-import { inc, observe, renderMetrics, setGauge } from './metrics';
+import { inc, observe, renderMetrics, setGauge, metricsFormatFor, METRICS_CONTENT_TYPE } from './metrics';
 import { Logger, hexId, pushTrace } from './logger';
 import { isProxyRequest, handleProxy } from './grafanaProxy';
 import { isFaroRequest, handleFaro } from './faroProxy';
@@ -246,9 +246,10 @@ async function handle(req: Request, env: Env, c: Ctx): Promise<Response> {
     // and tripping the "worker down" alert (noData=Alerting) on a perfectly healthy API.
     // Setting it here guarantees the liveness gauge is present on every scrape.
     setGauge('cy_api_up', 1, {}, 'Worker liveness (1=up)');
-    return new Response(renderMetrics(), {
+    const format = metricsFormatFor(req.headers.get('Accept'));
+    return new Response(renderMetrics(format), {
       status: 200,
-      headers: { 'Content-Type': 'text/plain; version=0.0.4', ...corsHeaders(req, env) },
+      headers: { 'Content-Type': METRICS_CONTENT_TYPE[format], ...corsHeaders(req, env) },
     });
   }
 

@@ -120,14 +120,28 @@ function fmtLabels(labels: Labels): string {
   );
 }
 
-/** Render the full registry as Prometheus text exposition format. */
-export function renderMetrics(): string {
+/**
+ * Render the registry for a scrape.
+ *
+ * - `'prometheus'` (default): classic Prometheus text format 0.0.4. That format has NO
+ *   exemplar syntax, so exemplars are omitted — a `# {trace_id=...}` suffix there makes
+ *   strict parsers (incl. Grafana Cloud's Metrics Endpoint validator) reject the whole body.
+ * - `'openmetrics'`: OpenMetrics 1.0 with trace exemplars on histogram buckets. OpenMetrics
+ *   names a counter FAMILY without `_total` (the sample keeps it) and ends with `# EOF`.
+ *   Served only when the scraper asks for it via `Accept: application/openmetrics-text`.
+ */
+export type MetricsFormat = 'prometheus' | 'openmetrics';
+
+export function renderMetrics(format: MetricsFormat = 'prometheus'): string {
+  const om = format === 'openmetrics';
   const lines: string[] = [];
   for (const [name, c] of counters) {
-    if (c.help) lines.push(`# HELP ${name} ${c.help}`);
-    lines.push(`# TYPE ${name} ${c.type}`);
+    const family = om && c.type === 'counter' ? name.replace(/_total$/, '') : name;
+    if (c.help) lines.push(`# HELP ${family} ${c.help}`);
+    lines.push(`# TYPE ${family} ${c.type}`);
     for (const { labels, value } of c.values.values()) {
-      lines.push(`${name}${fmtLabels(labels)} ${value}`);
+      const sample = om && c.type === 'counter' && !name.endsWith('_total') ? `${name}_total` : name;
+      lines.push(`${sample}${fmtLabels(labels)} ${value}`);
     }
   }
   for (const [name, h] of histograms) {
@@ -137,7 +151,7 @@ export function renderMetrics(): string {
       let cumulative = 0;
       for (let i = 0; i < h.buckets.length; i++) {
         cumulative = row.counts[i];
-        const ex = row.exemplars[i];
+        const ex = om ? row.exemplars[i] : null;
         // OpenMetrics exemplar suffix: `# {trace_id="..."} <value> <unix_seconds>`.
         // Grafana/Prometheus parse this to render a clickable point that links to the
         // trace (when the Prometheus datasource has an Exemplars → Tempo internal link).
@@ -153,5 +167,16 @@ export function renderMetrics(): string {
       lines.push(`${name}_count${fmtLabels(row.labels)} ${row.total}`);
     }
   }
+  if (om) lines.push('# EOF');
   return lines.join('\n') + '\n';
 }
+
+/** Pick the exposition format from a scrape's Accept header (OpenMetrics only if asked). */
+export function metricsFormatFor(accept: string | null): MetricsFormat {
+  return accept && /application\/openmetrics-text/i.test(accept) ? 'openmetrics' : 'prometheus';
+}
+
+export const METRICS_CONTENT_TYPE: Record<MetricsFormat, string> = {
+  prometheus: 'text/plain; version=0.0.4; charset=utf-8',
+  openmetrics: 'application/openmetrics-text; version=1.0.0; charset=utf-8',
+};
