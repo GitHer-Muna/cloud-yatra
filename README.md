@@ -10,7 +10,7 @@ you play.
 **Play it:** [cloud-yatra.pages.dev](https://cloud-yatra.pages.dev). It works with a keyboard on
 desktop and with on-screen controls on phones and tablets (use landscape).
 
-**Live dashboard:** [public Grafana dashboard](https://curioushalibut2108.grafana.net/public-dashboards/0bb04daf3f764307b6d0cea76a3de49e),
+**Live dashboard:** [public Grafana dashboard](https://curioushalibut2108.grafana.net/public-dashboards/f5c517acdff94f6d8f5cfb99683c6ef2),
 also embedded below the game.
 
 All art and audio are original and generated in code. There are no asset files.
