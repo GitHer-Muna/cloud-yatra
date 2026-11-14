@@ -3146,9 +3146,9 @@
             "gradientMode": "opacity",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
-            "showPoints": "never",
+            "showPoints": "always",
             "spanNulls": true,
-            "pointSize": 5,
+            "pointSize": 4,
             "axisBorderShow": false,
             "axisGridShow": true,
             "axisLabel": "",
@@ -3221,7 +3221,7 @@
       },
       "id": 23,
       "options": {
-        "calculate": false,
+        "calculate": true,
         "color": {
           "scheme": "Viridis",
           "mode": "scheme",
@@ -3229,7 +3229,8 @@
         },
         "cellGap": 1,
         "yAxis": {
-          "unit": "ms"
+          "unit": "fps",
+          "axisPlacement": "left"
         },
         "legend": {
           "show": true
@@ -3237,14 +3238,26 @@
         "tooltip": {
           "show": true,
           "yHistogram": true
+        },
+        "calculation": {
+          "yBuckets": {
+            "mode": "size",
+            "value": "5"
+          }
+        },
+        "rowsFrame": {
+          "layout": "auto"
+        },
+        "cellValues": {
+          "unit": "short"
         }
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "avg_over_time({kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"game_client_perf\" | unwrap value_fps [$__interval])",
-          "format": "heatmap",
-          "range": true
+          "expr": "avg(avg_over_time({kind=\"measurement\", app_id=\"2383\"} | logfmt | type=\"game_client_perf\" | unwrap value_fps [$__interval]))",
+          "range": true,
+          "legendFormat": "FPS"
         }
       ],
       "fieldConfig": {

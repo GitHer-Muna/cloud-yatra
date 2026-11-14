@@ -517,7 +517,7 @@ function polishPanel(p) {
         lineWidth: 2,
         fillOpacity: 14,
         gradientMode: 'opacity',
-        showPoints: 'never',
+        showPoints: p.id === 22 ? 'always' : 'never',
         spanNulls: true,
         axisBorderShow: false,
         axisGridShow: true,
@@ -732,6 +732,24 @@ function fixQueries(panels) {
       query: '{resource.service.name="cloud-yatra-api"}', tableType: 'traces', limit: 20,
     }];
   }
+  // FPS spread: one aggregated series per interval, bucketed by Grafana into FPS bands.
+  const spread = panels.find((p) => p.id === 23);
+  if (spread) {
+    const t = spread.targets[0];
+    t.expr = t.expr.replace(/^avg_over_time\((.*)\)$/, 'avg(avg_over_time($1))');
+    t.legendFormat = 'FPS';
+    delete t.format;
+    Object.assign(spread.options, {
+      calculate: true,
+      calculation: { yBuckets: { mode: 'size', value: '5' } },
+      yAxis: { unit: 'fps', axisPlacement: 'left' },
+      rowsFrame: { layout: 'auto' },
+      cellValues: { unit: 'short' },
+    });
+  }
+  // FPS samples are sparse; draw points so isolated samples are visible.
+  const fps = panels.find((p) => p.id === 22);
+  if (fps) fps.fieldConfig.defaults.custom = { ...fps.fieldConfig.defaults.custom, showPoints: 'always', pointSize: 4 };
   const chaos = panels.find((p) => p.id === 43);
   if (chaos) {
     chaos.targets = [{ refId: 'A', expr: 'sum(rate(cy_chaos_injected_total[1m])) or vector(0)', legendFormat: 'Requests hit', range: true }];
