@@ -42,24 +42,18 @@ export function initFaro(appVersion = '0.1.0'): Faro | null {
       version: appVersion,
       environment: env.MODE ?? 'development',
     },
-    // Don't trace/instrument the embedded Grafana dashboard's own proxied traffic. Faro
-    // already auto-ignores its collector URL (the Worker `/faro` path); these patterns add
-    // the dashboard reverse-proxy paths so the dashboard iframe's internal requests aren't
-    // captured as the game's RUM. Patterns are matched against the full request URL.
-    // Faro's own diagnostics ("Delivery retries exhausted", "Permanent delivery failure")
-    // go to the player's console whenever a network or ad-blocker drops a batch. RUM is
-    // best-effort; keep the console clean for players.
+    // Faro's own diagnostics ("Delivery retries exhausted", ...) would reach the player's console
+    // whenever a network or ad-blocker drops a batch. RUM is best-effort, so keep it silent.
     internalLoggerLevel: InternalLoggerLevel.OFF,
     // Drop RUM items while offline instead of retrying (and spamming the console).
     beforeSend: (item) => (typeof navigator !== 'undefined' && navigator.onLine === false ? null : item),
+    // Keep the embedded dashboard's proxied traffic out of the game's RUM.
     ignoreUrls: [/\/dash(\/|$)/, /\/public-dashboards\//, /\/apis\/.*\.grafana\.app/],
     instrumentations: [
       // Errors, web vitals, session, console, etc. (Faro's standard web set.)
       ...getWebInstrumentations(),
-      // HTTP/XHR tracing adds browser request timing and trace correlation. Faro auto-
-      // excludes its OWN collector URL (the Worker's first-party `/faro` path) from
-      // tracing, derived from the configured transport — so ingest isn't self-traced. The
-      // config-level `ignoreUrls` below additionally excludes the dashboard-proxy traffic.
+      // HTTP/XHR tracing adds browser request timing and trace correlation. Faro excludes
+      // its own collector URL automatically.
       new TracingInstrumentation(),
       // Replay is intentionally sampled (10%) and records the page DOM (HUD overlays,
       // dashboard, Chaos panel). Canvas recording is OFF: rrweb captures every WebGL draw

@@ -1,156 +1,212 @@
 # Cloud Yatra
 
-A 2D browser platformer that doubles as a live full-stack observability demo. You play
-Yatri, a Nepali traveller crossing the fictional cloud-kingdom of Himal Rajya, climbing from
-the Terai lowland jungle through the Pahad (middle hills) to the Himalayan summit.
+A 2D browser platformer that doubles as a live, full-stack observability demo.
 
-Playing the game produces real telemetry. That telemetry flows through a backend and into a
-Grafana Cloud dashboard that updates in near-real-time, so you can watch the system respond
-to actual traffic. All art and audio are original and generated in code; there are no
-external asset files.
+You play Yatri, a Nepali traveller who climbs from the Terai lowland jungle through the Pahad
+(middle hills) to the Himalayan summit. Every jump, fall and summit produces real telemetry. It
+flows through a Cloudflare Worker into Grafana Cloud, and a dashboard under the game updates as
+you play.
 
-**Live demo:** [cloud-yatra.pages.dev](https://cloud-yatra.pages.dev). Play with a keyboard
-on desktop or with on-screen touch controls on a phone or tablet (use landscape).
+**Play it:** [cloud-yatra.pages.dev](https://cloud-yatra.pages.dev). It works with a keyboard on
+desktop and with on-screen controls on phones and tablets (use landscape).
+
+All art and audio are original and generated in code. There are no asset files.
 
 ## Contents
 
 - [Gameplay](#gameplay)
 - [Controls](#controls)
 - [Architecture](#architecture)
+- [Observability](#observability)
 - [Project layout](#project-layout)
 - [Running locally](#running-locally)
-- [Observability](#observability)
 - [Configuration](#configuration)
-- [Originality and cultural respect](#originality-and-cultural-respect)
+- [Deployment](#deployment)
+- [Cultural respect](#cultural-respect)
 
 ## Gameplay
 
-- Run, jump, and swing a *khukuri* to cut through trail obstacles (thorns, bamboo, nettle,
-  thatch-grass, creeper vines). Yatri can double-jump to reach higher platforms.
-- Collect region-specific flowers (Terai marigold, hill rhododendron / *lali gurans*, Himal
-  blue poppy). Flowers build garlands; completing two garlands (every 24 blooms) grants an
-  extra life, and every garland pays out points.
-- Prayer bells are rare: each grants points, and restores a life when you are running low.
-- Walking into an uncut obstacle is a harmless warning the first time, but repeatedly
-  barging through one (instead of slashing or jumping it) costs a life.
-- Plant the pennant at checkpoints to set your respawn point and bank your score.
-- Hazards are predictable and learnable: drifting mist, swooping eagles, falling rocks, and a
-  jungle monkey. Difficulty increases region by region toward the summit.
-- Guru Megh, a cloud-sage guide, offers short in-character hints at key moments using
-  built-in lines in the browser (no external AI service).
+- Run, jump (double-jump in the air) and swing a *khukuri* to cut through thorns, bamboo, nettle,
+  tall grass and creeper vines.
+- Collect the flowers of each region: Terai marigold, hill rhododendron (*lali gurans*) and the
+  Himal blue poppy. Every 12 blooms make a garland. Two garlands earn an extra life.
+- Prayer bells are rare. Each one scores points and restores a life when you are running low.
+- Walking into an uncut obstacle is a warning the first time. Doing it repeatedly costs a life.
+- Plant the pennant at a checkpoint to set your respawn point and bank your score.
+- Watch for drifting mist, swooping eagles, falling rocks and a jungle monkey. Difficulty rises
+  region by region.
+- Guru Megh, a cloud-sage guide, gives short hints at key moments. His lines are written into the
+  game and need no network.
 
 ## Controls
 
 | Action | Desktop | Touch |
 | --- | --- | --- |
 | Move | Arrow keys or `A` / `D` | On-screen D-pad |
-| Jump / double-jump | `↑`, `W`, or Space (press again mid-air) | Jump button (tap again mid-air) |
+| Jump / double-jump | `↑`, `W` or `Space` (press again in the air) | Jump button (tap again in the air) |
 | Khukuri | `F` or `J` | Khukuri button |
+| Restart after a fall | `R` | Tap the card |
+| Mute | `M` | |
 
-On-screen controls appear automatically on touch devices, and the game fills the screen. In
-portrait orientation the game shows a prompt to rotate to landscape.
+Touch controls appear automatically on touch devices. In portrait the game asks you to rotate
+to landscape.
 
 ## Architecture
 
-Cloud Yatra is split into three independent pieces: a static frontend, an optional backend,
-and the Grafana Cloud dashboards. The game runs fully on its own; the backend and dashboards
-add the shared leaderboard and the live observability view.
+Three independent parts: a static game, an optional backend, and Grafana Cloud. The game runs on
+its own. The backend adds the shared leaderboard and the live dashboard.
 
 ```
-  Browser ─ Phaser game on Cloudflare Pages
-     │  Faro Web SDK: web vitals, JS errors, sessions, gameplay events
-     │  gameplay events + scores (batched)
-     ▼
-  Cloudflare Worker (cloud-yatra-api) ──────────► Cloudflare D1 (SQLite)
-     │  /faro      first-party Faro passthrough ─────────────► Grafana Faro (Loki)
-     │  per request: structured JSON log ────────────────────► Loki
-     │               OTLP trace span ────────────────────────► Tempo
-     │  /metrics   ◄── scraped every minute by Grafana Cloud ─ Prometheus
-     │  /stats /leaderboard /recent /session /pulse ◄── Infinity data source
-     │  /public-dashboards …  reverse proxy so the public dashboard can be framed
-     ▼
-  Grafana Cloud: Live Observatory dashboard, SLOs, alert rules
+Browser: Phaser game on Cloudflare Pages
+   │  Faro Web SDK: web vitals, JS errors, sessions, gameplay events
+   │  gameplay events and scores, sent in batches
+   ▼
+Cloudflare Worker (cloud-yatra-api) ─────────► Cloudflare D1 (SQLite)
+   │  /faro        first-party passthrough ──► Grafana Faro
+   │  every request: structured JSON log ─────► Loki
+   │                 OTLP trace span ─────────► Tempo
+   │  /metrics     scraped every minute by Grafana Cloud (Prometheus)
+   │  /stats /leaderboard /recent /pulse       read by the Infinity data source
+   │  /public-dashboards …  reverse proxy so the dashboard can be embedded
+   ▼
+Grafana Cloud: dashboards, SLOs, alert rules
 ```
 
-The project covers the four telemetry signals plus reliability tooling:
+| Part | Technology |
+| --- | --- |
+| Game | Phaser 3, TypeScript, Vite |
+| Hosting | Cloudflare Pages |
+| Backend | Cloudflare Worker, D1 |
+| Observability | Grafana Cloud: Prometheus, Loki, Tempo, Faro, Infinity |
 
-| Signal | Source | Implementation |
+## Observability
+
+| Signal | Source | How |
 | --- | --- | --- |
-| Metrics | Worker `/metrics`, scraped by the Grafana Cloud Metrics Endpoint integration | Prometheus counters and a request-duration histogram (RED method, p50/p90/p99 via `histogram_quantile`) |
-| Logs | Worker → Loki | One structured JSON log per request, each with a `correlationId` |
-| Traces | Worker → Tempo | A per-request OTLP span; latency buckets carry trace exemplars |
-| RUM | Browser → Faro | Web vitals, JS errors, sessions, custom gameplay events, sampled FPS |
-| Analytics | D1 → Infinity | Leaderboard, a live recent-runs feed, progression funnel, per-player stats, country geomap |
-| Reliability | Prometheus + dashboard | Availability and latency SLOs, error-budget burn, and alert rules |
+| Metrics | Worker `/metrics` | Prometheus counters and a request-duration histogram (rate, errors, duration; p50/p90/p99) |
+| Logs | Worker to Loki | One structured JSON log per request, each with a `correlationId` |
+| Traces | Worker to Tempo | One OTLP span per request. Latency buckets carry trace exemplars |
+| Real user monitoring | Browser to Faro | Web vitals, JS errors, sessions, gameplay events, sampled FPS |
+| Analytics | D1 to Infinity | Leaderboard, recent runs, progression funnel, deaths by cause, country map |
+| Reliability | Prometheus rules | Availability and latency SLOs, error-budget burn, alert rules |
 
-Labels are deliberately low-cardinality (`route`, `status_class`, `type`, `cause`, region).
-There is no PII: sessions are anonymous, `session_id` is only ever a log/trace field (never a
-metric label), and only a coarse edge country is recorded.
+Metric labels are kept low-cardinality (`route`, `status_class`, `type`, `cause`, region). There is
+no personal data. Sessions are anonymous, the session ID appears only in logs and traces, never as
+a metric label, and only a coarse country from Cloudflare is stored.
+
+### Dashboards
+
+`observability/dashboards/` holds one dashboard in two forms. Both are produced by
+`node observability/build-dashboard.mjs`, which lays out the source and derives the public copy
+from it, so the two never drift.
+
+- `cloud-yatra-observatory.json` is the full dashboard (52 data panels, last 6 hours, refresh
+  10 s). Import it into Grafana and map its data sources (Prometheus, Loki for backend logs, Loki
+  for Faro, Tempo, Infinity). It adds the game embed, a per-session "Your run" row and the Tempo
+  trace panels.
+- `cloud-yatra-observatory-public.json` is the externally shared version embedded below the game
+  (44 data panels, last 24 hours, refresh 30 s). Shared dashboards do not expand template
+  variables, so the build writes the Worker URL, Faro app id and data source UIDs into every
+  query, and uses fixed windows in place of `$__range` and `$__interval`.
+
+The sections read top to bottom:
+
+| Section | Source | What it shows |
+| --- | --- | --- |
+| Right now | D1 | Players online, players so far, events per minute, summits and lives lost today |
+| Is the server healthy? | Prometheus | Requests, response time, error rate, uptime, error budget and burn rate |
+| The climb | D1 | How far players get, share reaching each stage, summit rate |
+| What players do | D1 | Activity per region, actions, causes of falls, flowers and bells |
+| How the game feels | Faro | Web vitals, FPS over time and spread, browser errors |
+| Server activity | Prometheus | Requests by route, p50/p90/p99 latency, status classes, rejected events |
+| Server logs and traces | Loki, Tempo | Live request log, log levels, warnings and errors, traces (full dashboard) |
+| Leaderboard | D1 | Rank, best score, run time, furthest region, country, last played |
+| Around the world | D1 | Player map and top countries |
+| Chaos Mode | D1, Prometheus | Storm status and strength, requests hit, past storms |
+| How it's built | | The stack, from the browser to Grafana Cloud |
+
+Every panel title is plain language and has a hover description. Single numbers sit in small
+tiles beside the charts they summarise, and quiet panels show 0 or a short message instead of
+"No data".
+
+Grafana Cloud blocks framing from other sites, so the Worker reverse-proxies the public dashboard
+from its own address and removes the blocking headers.
+
+Metrics reach Grafana through the **Metrics Endpoint** integration: add a scrape job for
+`https://<worker>/metrics` with Bearer authentication using `METRICS_TOKEN`.
+
+### Alert rules
+
+- `prometheus-alert-rules.yaml`: standard Prometheus format. Import it under Alerting, Alert rules,
+  Import to Grafana-managed rules.
+- `grafana-alerts.yaml`: the same rules in Grafana provisioning format. Set the data source UID first.
+
+### Chaos Mode
+
+Chaos Mode is an admin-only fault injector inside the Worker. It lets the dashboard show a real
+incident and its recovery, not only calm traffic.
+
+1. Set the `CHAOS_ADMIN_TOKEN` secret on the Worker. Without it, Chaos Mode is disabled.
+2. In the running game press `Shift+C`, enter the token and start a window of about 60 seconds.
+3. During the window the Worker adds 600 ms of latency and about 25% synthetic `503` responses to
+   the gameplay routes only. Health, metrics, control routes and external services are never
+   affected, and the game keeps working.
+
+The panel shows `ACTIVE` with the time left, and a red "Cloud storm" banner appears in the game.
+Within one or two scrape intervals the error-rate and latency panels rise and the Chaos Mode alert
+fires. When the window ends, or you press Stop, everything recovers. The window is stored in D1, so
+every Worker instance sees the same state. Starting again extends the window.
 
 ## Project layout
 
 ```
 cloud-yatra/
-├── game/                  Frontend: Phaser 3 + TypeScript + Vite (static client)
-│   ├── index.html         Page shell: header, game stage, embedded dashboard, styles
+├── game/                Frontend: Phaser 3 + TypeScript + Vite
+│   ├── index.html       Page shell: header, game, embedded dashboard
 │   └── src/
-│       ├── main.ts        Phaser bootstrap: scenes, scale, physics, Faro, chaos panel
-│       ├── config/        Constants, level data, player tuning, scoring
-│       ├── scenes/        Boot, Menu, HimalRajya (gameplay), Leaderboard
-│       ├── entities/      Yatri, hazards, collectibles, checkpoints
-│       ├── ui/            HUD, Guru Megh dialogue, touch controls
-│       ├── audio/         Original procedural music and sound effects
-│       └── telemetry/     Event schema, sinks (console/Faro/HTTP), backend + chaos client
-│
-├── backend/               Optional backend: Cloudflare Worker + D1
-│   ├── migrations/        D1 schema (events, sessions, scores, rollups, chaos state)
-│   └── src/               Router, DB, event validation, metrics, logger, CORS, chaos,
-│                          dashboard + Faro reverse proxies
-│
-├── observability/         Grafana Cloud assets
-│   ├── dashboards/        Observatory source (full) + generated public copy JSON
-│   ├── build-dashboard.mjs  Generates the public dashboard from the source
-│   ├── prometheus-alert-rules.yaml  Alert rules (Prometheus format, UI import)
-│   └── grafana-alerts.yaml  Same rules, Grafana provisioning format
-│
-├── tools/live-check/      Headless-browser check of the live site's console + network
-│
-└── .github/workflows/     CI/CD: a CI quality gate (lint, type-check, tests), deploy Pages,
-                           deploy the Worker, a manual leaderboard-reset, and a daily live
-                           console check that fails on any new browser-console error
+│       ├── main.ts      Phaser setup, Faro, Chaos Mode panel
+│       ├── config/      Constants, level data, player tuning, scoring
+│       ├── scenes/      Boot, Menu, gameplay, Leaderboard
+│       ├── entities/    Player, hazards, collectibles, checkpoints
+│       ├── ui/          HUD, Guru Megh dialogue, touch controls
+│       ├── audio/       Procedural music and sound effects
+│       └── telemetry/   Event schema, sinks (console, Faro, HTTP), API and Chaos clients
+├── backend/             Cloudflare Worker + D1
+│   ├── migrations/      D1 schema
+│   ├── src/             Router, database, validation, metrics, logger, CORS, chaos, proxies
+│   └── test/            Worker tests
+├── observability/       Grafana assets
+│   ├── dashboards/      Source and public dashboard JSON
+│   ├── build-dashboard.mjs
+│   ├── prometheus-alert-rules.yaml
+│   └── grafana-alerts.yaml
+└── .github/workflows/   CI, deploy Pages, deploy Worker, reset leaderboard
 ```
 
 ## Running locally
 
 Requires Node.js 20 or newer.
 
-### Frontend
+### Game
 
 ```bash
 cd game
 npm install
-npm run dev        # http://localhost:5173
+npm run dev          # http://localhost:5173
 ```
 
-Other scripts, run in `game/`:
-
-```bash
-npm run build      # type-check and build to dist/
-npm run typecheck  # tsc --noEmit
-npm run lint       # eslint
-npm test           # vitest
-```
+Other scripts in `game/`: `npm run build`, `npm run typecheck`, `npm run lint`, `npm test`.
 
 ### Backend (optional)
 
-The game is fully playable without the backend. To run it locally:
+The game is fully playable without it.
 
 ```bash
 cd backend
 npm install
-npm run lint                # eslint
-npm test                    # vitest in the workerd runtime with in-memory D1
-npx wrangler dev --local    # local Worker + local SQLite
+npm run lint
+npm test                    # runs in the workerd runtime with an in-memory D1
+npx wrangler dev --local    # local Worker with local SQLite
 ```
 
 Routes:
@@ -159,102 +215,54 @@ Routes:
   `/chaos/status`, `/chaos/events`
 - `POST`: `/event`, `/events`, `/score`, `/chaos/start`, `/chaos/stop`
 
-See `backend/wrangler.toml` for the D1 binding and public settings. Secrets are never
-committed; they live in GitHub Actions secrets and the **Deploy backend Worker** workflow
-pushes them to the Worker:
-
-| Worker secret | Purpose |
-| --- | --- |
-| `METRICS_TOKEN` | Bearer token required by `/metrics` (the Metrics Endpoint scrape job uses it). |
-| `CHAOS_ADMIN_TOKEN` | Enables the Chaos Mode control plane. |
-| `GRAFANA_LOKI_URL`, `_USER`, `_TOKEN` | Push backend logs to Loki. |
-| `GRAFANA_OTLP_URL`, `_USER`, `_TOKEN` | Push backend traces to Tempo. |
-
-Change a secret in GitHub, then re-run the workflow; values edited directly in Cloudflare
-are overwritten on the next deploy.
-
-## Observability
-
-There is one canonical dashboard, kept in two forms:
-
-- `observability/dashboards/cloud-yatra-observatory.json`: the **source** dashboard
-  (authenticated import). Rich, every signal, with the game embedded in a **Video panel**
-  (`innius-video-panel`) at the top and a per-session "your run" row. Import it and map five
-  data sources: Faro/Loki (RUM), Prometheus (Worker `/metrics`), Loki (backend logs), Tempo
-  (traces), and Infinity (D1 analytics). Install the Video panel from **Administration →
-  Plugins and data → Plugins** (search "Video" by innius) so the game-in-dashboard panel
-  renders.
-- `observability/dashboards/cloud-yatra-observatory-public.json`: the **public** copy,
-  generated from the source by `observability/build-dashboard.mjs`. No template variables
-  (public dashboards can't use them), datasource refs wired to this stack's names, URLs
-  hardcoded. This is the one shared externally (Share → Share externally) and embedded below
-  the game. Its layout is set in `PUBLIC_LAYOUT` in the build script; regenerate with
-  `node observability/build-dashboard.mjs` after editing the source. Sections: Live now, The
-  climb, Yatri's journey, Scores, Around the world, Chaos Mode, How it's built.
-
-The public dashboard is embedded **inline below the game** on the standalone page. Grafana
-Cloud sends CSP `frame-ancestors 'none'`, so the dashboard can't be iframed on another
-origin directly; the Cloudflare Worker reverse-proxies it under `/dash` + the Grafana SPA
-paths (`/api`, `/public`, `/public-dashboards`, `/bootdata`, …) from its own origin, with
-the frame-blocking headers stripped, so the iframe renders. A per-session "your run" view is
-not possible on the public dashboard (public dashboards can't use template variables or
-identify a viewer); it lives in the authenticated source dashboard, driven by a `session`
-variable.
-
-Metrics reach Grafana through the **Metrics Endpoint** integration (Connections → Add new
-connection → Metrics Endpoint): a scrape job for `https://<worker>/metrics` with Bearer
-authentication using `METRICS_TOKEN`.
-
-`observability/prometheus-alert-rules.yaml` holds the alert rules in standard Prometheus
-format: import it with Alerting → Alert rules → Import to Grafana-managed rules → Prometheus
-YAML file, and pick the Prometheus data source. `observability/grafana-alerts.yaml` has the
-same rules in Grafana provisioning format (set the data source UID first).
-
-Backend logs (Loki) and traces (Tempo) ship only when their push secrets are set. Set the
-`GRAFANA_LOKI_*` and `GRAFANA_OTLP_*` secrets (see [Configuration](#configuration)) to enable
-them.
-
-### Chaos Mode
-
-Chaos Mode is an admin-only, self-contained fault injector built into the Worker. It exists so
-the dashboard can be shown catching a real incident and its recovery, not just calm traffic.
-Set the `CHAOS_ADMIN_TOKEN` secret, then in the running game press `Shift+C`, enter the token,
-and start a roughly 60-second window. The Worker adds latency (+600 ms) and about 25%
-synthetic `503`s to the gameplay routes only (never to health, metrics, control, or any
-external service), and gameplay keeps working. The window is stored in D1, so every Worker
-instance sees the same state; pressing Start again extends it rather than starting a second
-one.
-
-How to tell it is working:
-
-- The panel shows `ACTIVE · Ns left` with a red dot and a confirmation message.
-- A red "Cloud storm" banner appears at the top of the game, and Guru Megh narrates the storm.
-- Within one or two scrape intervals (about 1–2 minutes) the dashboard's error-rate and
-  latency panels rise, a red Chaos Mode annotation appears, and the "Chaos Mode active"
-  alert fires.
-- When the window ends (or you press Stop), the banner fades, Guru Megh announces clear skies,
-  and the panels recover.
-
-With no token set, the control plane is disabled.
+Public settings and the D1 binding are in `backend/wrangler.toml`.
 
 ## Configuration
 
-All client configuration is public, set through Vite environment variables. There are no
-secrets in the client. Copy `game/.env.example` to `game/.env` to connect a backend.
+### Game (public build-time variables)
+
+Copy `game/.env.example` to `game/.env`. These values are public. Never put secrets in the client.
 
 | Variable | Purpose |
 | --- | --- |
-| `VITE_API_BASE_URL` | Deployed Cloudflare Worker: telemetry ingest, the shared D1 leaderboard, and the dashboard reverse-proxy. Leave empty to run offline with a local leaderboard. |
-| `VITE_FARO_URL`, `VITE_FARO_APP_KEY` | Grafana Faro RUM collector (optional). |
-| `VITE_GRAFANA_DASHBOARD_URL` | Grafana public-dashboard URL (`/public-dashboards/<token>`). The page embeds it inline below the game, proxied through the Worker so it can be framed. |
-| `VITE_GRAFANA_GRAND_URL` | Optional authenticated dashboard URL (`/d/<uid>/...`) used only as an open-in-new-tab fallback if the inline embed can't load. |
+| `VITE_API_BASE_URL` | Deployed Worker URL: telemetry, shared leaderboard and dashboard proxy. Leave empty to run offline with a local leaderboard. |
+| `VITE_FARO_URL` | Grafana Faro collector. Use the Worker's `/faro` path so ad blockers do not drop it. Optional. |
+| `VITE_FARO_APP_KEY` | Faro app key, only if your receiver needs one. Optional. |
+| `VITE_GRAFANA_DASHBOARD_URL` | Grafana public dashboard URL (`/public-dashboards/<token>`), embedded below the game. |
+| `VITE_GRAFANA_GRAND_URL` | Optional public link to the full dashboard, used as a fallback if the embed cannot load. |
 
-With none of these set, the game still plays fully: telemetry logs to the console in
-development, the leaderboard uses local browser storage, and Guru Megh uses built-in lines.
+With none of these set, the game still works: telemetry logs to the console in development, the
+leaderboard uses local browser storage, and Guru Megh uses his built-in lines.
 
-## Originality and cultural respect
+### Worker secrets
 
-Every sprite, background and note of music is drawn or composed in code; there are no asset files. Cultural and national symbols (the
-*gunyu-cholo*, *dhaka topi*, *khukuri*, prayer flags, the Nepal flag, and *mani* stones) are
-used respectfully and are never hazards. The background music is an original composition and
-is not Nepal's national anthem.
+Secrets are never committed. They live in GitHub Actions secrets and the **Deploy backend Worker**
+workflow pushes them to the Worker.
+
+| Secret | Purpose |
+| --- | --- |
+| `METRICS_TOKEN` | Bearer token required by `/metrics`. |
+| `CHAOS_ADMIN_TOKEN` | Enables the Chaos Mode control plane. |
+| `GRAFANA_LOKI_URL`, `GRAFANA_LOKI_USER`, `GRAFANA_LOKI_TOKEN` | Push backend logs to Loki. |
+| `GRAFANA_OTLP_URL`, `GRAFANA_OTLP_USER`, `GRAFANA_OTLP_TOKEN` | Push backend traces to Tempo. |
+
+After changing a secret in GitHub, re-run the workflow. Values edited directly in Cloudflare are
+overwritten on the next deploy.
+
+## Deployment
+
+GitHub Actions handles everything. It also needs the `CLOUDFLARE_API_TOKEN` and
+`CLOUDFLARE_ACCOUNT_ID` secrets.
+
+| Workflow | What it does |
+| --- | --- |
+| CI | Lint, type-check, test and build the game and the Worker on every push and pull request. |
+| Deploy to Cloudflare Pages | Builds and publishes the game. Public settings come from repository variables. |
+| Deploy backend Worker | Tests, applies D1 migrations, deploys the Worker and pushes its secrets. |
+| Reset leaderboard | Manual only. Clears the shared leaderboard after you type a confirmation word. |
+
+## Cultural respect
+
+Cultural and national symbols (the *gunyu-cholo*, *dhaka topi*, *khukuri*, prayer flags, the Nepal
+flag and *mani* stones) are used with respect and are never hazards. The background music is an
+original composition. It is not Nepal's national anthem.

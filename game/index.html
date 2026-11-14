@@ -276,14 +276,29 @@
         filter: brightness(1.05);
         box-shadow: 0 9px 24px rgba(243, 198, 35, 0.28);
       }
+      /* The dashboard keeps its desktop layout at a readable width: the wrapper scrolls
+         sideways and the dashboard scrolls down inside the frame. */
+      #cy-dash-scroll {
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 12px;
+      }
       #cy-dash-frame {
         display: block;
         width: 100%;
+        min-width: 1200px;
         height: min(92vh, 1400px);
         min-height: 560px;
         border: 1px solid rgba(243, 198, 35, 0.35);
         border-radius: 12px;
         background: #0b1420;
+      }
+      /* On phones Grafana switches to its stacked single-column layout, so no sideways scroll. */
+      @media (max-width: 768px) {
+        #cy-dash-frame {
+          min-width: 0;
+        }
       }
       /* Fallback link, shown only if the inline dashboard can't load. */
       #cy-dash-cta {
@@ -505,13 +520,16 @@
 
       <!-- The public Grafana dashboard, framed through the Worker's reverse proxy
            (Grafana Cloud forbids direct framing). -->
-      <iframe
-        id="cy-dash-frame"
-        title="Cloud Yatra live Grafana dashboard"
-        loading="lazy"
-        referrerpolicy="no-referrer"
-        hidden
-      ></iframe>
+      <div id="cy-dash-scroll">
+        <iframe
+          id="cy-dash-frame"
+          title="Cloud Yatra live Grafana dashboard"
+          loading="lazy"
+          referrerpolicy="no-referrer"
+          scrolling="yes"
+          hidden
+        ></iframe>
+      </div>
 
       <!-- Fallback if the inline dashboard can't load. -->
       <a id="cy-dash-cta" href="#" target="_blank" rel="noopener" hidden>

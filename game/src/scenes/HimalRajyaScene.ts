@@ -1172,12 +1172,13 @@ export class HimalRajyaScene extends Phaser.Scene {
       const nextLevel = levelByIndex(this.level.index + 1);
       this.statusText
         .setText(
-          `🏆  LEVEL ${this.level.index} WON · ${this.level.name}!  (${secs}s)\n\n` +
-            `Run score: ${runScore}  (time +${timeBonus}, lives +${livesBonus})\n` +
-            `Total journey: ${this.cumulativeScore}\n` +
-            (newBest ? '⭐ NEW BEST!\n' : `Best: ${this.bestScore}\n`) +
-            `\nPress N, Enter or Space for Level ${this.level.index + 1}: ${nextLevel.name}\n` +
-            `Auto-continuing in 8 seconds…  ·  Press R to restart`,
+          `LEVEL ${this.level.index} CLEARED  \u00b7  ${this.level.name}\n\n` +
+            `Level score  ${runScore}   (time +${timeBonus}, lives +${livesBonus})\n` +
+            `JOURNEY  ${this.cumulativeScore}\n` +
+            (newBest ? 'New best!\n' : `Best ${this.bestScore}\n`) +
+            `\nCleared in ${secs}s\n\n` +
+            `Press N, Enter or Space for ${nextLevel.name}\n` +
+            `Continuing automatically in 8 seconds  \u00b7  R to restart`,
         )
         .setVisible(true);
       this.styleStatusCard(0x2fae5a); // green — level cleared
@@ -1193,13 +1194,11 @@ export class HimalRajyaScene extends Phaser.Scene {
       this.submitFinalScore(timeMs);
       this.statusText
         .setText(
-          `🏔  SUMMIT REACHED · THE YATRA IS COMPLETE!  (${secs}s)\n\n` +
-            `You climbed from the Terai jungle to the roof of Himal Rajya.\n\n` +
-            `Final score: ${this.cumulativeScore}\n` +
-            (newBest ? '⭐ NEW BEST!\n' : `Best: ${this.bestScore}\n`) +
-            '\n' +
-            this.runSummaryLines(timeMs) +
-            `\n\nThe prayer flags fly for you. Opening the leaderboard…`,
+          `SUMMIT REACHED\nThe yatra is complete\n\n` +
+            `FINAL SCORE  ${this.cumulativeScore}\n` +
+            (newBest ? 'New best!\n' : `Best ${this.bestScore}\n`) +
+            `\n${this.runSummaryLines(timeMs)}\n\n` +
+            `Opening the leaderboard\u2026`,
         )
         .setVisible(true);
       this.styleStatusCard(0xf6b73c); // gold — summit reached
@@ -1245,60 +1244,22 @@ export class HimalRajyaScene extends Phaser.Scene {
   }
 
   /**
-   * Your-run performance summary, shown on every end-of-run card (win or loss) so a player
-   * always sees how this journey went: how far they climbed, what they gathered, their
-   * best combo, how many falls, and the time. Pure presentation — reads tracked counters.
+   * Compact run summary shown on every end-of-run card: how far the journey got, what was
+   * gathered, and the run's pace. Pure presentation; reads tracked counters.
    */
   private runSummaryLines(timeMs: number): string {
-    const region = this.level.name; // Terai / Pahad / Himal display name
     const depth = Math.round(this.progressPct);
     const blooms = this.carriedBlooms + this.bloomsCollected;
     const bells = this.carriedBells + this.bellsCollected;
     const garlands = this.carriedGarlands + this.garlandsEarned;
     const falls = this.carriedDeaths + this.deathsThisJourney;
     const bestCombo = Math.max(this.carriedMaxCombo, this.maxCombo);
-    const combo = bestCombo >= 1.1 ? `x${bestCombo.toFixed(1)}` : 'none';
+    const combo = bestCombo >= 1.1 ? `x${bestCombo.toFixed(1)}` : '-';
     const secs = (timeMs / 1000).toFixed(1);
     return (
-      `\u2500\u2500 your run \u2500\u2500\n` +
-      `Reached: ${region}  (${depth}% up)\n` +
-      `\uD83C\uDF38 ${blooms} blooms   \uD83D\uDD14 ${bells} bells   \uD83D\uDCFF ${garlands} garlands\n` +
-      `Best combo: ${combo}   \u00b7   Falls: ${falls}   \u00b7   Time: ${secs}s\n` +
-      this.sessionIdFooter()
-    );
-  }
-
-  /**
-   * A footer line for the end-of-run card that surfaces this run's anonymous session id, so a
-   * player can tie this run to the Grand Observatory's per-session "Your run" panels (paste it
-   * into the dashboard's "Your session" box / append var-session=<id> to the URL). The id
-   * can't be click-copied off the Phaser canvas, so we copy it to the clipboard once (best
-   * effort) and print the full id on the card so it's usable even when the clipboard is
-   * blocked. Pure presentation + a harmless clipboard attempt; never throws.
-   */
-  private sessionIdFooter(): string {
-    const id = this.telemetry.getSessionId();
-    // Best-effort auto-copy of the full id. Guarded: the Clipboard API is unavailable on
-    // insecure origins or when permissions are denied — failure is silent and non-blocking.
-    // We signal whether the copy was attempted so the card never promises "(copied)" falsely.
-    let copied = false;
-    try {
-      const clip = (globalThis as { navigator?: Navigator }).navigator?.clipboard;
-      if (clip?.writeText) {
-        copied = true;
-        clip.writeText(id).catch(() => {
-          /* clipboard blocked at write time — the full id is printed below regardless */
-        });
-      }
-    } catch {
-      /* no navigator/clipboard (e.g. tests) — ignore */
-    }
-    // Print the FULL id (no panel to defer to) so the player can read or paste it into the
-    // Grand Observatory's "Your session" box to light up the per-session "Your run" panels.
-    return (
-      `\n\u2500\u2500 your session \u2500\u2500\n` +
-      `${id}${copied ? '  (copied)' : ''}\n` +
-      `Paste into the dashboard's “Your session” box to see this run.`
+      `Reached  ${this.level.name}  \u00b7  ${depth}% of the climb\n` +
+      `Blooms ${blooms}   \u00b7   Bells ${bells}   \u00b7   Garlands ${garlands}\n` +
+      `Best combo ${combo}   \u00b7   Falls ${falls}   \u00b7   Time ${secs}s`
     );
   }
 
@@ -1400,14 +1361,14 @@ export class HimalRajyaScene extends Phaser.Scene {
     // game-over status card.
     this.guru.setDock('bottom');
     this.guru.sayAsync(this.guruLine('death', 'player_died'), 6000);
+    const journeyTotal = this.cumulativeScore + this.score;
     this.statusText
       .setText(
-        `The journey pauses.\n${label}.\n\n` +
-          `This level: ${this.score}\n` +
-          `Journey total: ${this.cumulativeScore + this.score}\n` +
-          `Best: ${this.bestScore}\n\n` +
-          this.runSummaryLines(this.telemetry.sinceStartMs()) +
-          `\n\nPress R to begin a new journey (from the Terai)`,
+        `THE JOURNEY PAUSES\n${label}\n\n` +
+          `SCORE  ${journeyTotal}\n` +
+          `Best ${Math.max(this.bestScore, journeyTotal)}\n\n` +
+          `${this.runSummaryLines(this.telemetry.sinceStartMs())}\n\n` +
+          `Press R or tap to begin a new journey`,
       )
       .setVisible(true);
     this.styleStatusCard(0xe23b3b); // red — game over
