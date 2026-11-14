@@ -10,7 +10,14 @@ you play.
 **Play it:** [cloud-yatra.pages.dev](https://cloud-yatra.pages.dev). It works with a keyboard on
 desktop and with on-screen controls on phones and tablets (use landscape).
 
+**Live dashboard:** [public Grafana dashboard](https://curioushalibut2108.grafana.net/public-dashboards/0bb04daf3f764307b6d0cea76a3de49e),
+also embedded below the game.
+
 All art and audio are original and generated in code. There are no asset files.
+
+![Yatri in the Terai, with Guru Megh's first hint](.github/images/game.jpg)
+
+![The top of the live dashboard: players right now, server health and SLOs](.github/images/dashboard.jpg)
 
 ## Contents
 
@@ -22,6 +29,7 @@ All art and audio are original and generated in code. There are no asset files.
 - [Running locally](#running-locally)
 - [Configuration](#configuration)
 - [Deployment](#deployment)
+- [Testing](#testing)
 - [Cultural respect](#cultural-respect)
 
 ## Gameplay
@@ -127,7 +135,8 @@ The sections read top to bottom:
 
 Every panel title is plain language and has a hover description. Single numbers sit in small
 tiles beside the charts they summarise, and quiet panels show 0 or a short message instead of
-"No data".
+"No data". A "Chaos storms" annotation draws a red band on every time series while a storm runs.
+On a public share, turn on **Display annotations** in the sharing settings to show it.
 
 Grafana Cloud blocks framing from other sites, so the Worker reverse-proxies the public dashboard
 from its own address and removes the blocking headers.
@@ -260,6 +269,15 @@ GitHub Actions handles everything. It also needs the `CLOUDFLARE_API_TOKEN` and
 | Deploy to Cloudflare Pages | Builds and publishes the game. Public settings come from repository variables. |
 | Deploy backend Worker | Tests, applies D1 migrations, deploys the Worker and pushes its secrets. |
 | Reset leaderboard | Manual only. Clears the shared leaderboard after you type a confirmation word. |
+
+## Testing
+
+| Part | Command | Tests |
+| --- | --- | --- |
+| Game | `cd game && npm test` | 84 unit tests (Vitest): levels, scoring, jump logic, camera, telemetry, Guru Megh lines |
+| Worker | `cd backend && npm test` | 62 tests in the real `workerd` runtime with an in-memory D1 |
+
+CI runs both suites, plus lint, type-check and both builds, on every push and pull request.
 
 ## Cultural respect
 

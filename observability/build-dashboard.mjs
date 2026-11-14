@@ -205,6 +205,20 @@ function mapColors(node) {
 
 const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 
+/**
+ * Grafana 13 public dashboards run a query for every panel and show "Failed to extract queries
+ * from panel" on text panels that have none. A tiny inline Infinity query (no network call)
+ * keeps the banner and footer clean.
+ */
+const TEXT_PANEL_QUERY = {
+  datasource: { type: 'yesoreyeram-infinity-datasource', uid: '${DS_INFINITY}' },
+  targets: [{
+    refId: 'A',
+    datasource: { type: 'yesoreyeram-infinity-datasource', uid: '${DS_INFINITY}' },
+    type: 'json', source: 'inline', format: 'table', parser: 'backend', data: '[{"ok":1}]',
+  }],
+};
+
 /** The banner shared by both dashboards: dusk gradient, prayer-flag strip, signal chips. */
 function headerPanel(id) {
   const flag = (c, w) => `${c} ${w}`;
@@ -233,6 +247,7 @@ function headerPanel(id) {
     gridPos: { h: 4, w: GRID_W, x: 0, y: 0 },
     options: { mode: 'html', content },
     transparent: true,
+    ...clone(TEXT_PANEL_QUERY),
   };
 }
 
@@ -480,6 +495,7 @@ function polishPanel(p) {
   if (p.type === 'row' || p.type === 'innius-video-panel') return p;
   if (p.id === 40) {
     p.options.content = footerContent();
+    Object.assign(p, clone(TEXT_PANEL_QUERY));
     return p;
   }
   if (p.type === 'text') return p;
@@ -552,7 +568,7 @@ function polishPanel(p) {
       o.color = { ...(o.color ?? {}), mode: 'scheme', scheme: 'Viridis', steps: 64 };
       break;
     case 'geomap':
-      o.basemap = { type: 'carto', name: 'Basemap', config: { theme: 'dark', showLabels: true } };
+      o.basemap = { type: 'default', name: 'Basemap' }; // the stack's default tiles render on public shares
       break;
     case 'logs':
       Object.assign(o, { showTime: true, wrapLogMessage: true, prettifyLogMessage: true, enableLogDetails: true, sortOrder: 'Descending' });
@@ -577,6 +593,24 @@ function polish(d) {
   d.style = 'dark';
   d.timezone = 'browser';
   d.graphTooltip = 1; // shared crosshair and tooltip across time series
+  // A red band on every time series while a Chaos Mode storm is running.
+  d.annotations = {
+    list: [
+      ...(d.annotations?.list ?? []).filter((a) => a.name !== 'Chaos storms'),
+      {
+        name: 'Chaos storms',
+        enable: true,
+        hide: false,
+        iconColor: C.red,
+        datasource: { type: 'prometheus', uid: '${DS_PROM}' },
+        expr: 'max(cy_chaos_active) > 0',
+        step: '30s',
+        titleFormat: 'Chaos storm',
+        textFormat: 'Chaos Mode: added latency and synthetic 503s on gameplay routes',
+        useValueForTime: false,
+      },
+    ],
+  };
   d.refresh = '10s';
   d.time = { from: 'now-6h', to: 'now' };
   d.timepicker = { ...(d.timepicker ?? {}), refresh_intervals: ['10s', '30s', '1m', '5m'] };
@@ -667,6 +701,7 @@ function leaderboardPanel(old) {
           { id: 'custom.cellOptions', value: { type: 'gauge', mode: 'basic', valueDisplayMode: 'text' } },
           { id: 'color', value: { mode: 'fixed', fixedColor: C.gold } },
           { id: 'min', value: 0 },
+          { id: 'fieldMinMax', value: true }, // bar length relative to the top score
           { id: 'decimals', value: 0 },
           { id: 'custom.minWidth', value: 200 },
         ]),
@@ -750,6 +785,17 @@ function fixQueries(panels) {
   // FPS samples are sparse; draw points so isolated samples are visible.
   const fps = panels.find((p) => p.id === 22);
   if (fps) fps.fieldConfig.defaults.custom = { ...fps.fieldConfig.defaults.custom, showPoints: 'always', pointSize: 4 };
+  // Log lines: the level already has its own column, so the line starts with the route.
+  const logs = panels.find((p) => p.id === 61);
+  if (logs) {
+    logs.targets[0].expr = logs.targets[0].expr.replace('line_format "{{.level}} {{.route}}', 'line_format "{{.route}}');
+  }
+  // Warnings and errors: whole numbers on the axis, and a visible scale while it sits at zero.
+  const warn = panels.find((p) => p.id === 63);
+  if (warn) {
+    Object.assign(warn.fieldConfig.defaults, { unit: 'short', decimals: 0 });
+    warn.fieldConfig.defaults.custom = { ...warn.fieldConfig.defaults.custom, axisSoftMax: 1 };
+  }
   const chaos = panels.find((p) => p.id === 43);
   if (chaos) {
     chaos.targets = [{ refId: 'A', expr: 'sum(rate(cy_chaos_injected_total[1m])) or vector(0)', legendFormat: 'Requests hit', range: true }];
@@ -804,7 +850,8 @@ function buildPublic(grand) {
     .map((p) => stripPrivateLinks(wireDatasources(substituteLiterals(p))));
   panels.forEach(assertPublicSafe);
 
-  d.panels = layout(panels, PUBLIC_LAYOUT, headerPanel(1_000_000));
+  d.panels = layout(panels, PUBLIC_LAYOUT, wireDatasources(headerPanel(1_000_000)));
+  d.annotations = wireDatasources(d.annotations);
   d.uid = 'cloud-yatra';
   d.title = 'Cloud Yatra · Live Observatory';
   d.templating = { list: [] }; // externally shared dashboards cannot use variables
