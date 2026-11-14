@@ -64,21 +64,7 @@ to landscape.
 Three independent parts: a static game, an optional backend, and Grafana Cloud. The game runs on
 its own. The backend adds the shared leaderboard and the live dashboard.
 
-```
-Browser: Phaser game on Cloudflare Pages
-   │  Faro Web SDK: web vitals, JS errors, sessions, gameplay events
-   │  gameplay events and scores, sent in batches
-   ▼
-Cloudflare Worker (cloud-yatra-api) ─────────► Cloudflare D1 (SQLite)
-   │  /faro        first-party passthrough ──► Grafana Faro
-   │  every request: structured JSON log ─────► Loki
-   │                 OTLP trace span ─────────► Tempo
-   │  /metrics     scraped every minute by Grafana Cloud (Prometheus)
-   │  /stats /leaderboard /recent /pulse       read by the Infinity data source
-   │  /public-dashboards …  reverse proxy so the dashboard can be embedded
-   ▼
-Grafana Cloud: dashboards, SLOs, alert rules
-```
+![Cloud Yatra system architecture: the browser game, the Cloudflare Worker and D1, and Grafana Cloud](.github/images/architecture.png)
 
 | Part | Technology |
 | --- | --- |
