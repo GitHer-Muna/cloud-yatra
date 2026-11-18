@@ -43,4 +43,8 @@ export interface Env {
   // Optional bearer token that protects GET /metrics. Required by Grafana Cloud's
   // "Metrics Endpoint" integration (which rejects unauthenticated URLs). Unset = public.
   METRICS_TOKEN?: string;
+
+  // Optional Workers Rate Limiting binding (wrangler.toml [[ratelimits]]) used by the
+  // read-only /open/* API. When absent, a per-isolate fallback limiter is used.
+  PUBLIC_LIMITER?: { limit(options: { key: string }): Promise<{ success: boolean }> };
 }

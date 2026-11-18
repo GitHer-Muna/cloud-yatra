@@ -864,6 +864,62 @@ function buildPublic(grand) {
   return d;
 }
 
+/**
+ * Build the Grafana Play copy. Same panels as the public copy, but every API query goes to
+ * the read-only, name-free `/open/*` routes, and the leaderboard drops the player name.
+ */
+function buildPlay(pub) {
+  const text = JSON.stringify(pub)
+    .replaceAll(`${API_BASE}/recent?limit=50`, `${API_BASE}/open/leaderboard`)
+    .replaceAll(`${API_BASE}/stats`, `${API_BASE}/open/stats`)
+    .replaceAll(`${API_BASE}/pulse`, `${API_BASE}/open/pulse`)
+    .replaceAll(`${API_BASE}/chaos/`, `${API_BASE}/open/chaos/`);
+  const d = JSON.parse(text);
+  const board = d.panels.find((p) => p.id === 68);
+  if (board) {
+    for (const t of board.targets) t.columns = t.columns.filter((c) => c.text !== 'Player');
+    board.fieldConfig.overrides = board.fieldConfig.overrides.filter((o) => o.matcher.options !== 'Player');
+    for (const t of board.transformations) {
+      if (t.id === 'organize') {
+        t.options.indexByName = { Rank: 0, Score: 1, 'Run time': 2, 'Furthest region': 3, Country: 4, 'Last played': 5 };
+      }
+    }
+  }
+  d.uid = 'cloud-yatra-play';
+  d.title = 'Cloud Yatra · Live Observatory (Grafana Play)';
+  // Safety net: the Play copy must never call a route that can return names.
+  const bad = text.match(new RegExp(`${API_BASE.replaceAll('.', '\\.')}/(?!open/)[a-z]+`, 'g'));
+  if (bad) throw new Error(`play: non-/open API route still referenced: ${[...new Set(bad)].join(', ')}`);
+  return d;
+}
+
+/**
+ * Portable copy of the Play dashboard, equivalent to Grafana's "Export for sharing externally".
+ * Data source UIDs become ${DS_*} placeholders declared in __inputs, so whoever imports it
+ * (for example the Grafana Play admins) maps them to their own data sources.
+ */
+function buildPlayExport(play) {
+  const INPUTS = {
+    'grafanacloud-prom': { name: 'DS_PROMETHEUS', label: 'Prometheus', pluginId: 'prometheus', pluginName: 'Prometheus' },
+    'grafanacloud-logs': { name: 'DS_LOKI', label: 'Loki', pluginId: 'loki', pluginName: 'Loki' },
+    'grafanacloud-infinity': { name: 'DS_INFINITY', label: 'Infinity', pluginId: 'yesoreyeram-infinity-datasource', pluginName: 'Infinity' },
+  };
+  const text = JSON.stringify(play).replace(/"uid":"(grafanacloud-[a-z]+)"/g, (m, uid) =>
+    INPUTS[uid] ? `"uid":"\${${INPUTS[uid].name}}"` : m);
+  const d = JSON.parse(text);
+  d.__inputs = Object.values(INPUTS).map((i) => ({ ...i, description: '', type: 'datasource' }));
+  const panelTypes = [...new Set(d.panels.map((p) => p.type).filter((t) => t !== 'row'))].sort();
+  d.__requires = [
+    { type: 'grafana', id: 'grafana', name: 'Grafana', version: '11.0.0' },
+    ...d.__inputs.map((i) => ({ type: 'datasource', id: i.pluginId, name: i.pluginName, version: '1.0.0' })),
+    ...panelTypes.map((t) => ({ type: 'panel', id: t, name: t, version: '' })),
+  ];
+  d.id = null;
+  const left = text.match(/"uid":"grafanacloud-[a-z]+"/g);
+  if (left) throw new Error(`play export: unmapped data source uid ${[...new Set(left)].join(', ')}`);
+  return d;
+}
+
 // --- run ------------------------------------------------------------------------------
 const SOURCE = 'cloud-yatra-observatory.json';
 const original = JSON.parse(readFileSync(path.join(dir, SOURCE), 'utf8'));
@@ -872,6 +928,12 @@ const pub = buildPublic(grand);
 writeFileSync(path.join(dir, SOURCE), JSON.stringify(grand, null, 2) + '\n');
 writeFileSync(path.join(dir, 'cloud-yatra-observatory-public.json'), JSON.stringify(pub, null, 2) + '\n');
 
+const play = buildPlay(pub);
+writeFileSync(path.join(dir, 'cloud-yatra-observatory-play.json'), JSON.stringify(play, null, 2) + '\n');
+
+writeFileSync(path.join(dir, 'cloud-yatra-observatory-play-export.json'), JSON.stringify(buildPlayExport(play), null, 2) + '\n');
+
 const count = (d) => d.panels.filter((p) => p.type !== 'row').length;
 console.log(`Source: ${SOURCE} (${count(grand)} panels)`);
 console.log(`Public: cloud-yatra-observatory-public.json (${count(pub)} panels)`);
+console.log(`Play:   cloud-yatra-observatory-play.json (${count(play)} panels)`);

@@ -47,6 +47,13 @@ GRAFANA_PROXY_BASE = "https://curioushalibut2108.grafana.net"
 # it already ships in the public browser bundle, so it is not a secret. Point it at your own
 # Grafana Faro receiver URL. Unset = /faro returns 404 and the browser posts RUM directly.
 FARO_UPSTREAM = "https://faro-collector-prod-ap-south-1.grafana.net/collect/dd6661dd58b770f59b0d0bd72ec44511"
+# Rate limit for the read-only /open/* API (per client IP, 60 requests per 60 s).
+[[ratelimits]]
+name = "PUBLIC_LIMITER"
+namespace_id = "1001"
+  [ratelimits.simple]
+  limit = 60
+  period = 60
 # Grafana Cloud push endpoints are optional. Leave empty to disable the push (the Worker
 # still logs to Cloudflare Workers Logs and exposes /metrics for a pull scrape). Set these
 # as Wrangler secretS, not here:  GRAFANA_LOKI_URL, GRAFANA_LOKI_USER, GRAFANA_LOKI_TOKEN,

@@ -287,6 +287,27 @@ export async function leaderboard(env: Env, limit = 20): Promise<LeaderboardRow[
   return res.results ?? [];
 }
 
+export interface PublicLeaderboardRow {
+  rank: number;
+  score: number;
+  timeMs: number | null;
+  levelId: string | null;
+  country: string | null;
+  updatedAt: number;
+}
+
+/** Top scores for the public API. Deliberately excludes the player name and session id. */
+export async function publicLeaderboard(env: Env, limit = 50): Promise<PublicLeaderboardRow[]> {
+  const n = Math.min(Math.max(1, Math.floor(limit)), 100);
+  const res = await env.DB.prepare(
+    `SELECT score, time_ms AS timeMs, level_id AS levelId, country, updated_at AS updatedAt
+       FROM scores ORDER BY score DESC, updated_at ASC LIMIT ?`,
+  )
+    .bind(n)
+    .all<Omit<PublicLeaderboardRow, 'rank'>>();
+  return (res.results ?? []).map((r, i) => ({ rank: i + 1, ...r }));
+}
+
 export interface RecentRow {
   name: string;
   score: number;

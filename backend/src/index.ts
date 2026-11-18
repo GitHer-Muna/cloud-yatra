@@ -12,6 +12,8 @@
  *   GET  /recent        → the latest N runs, newest first (JSON, live "recent pilgrims" feed)
  *   GET  /session?id=   → per-session "Your Run" rollup from D1 (JSON)
  *   GET  /pulse         → durable live service-pulse metrics from D1 (JSON, LIVE NOW row)
+ *   GET  /open/{stats,pulse,leaderboard,chaos/status,chaos/events}
+ *                       → read-only, name-free, cached, rate-limited API for Grafana Play
  *   POST /score         → submit a completed run (best-per-name)
  *   POST /event         → ingest a single telemetry event
  *   POST /events        → ingest a batch of telemetry events
@@ -29,6 +31,7 @@ import { validateEvent, MAX_BATCH, type EventEnvelope } from './events';
 import { ingest, leaderboard, pulse, recent, sessionRollup, stats, submitScore } from './db';
 import { inc, observe, renderMetrics, setGauge, metricsFormatFor, METRICS_CONTENT_TYPE } from './metrics';
 import { Logger, hexId, pushTrace } from './logger';
+import { isPublicRequest, handlePublic } from './publicApi';
 import { isProxyRequest, handleProxy } from './grafanaProxy';
 import { isFaroRequest, handleFaro } from './faroProxy';
 import {
@@ -200,6 +203,7 @@ function routeLabel(pathname: string): string {
     '/chaos/start',
     '/chaos/stop',
   ];
+  if (isPublicRequest(pathname)) return '/open';
   return known.includes(pathname) ? pathname : 'other';
 }
 
@@ -213,6 +217,11 @@ interface Ctx {
 
 async function handle(req: Request, env: Env, c: Ctx): Promise<Response> {
   const { pathname, method } = c;
+
+  // Read-only public API for third-party dashboards (names/ids stripped, cached, limited).
+  if (isPublicRequest(pathname)) {
+    return handlePublic(req, env, pathname, () => cachedStats(env));
+  }
 
   if (pathname === '/healthz' && method === 'GET') {
     let dbOk = false;
